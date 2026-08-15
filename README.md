@@ -2,7 +2,7 @@
 
 > An open-source, self-hostable financial research agent that pulls primary sources, verifies every number verbatim, and writes memos where every claim traces back to the original filing — with China A-share & HK markets as first-class citizens.
 
-**Status: pre-release incubation. Not yet published.**
+**Status: v0.1 — early but real.** Three entry points (CLI · local Web UI · benchmark harness), five official skills, and an honest benchmark. Expect sharp edges; the trust discipline is the part we consider stable.
 
 ## What lives here
 
@@ -40,6 +40,7 @@ uv --directory bench/runner run bench run \
 75 instances per column, zero failed runs. The pipeline recorded **zero fabrication hard-failures**; the bare model fabricated on 4 instances — including writing "20亿 − 5亿 = **15亿** remaining" in all three languages on a task whose filing never discloses the quota-management basis (the tempting-but-unfounded-arithmetic trap working exactly as designed). Run-to-run variance is ±0.02–0.03; treat smaller differences as noise. Twelve scorer defects were found and fixed during dogfooding before these numbers were taken — several fixes raised the *bare model's* scores (see CONTRIBUTING's honest-benchmark rule). Integration guide for third-party agents: [`bench/RUNNING.md`](bench/RUNNING.md).
 
 Where the pipeline structurally differs from a bare model: it refuses to fabricate under absence (planted-fabrication traps score 0 by design), states residual non-disclosure even after answering the rule ("capped at X" answers the cap, not the value), attaches counter-evidence to inferences, placeholder-locks every number in prose (the writing model never sees a digit), carries interval uncertainty on derivation chains, and holds the memo language contract across scripts. The bare model remains genuinely strong at Simplified-Chinese extraction; we say so.
+
 ## 简体中文
 
 开源、可自托管、BYO-model 的金融分析 Agent——自主拉取原始数据、逐字验证数字、产出每句话都可回溯到原始文件的研究备忘录。A股/港股是一等公民。分析不是建议:我们永不输出买卖动作、目标价、评级档位或收益承诺。
