@@ -18,10 +18,10 @@
  * @module @meridian/agent
  */
 
-export { PIPELINE_VERSION, inferLang, runPipeline } from './pipeline.ts'
+export { PIPELINE_VERSION, auditEnabled, inferLang, runPipeline } from './pipeline.ts'
 export type { PipelineOptions, PipelineResult } from './pipeline.ts'
 
-export { renderMemoMarkdown } from './render.ts'
+export { auditCautions, renderMemoMarkdown } from './render.ts'
 export type { RenderOptions } from './render.ts'
 
 export {

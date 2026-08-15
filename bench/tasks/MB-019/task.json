@@ -1,0 +1,8 @@
+{
+  "id": "MB-019",
+  "lang": "zh-CN",
+  "type": "metric_calc",
+  "prompt": "阅读该担保公告,回答:1)本次担保的对象、金额上限、担保方式与期限?本次之后公司对该子公司的担保余额上限约为多少?2)公告披露的对外担保总额 95,205.99 万元是什么口径?它触发了哪一档特别风险提示?3)本次担保走了哪些决策程序?需不需要再提交股东会?依据是什么?4)被担保人最近的盈利状况如何(注意区分审计口径)?公告对其偿债能力的表述是什么性质?5)公司是否存在逾期担保?所有数字保持原文精度并注明出处。",
+  "context_files": ["context/guarantee.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "counterevidence", "completeness", "compliance"]
+}

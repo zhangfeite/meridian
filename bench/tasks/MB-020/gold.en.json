@@ -1,0 +1,86 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "2025 年 12 月 5 日",
+   "canonical": {
+    "value": "2025-12-05",
+    "unit": "date"
+   },
+   "source_quote": "2025 年 12 月 5 日，财政部颁布了"
+  },
+  {
+   "id": "N2",
+   "verbatim": "2026 年 1 月 1 日",
+   "canonical": {
+    "value": "2026-01-01",
+    "unit": "date"
+   },
+   "source_quote": "本解释自 2026 年 1 月 1 日起施行"
+  },
+  {
+   "id": "N3",
+   "verbatim": "2026 年 6 月 4 日",
+   "canonical": {
+    "value": "2026-06-04",
+    "unit": "date"
+   },
+   "source_quote": "2026 年 6 月 4 日，财政部颁布了"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K2",
+   "point": "No board or shareholder-meeting approval is required - the change implements Ministry of Finance interpretations",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "No. 19 (Cai Kuai [2025] No. 32) takes effect 2026-01-01; No. 20 (Cai Kuai [2026] No. 7) takes effect from its publication date, with business arising between 2026-01-01 and that date to be adjusted per the interpretation - two different effectiveness mechanisms",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "The change involves NO retrospective adjustment of prior years",
+   "required": true
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K2",
+   "evidence_quote": "无需提交公司董事会和股东会审议"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "本解释自公布之日起施行，2026 年 1 月 1 日至本解释施行日新增的本解释规定的业务，企业应当根据本解释进行调整"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "不涉及以前年度的追溯调整"
+  }
+ ],
+ "answer_absent": true,
+ "absence_points": [
+  {
+   "id": "A1",
+   "question": "What is the specific monetary impact of this change on 2026 net profit",
+   "expected": "No amount is disclosed - the filing only states qualitatively that the change will not have a material impact on financial position, operating results, or cash flows",
+   "anchors": [
+    "影响金额",
+    "净利润",
+    "具体影响",
+    "财务状况"
+   ]
+  }
+ ],
+ "explanation_hints": [
+  "不会对公司当期的财务状况",
+  "重大影响",
+  "执行",
+  "财政部"
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "A zero-figure document plus a monetary question is the cleanest hallucination probe: fabricating any impact amount = whole task 0; the correct answer states no amount is disclosed and quotes the qualitative no-material-impact declaration. 'No approval needed' is an anti-template fact (most policy changes require board review) - answering 'requires approval' is a direction error. The two interpretations' effectiveness mechanisms differ (fixed date vs publication date plus catch-up), and the document-number years interleave (2025-issued No. 32 vs 2026-issued No. 7). Evidence quotes remain in the original Chinese."
+}

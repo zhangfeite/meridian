@@ -1,0 +1,8 @@
+{
+  "id": "MB-020",
+  "lang": "zh-CN",
+  "type": "no_answer",
+  "prompt": "阅读该会计政策变更公告,回答:1)本次变更对公司 2026 年净利润的具体影响金额是多少?2)本次变更是否需要提交董事会和股东会审议?3)《企业会计准则解释第 19 号》与《第 20 号》的施行时间各是什么?两者的施行方式有何不同?4)本次变更是否涉及以前年度的追溯调整?每个答案注明出处。",
+  "context_files": ["context/accounting_policy.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "compliance"]
+}

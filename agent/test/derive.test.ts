@@ -10,6 +10,9 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { EvidenceRef } from '../src/contract.ts'
 import { computeDerivations, type DerivationProposal } from '../src/verify/derive.ts'
+import { computeMetrics } from '../src/steps/metrics.ts'
+import { ScriptedModel } from '../src/model.ts'
+import { idAllocator } from '../src/ids.ts'
 import { detectUnitHints } from '../src/verify/numbers.ts'
 
 const table = '单位：人民币万元\n资产减值损失 7,199.78 存货跌价准备\n合计 8,815.45'
@@ -538,4 +541,51 @@ test('a divisor that might be zero is rejected, not divided by', () => {
   assert.equal(summed.derived[0]?.display, '10000000.00')
   // ±50 元 from each figure: 100 元 on a 10,000,000 元 total.
   assert.equal(summed.derived[0]?.uncertainty, '100')
+})
+
+test('a unit the model repeats after the placeholder is absorbed, not printed twice', async () => {
+  // Found by the M6 checklist audit on a live MB-012 run: the memo published
+  // 「回购均价为1.82 元/股元/股」. The rendering carries its own unit, and a model
+  // writing `{{D1}} 元/股` is writing ordinary prose — the pipeline, not the
+  // model, has to reconcile the two.
+  const buyback: EvidenceRef[] = [
+    { ...evidence[0], id: 'E1', declaredUnits: [], quote: '成交总金额为 30,050,162.75 元（含交易费用）' },
+    { ...evidence[1], id: 'E2', declaredUnits: [], quote: '累计回购公司股份 16,498,650 股' },
+  ]
+  const model = new ScriptedModel([
+    JSON.stringify({
+      derivations: [
+        {
+          id: 'D1',
+          label: '回购均价',
+          op: 'quotient',
+          precision: 2,
+          operands: [
+            { display: '30,050,162.75', evidence_id: 'E1' },
+            { display: '16,498,650', evidence_id: 'E2' },
+          ],
+        },
+      ],
+      claims: [
+        {
+          question_id: 'Q1',
+          text: '按已披露数字计算,回购均价为{{D1}} 元/股。',
+          derivation_ids: ['D1'],
+          evidence_ids: ['E1', 'E2'],
+        },
+      ],
+    }),
+  ])
+
+  const result = await computeMetrics(
+    { entity: { name: '测试' }, questionType: 'metric_calc', seeksAdvice: false, subQuestions: [], lang: 'zh-CN' },
+    buyback,
+    model,
+    'zh-CN',
+    idAllocator('C'),
+  )
+
+  assert.deepEqual(result.rejected, [])
+  assert.equal(result.claims[0]?.text, '按已披露数字计算,回购均价为1.82 元/股。')
+  assert.equal(/元\/股\s*元\/股/.test(result.claims[0]?.text ?? ''), false)
 })

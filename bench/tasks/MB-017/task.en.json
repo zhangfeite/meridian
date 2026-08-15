@@ -1,0 +1,14 @@
+{
+ "id": "MB-017",
+ "lang": "en",
+ "type": "no_answer",
+ "prompt": "Read this Chinese ESOP draft summary and answer: 1) What is the transfer price for the repurchased shares and how is it derived (both benchmark prices, and the selection rule)? 2) What are the plan's share cap, share of capital, funding cap, and headcount cap? 3) What are the first-grant performance targets (mind which periods are single-year vs cumulative) and unlock ratios? 4) What is the specific 2027 net-profit target in 亿元? 5) How do unlock and assessment change if reserved units are granted after 2026-09-30? 6) What procedural stage is the plan at? Cite sources for every answer.",
+ "context_files": [
+  "context/esop_draft.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "compliance"
+ ]
+}

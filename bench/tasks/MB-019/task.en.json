@@ -1,0 +1,16 @@
+{
+ "id": "MB-019",
+ "lang": "en",
+ "type": "metric_calc",
+ "prompt": "Read this Chinese guarantee filing and answer: 1) Who is being guaranteed, up to what amount, in what form and term - and what is the post-transaction guarantee ceiling for this subsidiary? 2) What does the disclosed 95,205.99 万元 total represent, and which special-risk box does it tick? 3) Which decision bodies approved what - does this guarantee need another shareholder-meeting vote, and why? 4) What is the guaranteed subsidiary's recent profitability (mind the audit basis), and what is the nature of the filing's statement about its solvency? 5) Are there any overdue guarantees? Keep original precision; cite the Chinese source for every number.",
+ "context_files": [
+  "context/guarantee.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "counterevidence",
+  "completeness",
+  "compliance"
+ ]
+}

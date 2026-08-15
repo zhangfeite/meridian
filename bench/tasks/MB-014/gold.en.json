@@ -1,0 +1,136 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "29,469,150 股",
+   "canonical": {
+    "value": "29469150",
+    "unit": "shares"
+   },
+   "source_quote": "被司法拍卖的公司 29,469,150 股股份于 2026 年 7 月 8 日完成非交易过户"
+  },
+  {
+   "id": "N2",
+   "verbatim": "2026 年 7 月 8 日",
+   "canonical": {
+    "value": "2026-07-08",
+    "unit": "date"
+   },
+   "source_quote": "于 2026 年 7 月 8 日完成非交易过户"
+  },
+  {
+   "id": "N3",
+   "verbatim": "58,078,800 股",
+   "canonical": {
+    "value": "58078800",
+    "unit": "shares"
+   },
+   "source_quote": "湖南派勒科技有限公司持有公司 58,078,800 股占公司 11.85%的股份"
+  },
+  {
+   "id": "N4",
+   "verbatim": "11.85%",
+   "canonical": {
+    "value": "0.1185",
+    "unit": "ratio"
+   },
+   "source_quote": "占公司 11.85%的股份"
+  },
+  {
+   "id": "N5",
+   "verbatim": "28557200 股",
+   "canonical": {
+    "value": "28557200",
+    "unit": "shares"
+   },
+   "source_quote": "所持有的 28557200 股公司股票"
+  },
+  {
+   "id": "N6",
+   "verbatim": "5.82%",
+   "canonical": {
+    "value": "0.0582",
+    "unit": "ratio"
+   },
+   "source_quote": "占公司总股本 5.82%"
+  },
+  {
+   "id": "N7",
+   "verbatim": "4.99",
+   "canonical": {
+    "value": "0.0499",
+    "unit": "ratio"
+   },
+   "source_quote": "上海织箜管理咨询合伙企业（有限合伙） 24465900 4.99"
+  },
+  {
+   "id": "N8",
+   "verbatim": "30%",
+   "canonical": {
+    "value": "0.30",
+    "unit": "ratio"
+   },
+   "source_quote": "远低于 30%表决权支配阈值"
+  },
+  {
+   "id": "N9",
+   "verbatim": "约 4.9 亿股",
+   "canonical": {
+    "value": "490116456",
+    "unit": "shares",
+    "derived": true,
+    "formula": "58078800/0.1185"
+   },
+   "source_quote": "(derived) 第一大股东 58,078,800 股 ÷ 11.85%"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "After the 2026-07-08 transfer the company changed from being controlled by Xinhaixin (actual controllers Wang Hairong and Wang Liyan) to having NO controlling shareholder and NO actual controller; Hunan Paile's 58,078,800 shares (11.85%) make it merely the largest shareholder",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "Two batches: 29,469,150 shares whose judicial-auction transfer COMPLETED on 2026-07-08 (accomplished fact); Xinhaixin's remaining 28557200 shares (5.82%) to be auctioned by the Beijing Financial Court on the JD platform on 2026-09-15/16 (not yet occurred)",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "'Xinhaixin will no longer hold shares' is conditioned on 'if this auction succeeds and the transfer completes' - a conditional projection, not a fact; the company is also planning an out-of-court restructuring that could further change the ownership structure",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "The determination was not confirmed by all parties: Hunan Paile and Shanghai Zhikong replied in writing agreeing, but Paile's upstream shareholder explicitly disagrees with deeming Paile the actual controller during restructuring, and Xinhaixin has not replied",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "Only two shareholders hold 5%+ (Paile 11.85%, Xinhaixin 5.82%); the third-largest holds 4.99%, just under the disclosure line; implied total share capital ~490 million shares (58,078,800 / 11.85%, derived)",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "公司控股股东由西藏新海新创业投资有限公司变更为无控股股东、公司实际控制人由王海荣、王立言变更为无实际控制人"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "将于 2026 年 9 月 15 日 10 时至 2026 年9 月 16 日 10 时止（延时除外）被北京金融法院在京东网司法拍卖平台公开拍卖"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "如此次拍卖成功并完成过户，西藏新海新创业投资有限公司不再持有公司股份"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "湖南派勒上层股东明确反馈不认可重整阶段认定湖南派勒为上市公司实际控制人"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "Conditional-vs-accomplished is the crux: the two auction batches nearly collide numerically (29,469,150 transferred vs 28557200 pending - the latter printed without thousands separators) and have OPPOSITE statuses; calling Paile the controller reverses the filing's own conclusion; dropping the 'if the auction succeeds' condition loses points; the dissent/non-reply details are completeness material; the 4.99% stake deliberately sits under the 5% line; N9 is derived (0.5% tolerance covers both back-out paths). Evidence quotes remain in the original Chinese."
+}

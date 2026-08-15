@@ -34,6 +34,7 @@ import type { ModelClient } from '../model.ts'
 import type { Skill } from '../skills/types.ts'
 import type { EvidencePool } from '../evidence-pool.ts'
 import { buildProse } from '../prose.ts'
+import { auditChecklist, AUDIT_VERSION } from './audit.ts'
 import type { SourceDocument } from '../source/types.ts'
 import type { Intent, RetrievalResult } from '../types.ts'
 import { bindNumbers } from '../verify/bind.ts'
@@ -63,6 +64,8 @@ export interface ComposeInput {
   model?: ModelClient
   /** The analysis recipe in force, if any. */
   skill?: Skill
+  /** Set false to skip the step-7b checklist audit. */
+  auditChecklist?: boolean
 }
 
 /** Composition output: the artifact and its rendering. */
@@ -323,7 +326,7 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
         detail: `${input.skill?.id ?? 'skill'} checklist item has nothing in the memo answering it: ${item}`,
       })
     }
-    return { item, covered }
+    return { item, covered, source: 'lexical' as const }
   })
 
   const memo: Memo = {
@@ -348,12 +351,51 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
 
   const gate = runGate(memo, input.intent, input.documents, input.skill?.forbidden_reinforce ?? [])
   memo.gate = gate
+  const render = (): string => renderMemoMarkdown(memo, refusalOption(input.intent, input.lang))
+  let markdown = render()
 
-  return {
-    memo,
-    markdown: renderMemoMarkdown(memo, refusalOption(input.intent, input.lang)),
-    prose: prose.stats,
+  // Step 7b. After the gate on purpose: the memo is already publishable, and the
+  // audit's job is to describe it, not to decide whether it may exist.
+  if (input.model && input.auditChecklist !== false && checklist.length > 0) {
+    const audited = await auditChecklist(checklist, markdown, input.model, input.lang)
+    audit.push(...audited.audit)
+    memo.checklist = audited.checklist
+    memo.audit = audit
+    if (audited.applied) {
+      memo.provenance = {
+        ...memo.provenance,
+        audit: { model: input.model.id, version: AUDIT_VERSION },
+      }
+    }
+    if (audited.checklist.some((entry) => entry.verdict === 'contradicted')) {
+      // The caution line is emitted by the renderer from structured state — a
+      // fixed, digit-free sentence of ours. The auditor's words never reach the
+      // page, so re-gating here is checking our own template, cheaply.
+      const cautioned = render()
+      const regated = runGate(memo, input.intent, input.documents, input.skill?.forbidden_reinforce ?? [])
+      if (regated.passed || !gate.passed) {
+        markdown = cautioned
+        memo.gate = regated
+      } else {
+        // Our own template should never do this. If it somehow does, the memo
+        // publishes as it was and the withheld caution is disclosed — the audit
+        // is an enhancement and may not cost a memo its publication. The
+        // withholding is recorded on the entries, so re-rendering this memo
+        // anywhere else does not resurrect the line.
+        memo.checklist = memo.checklist?.map((entry) =>
+          entry.verdict === 'contradicted' ? { ...entry, cautionWithheld: true } : entry,
+        )
+        markdown = render()
+        audit.push({
+          step: 'audit',
+          action: 'audit_degraded',
+          detail: 'the contradiction caution line was withheld: appending it would have failed the gate',
+        })
+      }
+    }
   }
+
+  return { memo, markdown, prose: prose.stats }
 }
 
 /**

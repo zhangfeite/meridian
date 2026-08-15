@@ -1,0 +1,15 @@
+{
+ "id": "MB-018",
+ "lang": "en",
+ "type": "metric_calc",
+ "prompt": "This is a full Chinese convertible-bond prospectus summary (~100 pages); the needles sit deep in the major-matters and financial sections. Answer: 1) Which profit basis is the '48.14% decline in 2025' - and roughly what is the attributable-net-profit decline (compute it)? 2) Do the '71.14% three-year payout' and the '22.75% 2025 payout ratio' contradict each other? 3) What share base underlies the 2025 dividend of 2.00 yuan per 10 shares, and why does it differ from 2023/2024? 4) How does Q1 2026 FX gain/loss compare with full-year 2025? 5) What are the credit ratings and the follow-up rating arrangement? 6) What was 2025 gross margin - and which near-identical numbers with different meanings lurk in the document? Keep original precision; cite the Chinese source for every number.",
+ "context_files": [
+  "context/cb_prospectus_summary.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

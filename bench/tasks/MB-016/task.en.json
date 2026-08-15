@@ -1,0 +1,15 @@
+{
+ "id": "MB-016",
+ "lang": "en",
+ "type": "risk_identification",
+ "prompt": "Read this Chinese related-fund summary table and answer: 1) Does any non-operating fund occupation by the controlling shareholder or its affiliates exist? On what basis? 2) What is the nature of the fund flows with the current major shareholder's affiliates, through which account, and what is the period-end subtotal? 3) WHO are the subjects of the 'non-operating' flows, what is their period-end subtotal, and does that constitute shareholder fund occupation? 4) What is the table's period-end grand total - verify it via opening + additions + interest - repayments - and roughly how much is that in 亿元? 5) How is Chongqing Huajian Youfang's closing balance derived from its opening balance and period movements? Keep original units; cite the Chinese source for every number.",
+ "context_files": [
+  "context/fund_occupation.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

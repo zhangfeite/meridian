@@ -140,7 +140,7 @@ export async function computeMetrics(
     let text = rawText
     for (const id of usedIds) {
       const derivation = derivedById.get(id)
-      if (derivation) text = text.replaceAll(`{{${id}}}`, derivation.display)
+      if (derivation) text = substitute(text, id, derivation.display)
     }
     if (/\{\{\w+\}\}/.test(text)) {
       rejected.push({ text: rawText, reason: 'unresolved derivation placeholder', questionId })
@@ -200,4 +200,28 @@ export async function computeMetrics(
   }
 
   return { derived, claims, rejected, derivationRejections }
+}
+
+/** Trailing unit of a rendered figure: `1.82 元/股` → `元/股`, `0.35%` → none. */
+const UNIT_SUFFIX = /[^\d\s.,%]+$/
+
+/**
+ * Substitute a derivation's rendering for its placeholder.
+ *
+ * The rendering carries its own unit (`1.82 元/股`), and a model writing
+ * `回购均价为{{D1}} 元/股` is writing normal prose — so a plain replacement
+ * publishes `1.82 元/股 元/股`. Any unit immediately following the placeholder
+ * that repeats the rendering's own is absorbed; anything else is left alone.
+ *
+ * @param text - the claim sentence, with placeholders.
+ * @param id - the model's placeholder id.
+ * @param display - the pipeline's rendering of that derivation.
+ * @returns the sentence with the placeholder resolved.
+ */
+function substitute(text: string, id: string, display: string): string {
+  const suffix = UNIT_SUFFIX.exec(display.trim())?.[0]
+  const placeholder = `\\{\\{${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\}\\}`
+  if (!suffix) return text.replaceAll(`{{${id}}}`, display)
+  const escaped = suffix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return text.replace(new RegExp(`${placeholder}[ \u3000]*(?:${escaped})?`, 'g'), display)
 }

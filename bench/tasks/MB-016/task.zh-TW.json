@@ -1,0 +1,8 @@
+{
+  "id": "MB-016",
+  "lang": "zh-TW",
+  "type": "risk_identification",
+  "prompt": "閱讀該資金佔用及關聯資金往來匯總表,回答:1)公司是否存在控股股東及其關聯方非經營性資金佔用?依據是什麼?2)與現大股東附屬企業的資金往來是什麼性質?通過什麼科目核算?期末餘額小計多少?3)表中「非經營性往來」的主體是誰?期末餘額小計多少?這構不構成大股東資金佔用?4)全表期末總餘額是多少?請用「期初+發生+利息-償還」驗算;該總額換算成億元約是多少?5)重慶華健友方醫院的期末餘額如何由期初與當期變動推得?所有數字保持原文單位並註明出處。",
+  "context_files": ["context/fund_occupation.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

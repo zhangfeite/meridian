@@ -1,0 +1,8 @@
+{
+  "id": "MB-020",
+  "lang": "zh-TW",
+  "type": "no_answer",
+  "prompt": "閱讀該會計政策變更公告,回答:1)本次變更對公司 2026 年淨利潤的具體影響金額是多少?2)本次變更是否需要提交董事會和股東會審議?3)《企業會計準則解釋第 19 號》與《第 20 號》的施行時間各是什麼?兩者的施行方式有何不同?4)本次變更是否涉及以前年度的追溯調整?每個答案註明出處。",
+  "context_files": ["context/accounting_policy.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "compliance"]
+}

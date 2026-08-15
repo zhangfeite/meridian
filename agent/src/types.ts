@@ -92,6 +92,8 @@ export interface PipelineTrace {
     complianceHits: number
     /** Paragraphs drafted, improved by the writing pass, and rejected by it. */
     prose: { drafted: number; polished: number; rejected: number; dropped: number }
+    /** Step 7b verdict counts; absent when no recipe checklist applied. */
+    checklist?: Record<string, number>
   }
   modelCalls: { step: string; inputTokens?: number; outputTokens?: number }[]
   startedAt: string

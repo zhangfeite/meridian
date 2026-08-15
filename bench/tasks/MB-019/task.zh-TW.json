@@ -1,0 +1,8 @@
+{
+  "id": "MB-019",
+  "lang": "zh-TW",
+  "type": "metric_calc",
+  "prompt": "閱讀該擔保公告,回答:1)本次擔保的對象、金額上限、擔保方式與期限?本次之後公司對該子公司的擔保餘額上限約為多少?2)公告揭露的對外擔保總額 95,205.99 萬元是什麼口徑?它觸發了哪一檔特別風險提示?3)本次擔保走了哪些決策程序?需不需要再提交股東會?依據是什麼?4)被擔保人最近的盈利狀況如何(注意區分審計口徑)?公告對其償債能力的表述是什麼性質?5)公司是否存在逾期擔保?所有數字保持原文精度並註明出處。",
+  "context_files": ["context/guarantee.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "counterevidence", "completeness", "compliance"]
+}

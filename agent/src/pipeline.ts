@@ -71,6 +71,8 @@ export interface PipelineOptions {
   skillsDir?: string
   /** A pre-loaded registry, for tests and hosts that cache it. */
   skills?: SkillRegistry
+  /** Set false to skip the step-7b checklist audit (default: on). */
+  audit?: boolean
 }
 
 /** One run's outputs. */
@@ -289,11 +291,21 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     },
     model,
     ...(choice ? { skill: choice.skill } : {}),
+    ...(options.audit === undefined ? {} : { auditChecklist: options.audit }),
   })
+  // Verdict counts, so a run can be inspected without opening the memo. The
+  // lexical fallback shows up as `lexical`, which is how a reader learns the
+  // audit did not run.
+  const checklistCounts = (composed.memo.checklist ?? []).reduce<Record<string, number>>((counts, entry) => {
+    const key = entry.source === 'lexical' ? 'lexical' : (entry.verdict ?? 'lexical')
+    counts[key] = (counts[key] ?? 0) + 1
+    return counts
+  }, {})
   report('compose', {
     claims: composed.memo.claims.length,
     prose: composed.prose,
     gatePassed: composed.memo.gate.passed,
+    ...(composed.memo.checklist ? { checklist: checklistCounts } : {}),
   })
 
   const finishedAt = new Date()
@@ -308,6 +320,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       claimsPublished: composed.memo.claims.length,
       complianceHits: composed.memo.gate.complianceHits.length,
       prose: composed.prose,
+      ...(composed.memo.checklist ? { checklist: checklistCounts } : {}),
     },
     modelCalls: model.calls,
     startedAt: startedAt.toISOString(),
@@ -316,4 +329,19 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   }
 
   return { memo: composed.memo, markdown: composed.markdown, trace }
+}
+
+/**
+ * Read the checklist-audit switch out of the environment.
+ *
+ * Step 7b costs one model call per memo, so a host paying per token can turn it
+ * off without touching code. Every entry point reads it through this function so
+ * `MERIDIAN_AUDIT=off` means the same thing in the CLI, the bench adapter and
+ * the web server.
+ *
+ * @param env - environment to read.
+ * @returns false when the audit is switched off, true otherwise.
+ */
+export function auditEnabled(env: NodeJS.ProcessEnv): boolean {
+  return !['off', '0', 'false', 'no'].includes((env.MERIDIAN_AUDIT ?? '').trim().toLowerCase())
 }

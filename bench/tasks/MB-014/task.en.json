@@ -1,0 +1,15 @@
+{
+ "id": "MB-014",
+ "lang": "en",
+ "type": "event_interpretation",
+ "prompt": "Read this Chinese control-change filing and answer: 1) What is the company's current control status, on what core grounds, and is Hunan Paile the controlling shareholder or actual controller? 2) Which two batches of shares are involved in the judicial auctions - how many shares each, and what is the status of each (completed vs not yet occurred)? 3) Is the statement that the former controlling shareholder 'will no longer hold any shares' a fact or a conditional projection? What else could still change the ownership structure? 4) Did every consulted shareholder confirm the no-controller determination? 5) How many shareholders hold 5% or more, and roughly what is the total share capital implied by the largest holder's stake? Cite the Chinese source for every conclusion.",
+ "context_files": [
+  "context/control_change.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

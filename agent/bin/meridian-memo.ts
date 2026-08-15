@@ -28,7 +28,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { OpenAICompatibleModel } from '../src/model.ts'
-import { runPipeline, type PipelineResult } from '../src/pipeline.ts'
+import { auditEnabled, runPipeline, type PipelineResult } from '../src/pipeline.ts'
 import { EdgarSource } from '../src/source/edgar.ts'
 import { FixtureSource } from '../src/source/fixture.ts'
 import { PeriscopeSource } from '../src/source/periscope.ts'
@@ -47,6 +47,8 @@ interface Args {
   lang?: MeridianLang
   /** Apply this analysis recipe instead of matching one. */
   skill?: string
+  /** `--no-audit` (or `MERIDIAN_AUDIT=off`) turns off the step-7b checklist audit. */
+  audit: boolean
   /** `fixture` (default) | `periscope` | `edgar` */
   source?: string
   symbol?: string
@@ -55,7 +57,7 @@ interface Args {
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { bench: false, tasksDir: process.env.MERIDIAN_BENCH_TASKS ?? DEFAULT_TASKS_DIR }
+  const args: Args = { bench: false, audit: auditEnabled(process.env), tasksDir: process.env.MERIDIAN_BENCH_TASKS ?? DEFAULT_TASKS_DIR }
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index]
     const value = argv[index + 1]
@@ -90,6 +92,9 @@ function parseArgs(argv: string[]): Args {
       case '--skill':
         args.skill = value
         index += 1
+        break
+      case '--no-audit':
+        args.audit = false
         break
       case '--source':
         args.source = value
@@ -158,6 +163,7 @@ async function main(): Promise<number> {
       documentIds,
       taskId,
       ...(args.skill === undefined ? {} : { skillId: args.skill }),
+      ...(args.audit ? {} : { audit: false }),
     })
     const outRoot = process.env.MERIDIAN_MEMO_OUT
     if (outRoot) writeArtifacts(join(resolve(outRoot), taskId), result)
@@ -176,6 +182,7 @@ async function main(): Promise<number> {
       documentIds: task.contextFiles.map((relative) => `${args.task}/${relative}`),
       taskId: args.task,
       ...(args.skill === undefined ? {} : { skillId: args.skill }),
+      ...(args.audit ? {} : { audit: false }),
       onStep: (step, detail) => process.stderr.write(`[${step}] ${JSON.stringify(detail)}\n`),
     })
     if (args.out) writeArtifacts(args.out, result)
@@ -200,6 +207,7 @@ async function main(): Promise<number> {
       model,
       ...(args.lang === undefined ? {} : { lang: args.lang }),
       ...(args.skill === undefined ? {} : { skillId: args.skill }),
+      ...(args.audit ? {} : { audit: false }),
       catalogQuery: {
         ...(args.symbol === undefined ? {} : { symbol: args.symbol }),
         ...(args.market === undefined ? {} : { market: args.market }),
@@ -220,6 +228,7 @@ async function main(): Promise<number> {
       model,
       ...(args.lang === undefined ? {} : { lang: args.lang }),
       ...(args.skill === undefined ? {} : { skillId: args.skill }),
+      ...(args.audit ? {} : { audit: false }),
       onStep: (step, detail) => process.stderr.write(`[${step}] ${JSON.stringify(detail)}\n`),
     })
     if (args.out) writeArtifacts(args.out, result)

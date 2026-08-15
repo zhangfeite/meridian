@@ -1,0 +1,8 @@
+{
+  "id": "MB-016",
+  "lang": "zh-CN",
+  "type": "risk_identification",
+  "prompt": "阅读该资金占用及关联资金往来汇总表,回答:1)公司是否存在控股股东及其关联方非经营性资金占用?依据是什么?2)与现大股东附属企业的资金往来是什么性质?通过什么科目核算?期末余额小计多少?3)表中「非经营性往来」的主体是谁?期末余额小计多少?这构不构成大股东资金占用?4)全表期末总余额是多少?请用「期初+发生+利息-偿还」验算;该总额换算成亿元约是多少?5)重庆华健友方医院的期末余额如何由期初与当期变动推得?所有数字保持原文单位并注明出处。",
+  "context_files": ["context/fund_occupation.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

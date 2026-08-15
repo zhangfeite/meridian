@@ -146,6 +146,31 @@ test('ask reads repeated txt/md files, writes memo.md, and prints the human summ
   assert.equal(output.stderr(), '')
 })
 
+test('the checklist audit is switched off by --no-audit or MERIDIAN_AUDIT=off', async (t) => {
+  // Two switches, one meaning. A host that pays per token sets the environment
+  // once; a user trying a single run passes the flag.
+  const directory = await tempDir(t)
+  const textPath = join(directory, '公告.txt')
+  await writeFile(textPath, '公告标题\n重整申请已获法院受理。', 'utf8')
+
+  const run = async (argv: string[], env?: NodeJS.ProcessEnv): Promise<PipelineOptions | undefined> => {
+    const capture: Capture = {}
+    const code = await runCli(['ask', '重整走到哪一步?', '--file', textPath, ...argv], memoryIo().io, {
+      cwd: directory,
+      model: new ScriptedModel(['unused']),
+      pipeline: fixturePipeline(capture),
+      ...(env === undefined ? {} : { env }),
+    })
+    assert.equal(code, EXIT_OK)
+    return capture.options
+  }
+
+  assert.equal((await run([]))?.audit, undefined, 'on by default, and not passed as an explicit true')
+  assert.equal((await run(['--no-audit']))?.audit, false)
+  assert.equal((await run([], { MERIDIAN_AUDIT: 'off', DEEPSEEK_API_KEY: 'k' }))?.audit, false)
+  assert.equal((await run([], { MERIDIAN_AUDIT: 'ON', DEEPSEEK_API_KEY: 'k' }))?.audit, undefined)
+})
+
 test('ask keeps PDF parsing in the CLI and honors --out', async (t) => {
   const directory = await tempDir(t)
   const pdfPath = join(directory, '公告.pdf')

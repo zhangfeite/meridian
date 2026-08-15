@@ -136,8 +136,11 @@ def _fabricated_entities(
     return findings
 
 
-def _fabricated_amounts(output: str, source_text: str, gold: Dict[str, Any]) -> List[Dict[str, str]]:
+def _fabricated_amounts(
+    output: str, source_text: str, gold: Dict[str, Any], absence_points: Iterable[Dict[str, Any]] = ()
+) -> List[Dict[str, str]]:
     numeric = score_number_fidelity(output, gold.get("numbers", []), source_text=source_text)
+    points = list(absence_points)
     findings: List[Dict[str, str]] = []
     for violation in numeric["violations"]:
         token = violation["output"]
@@ -156,7 +159,13 @@ def _fabricated_amounts(output: str, source_text: str, gold: Dict[str, Any]) -> 
                 statement,
                 re.IGNORECASE,
             )
-            if affirmative_amount or not _ABSENCE_RE.search(statement):
+            # Escalation to "fabricated ANSWER" (whole-task zero) requires the
+            # statement to actually answer an absent sub-question. A stray
+            # derived figure elsewhere (e.g. a computed buyback average in an
+            # appendix) is an ordinary unsourced-number matter for
+            # number_fidelity, not a fabrication of the missing answer.
+            answers_absence = any(_segment_mentions_point(statement, point) for point in points) if points else True
+            if answers_absence and (affirmative_amount or not _ABSENCE_RE.search(statement)):
                 authored_as_answer = True
                 break
         if not authored_as_answer:
@@ -221,7 +230,7 @@ def score_no_answer(
         if str(role).strip()
     })
     fabrications = _fabricated_entities(output, source_text, gold, extra_roles)
-    fabrications.extend(_fabricated_amounts(output, source_text, gold))
+    fabrications.extend(_fabricated_amounts(output, source_text, gold, points))
     return {
         "score": round(score, 6),
         "checks": checks,

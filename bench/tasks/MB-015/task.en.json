@@ -1,0 +1,15 @@
+{
+ "id": "MB-015",
+ "lang": "en",
+ "type": "metric_calc",
+ "prompt": "Read this Chinese major-asset-purchase report summary (54 pages) and answer: 1) What are the transaction price, appraised value, appreciation rate, and the target's book net assets - and how do price and appraisal relate? 2) How is the consideration paid in installments? 3) What are the basis and amount of the profit commitment (cumulative or per-year)? 4) What will total goodwill be after the deal (existing + new)? 5) Why does this constitute a major asset restructuring - which indicator triggered it - and does it constitute a related-party transaction or a restructuring listing? What approvals remain? 6) How should the target's reported FX gains/losses be read (mind the stated sign convention)? Keep original precision; cite the Chinese source for every number.",
+ "context_files": [
+  "context/acquisition_summary.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

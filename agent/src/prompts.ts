@@ -506,6 +506,55 @@ ${paragraphs
   }
 }
 
+/** Bumped on any wording change to the audit prompt; recorded in provenance. */
+export const AUDIT_PROMPT_VERSION = 'meridian-audit-v0.1'
+
+/**
+ * Step 7b: judge whether the finished memo engaged with each checklist concern.
+ *
+ * The auditor reads a document that has already passed the gate and reports on
+ * it. It is not asked to improve the memo, and nothing it writes reaches the
+ * page — so the instruction it needs most is the one about pointing rather than
+ * retelling: a verdict that cannot be located in the memo is discarded.
+ */
+export function checklistAuditPrompt(items: string[], memoText: string, lang: MeridianLang): Prompt {
+  return {
+    system: `${HOUSE_RULES}
+
+You are STEP 7b of 7: CHECKLIST AUDIT. A finished research memo is below, together with the
+checklist an analysis recipe asked it to cover. For each checklist item, report what the memo
+actually did with it.
+
+Output schema:
+{"results": [{"item_index": 0, "verdict": "addressed"|"not_addressed"|"contradicted", "quote": string}]}
+
+Verdicts:
+- "addressed" — the memo engages with this concern. Quote the passage that shows it.
+- "not_addressed" — the memo says nothing about it. Leave "quote" empty; the absence IS the finding.
+- "contradicted" — the memo states something contrary to the concern (for example, the concern is
+  that a self-description must be attributed, and the memo presents it as established fact). Quote
+  the passage that contradicts it. This is the most valuable verdict; do not soften it.
+
+Rules:
+- "quote" must be copied character-for-character from the memo, at most sixty characters — one
+  clause is enough. It is a pointer, not a summary, and it is checked against the memo: a quote
+  that is not there verbatim costs you the verdict, which is recorded as unverified. Copy, do not
+  retype from memory, and do not tidy up spacing or punctuation.
+- You are reporting on the memo, not editing it. Do not suggest wording, do not write sentences for
+  it to include, do not restate its findings. Nothing you write will be published; only your
+  verdicts and located quotes are kept.
+- Judge only what the memo says. Do not consult the underlying filings, and do not reason about what
+  the memo should have said.
+${LANGUAGE_CLAUSE[lang]}`,
+    user: `Checklist items, by index:
+${items.map((item, index) => `${index}. ${asData(item)}`).join('\n')}
+
+--- BEGIN MEMO ---
+${memoText}
+--- END MEMO ---`,
+  }
+}
+
 /** Step 6: hunt for evidence against each inference. */
 export function counterEvidencePrompt(
   inferences: { id: string; text: string; assumptions: string[] }[],

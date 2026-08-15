@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
+  auditEnabled,
   FixtureSource,
   ModelError,
   OpenAICompatibleModel,
@@ -46,6 +47,8 @@ interface CommonArgs {
   lang?: MeridianLang
   /** Analysis recipe to apply; omitted means the pipeline matches one. */
   skill?: string
+  /** False when `--no-audit` was passed: skip the step-7b checklist audit. */
+  audit?: boolean
 }
 
 interface AskArgs extends CommonArgs {
@@ -116,9 +119,13 @@ export async function runCli(
 
   let result: PipelineResult
   try {
-    result = await (dependencies.pipeline ?? runPipeline)(
-      parsed.skill === undefined ? options : { ...options, skillId: parsed.skill },
-    )
+    result = await (dependencies.pipeline ?? runPipeline)({
+      ...options,
+      ...(parsed.skill === undefined ? {} : { skillId: parsed.skill }),
+      // `--no-audit` on the command line, `MERIDIAN_AUDIT=off` in the host's
+      // environment — either one switches step 7b off.
+      ...(parsed.audit === false || !auditEnabled(env) ? { audit: false } : {}),
+    })
   } catch (error) {
     writeFailure(io, parsed.json, modelFailure(error))
     return EXIT_DATA_UNAVAILABLE
@@ -312,6 +319,9 @@ function parseArgs(argv: string[]): ParsedArgs {
         common.skill = take(token, index)
         index += 1
         break
+      case '--no-audit':
+        common.audit = false
+        break
       case '--file':
         files.push(take(token, index))
         index += 1
@@ -431,6 +441,7 @@ function usage(): string {
   meridian ask "问题" --file 公告.pdf [--file 公告.txt] [--out memo.md] [--json]
   meridian ask "问题" --symbol 600491 --source periscope [--lang zh-CN] [--out memo.md]
   可选 --skill <id> 指定分析技能（不指定时自动匹配，所用技能记入 memo provenance）
+  可选 --no-audit 关闭 checklist 模型审计（默认开启，每篇 memo 一次调用）
   meridian bench --tasks MB-001 [--lang zh-CN] [--out memo.md] [--json]
 
 退出码：0 正常；2 验证 gate 拒绝；3 数据、配置或模型不可用。

@@ -304,6 +304,18 @@ class ScoringTests(unittest.TestCase):
         checks = {c["point_id"]: c for c in score["details"]["citation_alignment"]["checks"]}
         self.assertGreaterEqual(checks["K1"]["best_overlap"], 0.99, msg=json.dumps(checks["K1"], ensure_ascii=False))
 
+    def test_derived_stray_amount_is_not_escalated_to_fabricated_answer(self):
+        key = ("MB-017", "zh-CN") if ("MB-017", "zh-CN") in self.tasks else "MB-017"
+        task = self.tasks[key]
+        output = (
+            "受让价 6.35 元/股,为前 1 个交易日均价 12.70 元/股的 50%。「购买回购股票的价格为6.35 元/股」\n"
+            "按回购总成交金额与总股数推算,公司回购均价约 12.78 元(衍生计算,附录含公式)。\n"
+            "2027 年度净利润考核目标:文件未披露任何具体金额,仅要求 2026—2028 各年度归母净利润不低于 2025 年度。"
+        )
+        score = score_task(task.task, task.gold, output, source_text="\n".join(text for _, text in task.contexts))
+        absence = score["details"]["absence"]
+        self.assertFalse(absence["hard_failure"], msg=json.dumps(absence["fabrications"], ensure_ascii=False))
+
     def test_mb_t04_right_quote_wrong_source_file_loses_k2_citation(self):
         trap = json.loads((FIXTURES_DIR / "MB-T04-planted.json").read_text(encoding="utf-8"))
         task = self.tasks[trap["source_task"]]

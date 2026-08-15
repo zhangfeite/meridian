@@ -52,6 +52,8 @@ interface Labels {
   calculations: string
   references: string
   openQuestions: string
+  risks: string
+  auditCaution: string
   confidenceValue: Record<'low' | 'medium' | 'high', string>
 }
 
@@ -77,6 +79,8 @@ const LABELS: Record<MeridianLang, Labels> = {
     calculations: '计算过程',
     references: '资料来源',
     openQuestions: '待核问题',
+    risks: '风险与反证',
+    auditCaution: '复核提示:本备忘录的表述与下列检查关注点存在抵触,请重点复核',
     confidenceValue: { low: '低', medium: '中', high: '高' },
   },
   'zh-TW': {
@@ -100,6 +104,8 @@ const LABELS: Record<MeridianLang, Labels> = {
     calculations: '計算過程',
     references: '資料來源',
     openQuestions: '待核問題',
+    risks: '風險與反證',
+    auditCaution: '覆核提示:本備忘錄的表述與下列檢查關注點存在牴觸,請重點覆核',
     confidenceValue: { low: '低', medium: '中', high: '高' },
   },
   en: {
@@ -123,6 +129,8 @@ const LABELS: Record<MeridianLang, Labels> = {
     calculations: 'Calculations',
     references: 'Sources',
     openQuestions: 'Open questions',
+    risks: 'Risks and counter-evidence',
+    auditCaution: 'Review note: this memo appears to run against the following check',
     confidenceValue: { low: 'low', medium: 'medium', high: 'high' },
   },
 }
@@ -152,6 +160,8 @@ export function renderMemoMarkdown(memo: Memo, options: RenderOptions = {}): str
   if (options.refusal) lines.push(options.refusal, '')
   lines.push(labels.preamble, '')
 
+  const cautions = auditCautions(memo)
+  let cautionsPlaced = false
   for (const block of memo.narrative) {
     lines.push(`## ${block.heading}`, '')
     if (block.kind === 'findings') {
@@ -163,6 +173,13 @@ export function renderMemoMarkdown(memo: Memo, options: RenderOptions = {}): str
     } else {
       for (const paragraph of block.paragraphs) lines.push(paragraph.text, '')
     }
+    if (block.kind === 'risks') cautionsPlaced = pushCautions(lines, cautions)
+  }
+  // A memo with no risk claims has no risks section to append to; a contradiction
+  // must still reach the page, so it opens one.
+  if (cautions.length > 0 && !cautionsPlaced) {
+    lines.push(`## ${labels.risks}`, '')
+    pushCautions(lines, cautions)
   }
 
   if (memo.openQuestions.length > 0) {
@@ -272,4 +289,51 @@ function renderClaim(
       return rows
     }
   }
+}
+
+/**
+ * Emit the checklist-audit caution lines.
+ *
+ * A contradiction found by the audit is a caution about this memo, not a finding
+ * about the company — so the sentence is the pipeline's own fixed wording, it
+ * carries no figures, and it never repeats the auditor's words.
+ *
+ * @param lines - output buffer.
+ * @param cautions - the caution sentences, already built.
+ * @returns true when anything was written.
+ */
+function pushCautions(lines: string[], cautions: string[]): boolean {
+  if (cautions.length === 0) return false
+  for (const caution of cautions) lines.push(caution, '')
+  return true
+}
+
+/**
+ * The memo's fixed preamble for a locale.
+ *
+ * Exposed for the checklist audit: boilerplate is not evidence that a concern
+ * was engaged with, and an auditor that cannot see it cannot cite it.
+ *
+ * @param lang - output language contract.
+ * @returns the preamble sentence rendered into every memo.
+ */
+export function memoPreamble(lang: MeridianLang): string {
+  return LABELS[lang].preamble
+}
+
+/**
+ * The caution lines a memo owes its reader, given its checklist verdicts.
+ *
+ * Shared with the web view so both renderings of one memo say the same fixed,
+ * digit-free sentence — a contradiction is the audit's only route onto the page,
+ * and it may not depend on which surface the reader is looking at.
+ *
+ * @param memo - the memo, carrying its checklist.
+ * @returns one line per un-withheld contradiction, empty when there are none.
+ */
+export function auditCautions(memo: Memo): string[] {
+  const labels = LABELS[memo.lang]
+  return (memo.checklist ?? [])
+    .filter((entry) => entry.verdict === 'contradicted' && !entry.cautionWithheld)
+    .map((entry) => `${labels.auditCaution}:${entry.item}`)
 }

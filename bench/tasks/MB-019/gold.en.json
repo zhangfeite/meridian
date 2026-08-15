@@ -1,0 +1,138 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "3,000 万元",
+   "canonical": {
+    "value": "30000000",
+    "unit": "CNY"
+   },
+   "source_quote": "申请不超过 3,000 万元的综合授信额度"
+  },
+  {
+   "id": "N2",
+   "verbatim": "9,395.43 万元",
+   "canonical": {
+    "value": "93954300",
+    "unit": "CNY"
+   },
+   "source_quote": "福建南威软件有限公司 3,000 万元 9,395.43 万元 是 否"
+  },
+  {
+   "id": "N3",
+   "verbatim": "95,205.99 万元",
+   "canonical": {
+    "value": "952059900",
+    "unit": "CNY"
+   },
+   "source_quote": "对外担保总额为 95,205.99 万元"
+  },
+  {
+   "id": "N4",
+   "verbatim": "50.10%",
+   "canonical": {
+    "value": "0.5010",
+    "unit": "ratio"
+   },
+   "source_quote": "占公司最近一期经审计净资产的比例为 50.10%"
+  },
+  {
+   "id": "N5",
+   "verbatim": "70,000 万元",
+   "canonical": {
+    "value": "700000000",
+    "unit": "CNY"
+   },
+   "source_quote": "总额不超过 70,000 万元人民币的担保"
+  },
+  {
+   "id": "N6",
+   "verbatim": "-862.11 万元",
+   "canonical": {
+    "value": "-8621100",
+    "unit": "CNY"
+   },
+   "source_quote": "净利润 -862.11 -1,264.60"
+  },
+  {
+   "id": "N7",
+   "verbatim": "-1,264.60 万元",
+   "canonical": {
+    "value": "-12646000",
+    "unit": "CNY"
+   },
+   "source_quote": "-862.11 -1,264.60"
+  },
+  {
+   "id": "N8",
+   "verbatim": "约 12,395.43 万元",
+   "canonical": {
+    "value": "123954300",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "9395.43+3000"
+   },
+   "source_quote": "(derived) 现有余额 9,395.43 + 本次上限 3,000"
+  },
+  {
+   "id": "N9",
+   "verbatim": "0",
+   "canonical": {
+    "value": "0",
+    "unit": "CNY"
+   },
+   "source_quote": "对外担保逾期的累计金额（万元） 0"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "Joint-liability guarantee for wholly-owned subsidiary Fujian Nanwei's credit facility of up to 3,000 万元 with Bank of Communications Fujian branch, term ≤1 year, no counter-guarantee; the post-transaction ceiling for this subsidiary is ~12,395.43 万元 (9,395.43 + 3,000, derived)",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "95,205.99 万元 is the sum of actual outstanding guarantees PLUS approved-but-unused quota - not the actual outstanding balance; at 50.10% of latest audited net assets it ticks the 'exceeds 50%' special-risk box (not the 100% box)",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "Two-tier procedure: the 70,000 万元 annual quota was approved by the 2026-04-29 board and 2026-05-20 shareholder meeting; this specific guarantee falls within that quota and needed only the 2026-08-13 board meeting - no further shareholder vote",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "But the guaranteed subsidiary is loss-making: Q1 2026 net profit -862.11 万元 (unaudited) and FY2025 -1,264.60 万元 (audited); 'possesses normal debt-repayment ability' is the board's opinion (attributed statement) standing alongside, not canceling, the loss facts",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "Overdue guarantees: 0; all external guarantees are for consolidated subsidiaries",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "公司为该综合授信提供连带责任保证"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "包含担保实际发生余额与已批准的担保额度内尚未使用额度之和"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "在公司股东会批准的年度担保额度内，公司于 2026 年 8 月 13 日召开第五届董事会第二十一次会议"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "目前被担保人具备正常的债务偿还能力"
+  }
+ ],
+ "counterevidence_required": [
+  "K4"
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "notes": "Three-layer basis confusion is the crux: this facility cap (3,000 万) vs single-subsidiary balance (9,395.43 万, excluding this one) vs group total including unused quota (95,205.99 万) - conflating any two loses points. The ticked box is 'over 50%', not 'over 100%'. Procedure is two-tier (quota=shareholders, single deal=board); answering 'needs another shareholder vote' is a direction error. K4 runs through counterevidence: consecutive losses (note the audit-basis split) must be flagged in risk register, with the solvency claim attributed to the board. Minus signs on N6/N7 must survive; N8 is the only derived number. Evidence quotes remain in the original Chinese."
+}

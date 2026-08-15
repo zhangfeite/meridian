@@ -1,0 +1,105 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "3,515.84 万元",
+   "canonical": {
+    "value": "35158400",
+    "unit": "CNY"
+   },
+   "source_quote": "小计 5,665.83 3,509.87 5,659.86 3,515.84"
+  },
+  {
+   "id": "N2",
+   "verbatim": "97,915.27 万元",
+   "canonical": {
+    "value": "979152700",
+    "unit": "CNY"
+   },
+   "source_quote": "95,672.14 3,565.00 126.45 1,448.32 97,915.27"
+  },
+  {
+   "id": "N3",
+   "verbatim": "101,337.97 万元",
+   "canonical": {
+    "value": "1013379700",
+    "unit": "CNY"
+   },
+   "source_quote": "总计 101,337.97 7,074.87 126.45 7,108.18 101,431.11"
+  },
+  {
+   "id": "N4",
+   "verbatim": "101,431.11 万元",
+   "canonical": {
+    "value": "1014311100",
+    "unit": "CNY"
+   },
+   "source_quote": "7,074.87 126.45 7,108.18 101,431.11"
+  },
+  {
+   "id": "N5",
+   "verbatim": "126.45 万元",
+   "canonical": {
+    "value": "1264500",
+    "unit": "CNY"
+   },
+   "source_quote": "总计 101,337.97 7,074.87 126.45"
+  },
+  {
+   "id": "N6",
+   "verbatim": "5,489.08 万元",
+   "canonical": {
+    "value": "54890800",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "5804.84+112.56-428.32"
+   },
+   "source_quote": "(derived) 重庆华健友方:期初 5,804.84 + 发生 112.56 − 偿还 428.32"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "NO non-operating fund occupation by the controlling shareholder or its affiliates exists - the entire non-operating-occupation section (current and former major shareholders) is empty",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "Flows with the current major shareholder's affiliates (under common ultimate control) are ALL operating in nature, booked as accounts receivable (services/goods), period-end subtotal 3,515.84 万元",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "The 'non-operating' flows belong to the LISTED COMPANY'S OWN subsidiaries (other receivables: intercompany/loans/equity-transfer amounts), period-end subtotal 97,915.27 万元 - intra-group flows, NOT shareholder occupation",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "The table reconciles: closing 101,431.11 = opening 101,337.97 + additions 7,074.87 + interest 126.45 - repayments 7,108.18, in RMB 万元 (~1.014 billion yuan)",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "Row-level reconciliation: Chongqing Huajian Youfang closes at 5,489.08 = 5,804.84 + 112.56 - 428.32 (loans); Yingkang Yisheng (Shenzhen)'s 29,980.00 万元 equity-transfer balance had zero movement",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K2",
+   "evidence_quote": "小计 5,665.83 3,509.87 5,659.86 3,515.84"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "小计 全资子公司 其他应收款 95,672.14 3,565.00 126.45 1,448.32 97,915.27"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "总计 101,337.97 7,074.87 126.45 7,108.18 101,431.11"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "Direction misjudgment is the crux: the table has two parts - shareholder non-operating OCCUPATION (entirely empty) and other related FLOWS; the ~979 million yuan of non-operating flows belongs to the company's own subsidiaries, and reporting it as shareholder occupation is an accident-grade direction error. Units are RMB 万元 (total ~1.014 billion yuan; two-magnitude errors lurk). Opening 101,337.97 vs closing 101,431.11 differ by only 0.09% (collision). K1 is a proof-of-absence point with no quote pair. Evidence quotes remain in the original Chinese."
+}

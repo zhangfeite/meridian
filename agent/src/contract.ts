@@ -214,6 +214,38 @@ export interface NarrativeBlock {
   paragraphs: NarrativeParagraph[]
 }
 
+/**
+ * One checklist item's outcome.
+ *
+ * `covered` is the lexical judgement — cheap, deterministic, and coarse.
+ * `verdict` is the audited one when step 7b ran. The audit **annotates**: it can
+ * change what the memo says *about itself*, never what the memo asserts.
+ */
+export interface ChecklistEntry {
+  item: string
+  /** Lexical landing: does the published text engage with this topic? */
+  covered: boolean
+  /**
+   * The audited judgement.
+   *
+   * `unverified` means the audit answered but could not prove it — its locating
+   * quote was not in the memo. A claim about the memo that cannot be located in
+   * the memo is exactly as trustworthy as a claim about a filing that cannot be
+   * located in the filing.
+   */
+  verdict?: 'addressed' | 'not_addressed' | 'contradicted' | 'unverified'
+  /** Verbatim passage from the memo that supports the verdict. */
+  locator?: string
+  /**
+   * True when a `contradicted` verdict's caution line was withheld from the page
+   * because appending it would have failed the gate. Persisted on the memo so
+   * every later rendering withholds it too, instead of reviving it.
+   */
+  cautionWithheld?: boolean
+  /** Which judgement is authoritative for this entry. */
+  source: 'lexical' | 'audit'
+}
+
 /** A primary source consulted for this memo. */
 export interface SourceRef {
   documentId: string
@@ -258,6 +290,12 @@ export interface AuditRecord {
     | 'skill_checklist_unmet'
     /** A figure the recipe requires that no derivation produced. */
     | 'skill_derivation_unmet'
+    /** The checklist audit ran and its verdict could not be located in the memo. */
+    | 'checklist_audit_unverified'
+    /** The checklist audit failed; lexical judgement stands and says so. */
+    | 'audit_degraded'
+    /** The audit reported the memo contradicting a checklist concern. */
+    | 'checklist_contradicted'
     | 'retrieval_failed'
     | 'derived_number_rejected'
   detail: string
@@ -310,14 +348,17 @@ export interface Memo {
     kernel?: string
     /** The analysis recipe applied, and how it was chosen. */
     skill?: { id: string; version: string; selection: 'explicit' | 'matched' | 'fallback' }
+    /** The model and prompt version that audited the checklist, when 7b ran. */
+    audit?: { model: string; version: string }
   }
   /**
-   * Whether each of the skill's risk-checklist items found a home in the memo.
+   * What became of each of the skill's risk-checklist items.
    *
-   * An unmet item is not a failure — some checks do not apply to a given filing.
-   * It is a disclosure: the recipe said to look, and this is what looking found.
+   * An unaddressed item is not a failure — some checks do not apply to a given
+   * filing. It is a disclosure: the recipe said to look, and this is what
+   * looking found.
    */
-  checklist?: { item: string; covered: boolean }[]
+  checklist?: ChecklistEntry[]
 }
 
 /** Markers that make a no-answer statement machine-checkable in all three languages. */

@@ -1,3 +1,4 @@
+import { auditCautions } from '@meridian/agent'
 import type { Claim, DerivedNumber, EvidenceRef, Memo, MeridianLang } from '@meridian/agent'
 import type { UploadedDocument } from './upload-source.ts'
 
@@ -30,6 +31,7 @@ interface Labels {
   derivations: string
   audit: string
   openQuestions: string
+  risks: string
   evidence: string
   sourcePosition: string
 }
@@ -55,6 +57,7 @@ const LABELS: Record<MeridianLang, Labels> = {
     derivations: '派生链',
     audit: '审计记录',
     openQuestions: '待核问题',
+    risks: '风险与反证',
     evidence: '出处原文',
     sourcePosition: '跳到上传文档对应段落',
   },
@@ -78,6 +81,7 @@ const LABELS: Record<MeridianLang, Labels> = {
     derivations: '派生鏈',
     audit: '稽核記錄',
     openQuestions: '待核問題',
+    risks: '風險與反證',
     evidence: '出處原文',
     sourcePosition: '跳到上傳文件對應段落',
   },
@@ -101,6 +105,7 @@ const LABELS: Record<MeridianLang, Labels> = {
     derivations: 'Derivation chain',
     audit: 'Audit record',
     openQuestions: 'Open questions',
+    risks: 'Risks and counter-evidence',
     evidence: 'Source passage',
     sourcePosition: 'Go to the matching passage in the upload',
   },
@@ -177,11 +182,23 @@ export function renderMemoPage(memo: Memo, documents: readonly UploadedDocument[
           )}</article>`
         })
         .join('')
+      // A contradiction the checklist audit found is the one thing the audit may
+      // put on the page, and the Markdown and the web page are the same memo —
+      // so the same fixed sentence, from the same builder, appears on both.
+      const cautions = block.kind === 'risks' ? renderCautions(memo) : ''
       return `<section class="memo-section ${block.kind}" aria-labelledby="block-${escapeAttribute(block.kind)}"><p class="section-kicker">${escapeHtml(
         block.kind.toUpperCase(),
-      )}</p><h2 id="block-${escapeAttribute(block.kind)}">${escapeHtml(block.heading)}</h2>${paragraphs || '<p class="muted">—</p>'}</section>`
+      )}</p><h2 id="block-${escapeAttribute(block.kind)}">${escapeHtml(block.heading)}</h2>${paragraphs || '<p class="muted">—</p>'}${cautions}</section>`
     })
     .join('')
+  // A memo with no risk claims has no risks section; the caution still has to
+  // reach the reader, so it opens one of its own.
+  const orphanCautions = memo.narrative.some((block) => block.kind === 'risks')
+    ? ''
+    : renderCautions(memo) &&
+      `<section class="memo-section risks"><p class="section-kicker">RISKS</p><h2>${escapeHtml(
+        labels.risks,
+      )}</h2>${renderCautions(memo)}</section>`
 
   const gate = renderGate(memo, labels)
   const openQuestions = memo.openQuestions.length
@@ -230,7 +247,7 @@ export function renderMemoPage(memo: Memo, documents: readonly UploadedDocument[
         memo.provenance.model,
       )}</span><span>ID ${escapeHtml(memoId)}</span></div></header>
       ${gate}
-      <div class="memo-grid"><div class="memo-main">${narrative || '<section class="memo-section"><p class="muted">没有形成可发布的正文。</p></section>'}${openQuestions}</div>
+      <div class="memo-grid"><div class="memo-main">${narrative || '<section class="memo-section"><p class="muted">没有形成可发布的正文。</p></section>'}${orphanCautions}${openQuestions}</div>
       <aside class="memo-aside"><p>TRACE</p><dl><dt>Pipeline</dt><dd>${escapeHtml(memo.provenance.pipeline)}</dd><dt>Data</dt><dd>${escapeHtml(
         memo.provenance.dataSource,
       )}</dd><dt>Gate</dt><dd class="${memo.gate.passed ? 'pass-text' : 'reject-text'}">${
@@ -406,4 +423,18 @@ function formatDate(value: string, lang: MeridianLang): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeStyle: 'short' }).format(date)
+}
+
+/**
+ * Render the memo's checklist-audit caution lines, if any.
+ *
+ * @param memo - the memo, carrying its checklist verdicts.
+ * @returns escaped HTML, or an empty string when there is nothing to caution.
+ */
+function renderCautions(memo: Memo): string {
+  const cautions = auditCautions(memo)
+  if (cautions.length === 0) return ''
+  return `<aside class="audit-caution">${cautions
+    .map((caution) => `<p>${escapeHtml(caution)}</p>`)
+    .join('')}</aside>`
 }

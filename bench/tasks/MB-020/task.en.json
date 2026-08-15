@@ -1,0 +1,14 @@
+{
+ "id": "MB-020",
+ "lang": "en",
+ "type": "no_answer",
+ "prompt": "Read this Chinese accounting-policy-change filing and answer: 1) What is the specific monetary impact of this change on 2026 net profit? 2) Does the change require board and shareholder-meeting approval? 3) What are the effective dates of Interpretations No. 19 and No. 20, and how do their effectiveness mechanisms differ? 4) Does the change involve retrospective adjustment of prior years? Cite sources for every answer.",
+ "context_files": [
+  "context/accounting_policy.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "compliance"
+ ]
+}

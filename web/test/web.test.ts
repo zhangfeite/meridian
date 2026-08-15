@@ -9,6 +9,7 @@ import {
   ModelError,
   OpenAICompatibleModel,
   ScriptedModel,
+  renderMemoMarkdown,
   runPipeline,
   type Memo,
   type PipelineOptions,
@@ -245,6 +246,56 @@ test('upload → ask renders narrative, expandable evidence, source anchor, and 
   assert.match(html, /完整链示例/)
   assert.match(html, /示例比率/)
   assert.match(html, /<mark>《通知书》仅表明法院已立案审查/)
+})
+
+test('a contradicted checklist item shows the same caution on the page as in the Markdown', async () => {
+  // One memo, two renderings. The contradiction caution is the audit's only route
+  // onto the page, so a reader on the web must not see a cleaner memo than a
+  // reader of the file — same fixed sentence, same source of truth.
+  const item = '公司自述与可核查事实是否区分'
+  const webApp = app({
+    model,
+    createId: () => 'memo-caution',
+    pipeline: async (options) => {
+      const result = fixtureResult(options)
+      const memo: Memo = {
+        ...result.memo,
+        checklist: [{ item, covered: true, verdict: 'contradicted', locator: '法院已立案审查', source: 'audit' }],
+      }
+      return { ...result, memo, markdown: renderMemoMarkdown(memo) }
+    },
+  })
+
+  const html = await (await inject(webApp, '/ask', { method: 'POST', body: askForm() })).text()
+  assert.match(html, /audit-caution/)
+  assert.match(html, /复核提示/)
+  assert.ok(html.includes(item), 'the caution names the checklist item it came from')
+})
+
+test('a withheld caution appears on neither rendering', async () => {
+  const webApp = app({
+    model,
+    createId: () => 'memo-withheld',
+    pipeline: async (options) => {
+      const result = fixtureResult(options)
+      const memo: Memo = {
+        ...result.memo,
+        checklist: [
+          {
+            item: '公司自述与可核查事实是否区分',
+            covered: true,
+            verdict: 'contradicted',
+            cautionWithheld: true,
+            source: 'audit',
+          },
+        ],
+      }
+      return { ...result, memo, markdown: renderMemoMarkdown(memo) }
+    },
+  })
+
+  const html = await (await inject(webApp, '/ask', { method: 'POST', body: askForm() })).text()
+  assert.equal(html.includes('复核提示'), false)
 })
 
 test('GET /memo/:id and home history are scoped to the browser session', async () => {

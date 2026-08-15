@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import {
+  auditEnabled,
   ModelError,
   OpenAICompatibleModel,
   runPipeline,
@@ -224,6 +225,9 @@ async function route(
         source,
         model,
         documentIds: source.documents.map((document) => document.id),
+        // The step-7b checklist audit costs one extra model call per memo, so a
+        // host paying per token can switch it off; on is the default.
+        ...(auditEnabled(dependencies.env ?? process.env) ? {} : { audit: false }),
         ...(dependencies.kernel === undefined ? {} : { kernel: dependencies.kernel }),
       }
       result = await (dependencies.pipeline ?? runPipeline)(options)
@@ -394,3 +398,4 @@ function send(
 function humanError(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
+

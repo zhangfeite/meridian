@@ -1,0 +1,172 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "48.14%",
+   "canonical": {
+    "value": "0.4814",
+    "unit": "ratio"
+   },
+   "source_quote": "扣除非经常性损益后归属于母公司股东的净利润较上年同期下降 48.14%"
+  },
+  {
+   "id": "N2",
+   "verbatim": "9,153.71 万元",
+   "canonical": {
+    "value": "91537100",
+    "unit": "CNY"
+   },
+   "source_quote": "归属于上市公司股东的净利润 9,153.71 16,172.07 13,818.27"
+  },
+  {
+   "id": "N3",
+   "verbatim": "7,502.39 万元",
+   "canonical": {
+    "value": "75023900",
+    "unit": "CNY"
+   },
+   "source_quote": "14,467.91 万元和 7,502.39 万元"
+  },
+  {
+   "id": "N4",
+   "verbatim": "约 43.4%",
+   "canonical": {
+    "value": "0.4340",
+    "unit": "ratio",
+    "derived": true,
+    "formula": "1-9153.71/16172.07"
+   },
+   "source_quote": "(derived) 归母口径 1 − 9,153.71/16,172.07"
+  },
+  {
+   "id": "N5",
+   "verbatim": "71.14%",
+   "canonical": {
+    "value": "0.7114",
+    "unit": "ratio"
+   },
+   "source_quote": "最近三年累计现金分红金额占最近三年实现的年均可分配利润的比例 71.14%"
+  },
+  {
+   "id": "N6",
+   "verbatim": "22.75%",
+   "canonical": {
+    "value": "0.2275",
+    "unit": "ratio"
+   },
+   "source_quote": "22.75% 24.73% 23.16%"
+  },
+  {
+   "id": "N7",
+   "verbatim": "2,082.44 万元",
+   "canonical": {
+    "value": "20824400",
+    "unit": "CNY"
+   },
+   "source_quote": "现金红利 2,082.44 万元（含税）"
+  },
+  {
+   "id": "N8",
+   "verbatim": "10,412.182 万股",
+   "canonical": {
+    "value": "104121820",
+    "unit": "shares"
+   },
+   "source_quote": "以截至 2025 年 12 月 31 日总股本 10,412.182 万股"
+  },
+  {
+   "id": "N9",
+   "verbatim": "-530.95 万元",
+   "canonical": {
+    "value": "-5309500",
+    "unit": "CNY"
+   },
+   "source_quote": "2026 年一季度公司汇兑损益为-530.95 万元"
+  },
+  {
+   "id": "N10",
+   "verbatim": "-95.91 万元",
+   "canonical": {
+    "value": "-959100",
+    "unit": "CNY"
+   },
+   "source_quote": "-195.46 万元和-95.91 万元"
+  },
+  {
+   "id": "N11",
+   "verbatim": "25.25%",
+   "canonical": {
+    "value": "0.2525",
+    "unit": "ratio"
+   },
+   "source_quote": "30.56%和 25.25%"
+  },
+  {
+   "id": "N12",
+   "verbatim": "2,400.00 万股",
+   "canonical": {
+    "value": "24000000",
+    "unit": "shares"
+   },
+   "source_quote": "每 10 股转增 3 股，合计转增 2,400.00 万股"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "The 48.14% decline is the EX-NON-RECURRING basis (7,502.39 vs 14,467.91 万元); the attributable basis fell from 16,172.07 to 9,153.71 万元, ~43.4% (derived) - two different declines, not interchangeable",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "No contradiction: 71.14% is cumulative three-year dividends (9,282.44 万元) over three-year AVERAGE distributable profit (13,048.02 万元); 22.75%/24.73%/23.16% are single-year payout ratios",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "The 2025 dividend base is 10,412.182 万股 (2.00 yuan per 10 shares, 2,082.44 万元 total); 2023/2024 both used 8,000.00 万股 - the 2024 plan added a 3-for-10 capitalization (2,400.00 万股), so per-share figures are not comparable across years",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "FX gains/losses were -352.56/-195.46/-95.91 万元 for 2023-2025, while Q1 2026 alone was -530.95 万元 - a single quarter exceeding the prior full year (period-alignment point)",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "Issuer and bond both rated AA- (Dongfang Jincheng, stable outlook), with at least one follow-up rating per year during the bond's life; unsecured",
+   "required": true
+  },
+  {
+   "id": "K6",
+   "point": "2025 gross margin 25.25%; the near-identical 25.30% appears twice with different meanings (Q1 2026 gross margin / inventory share of current assets) - three numbers, three bases",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "扣除非经常性损益后归属于母公司股东的净利润较上年同期下降 48.14%"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "最近三年累计现金分红金额占最近三年实现的年均可分配利润的比例 71.14%"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "以截至 2025 年 12 月 31 日总股本 10,412.182 万股"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "2026 年一季度公司汇兑损益为-530.95 万元"
+  },
+  {
+   "point_id": "K5",
+   "evidence_quote": "丰茂股份主体信用等级为 AA-，评级展望为稳定，本次可转换公司债券信用等级为 AA-"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "Hundred-page needle-finding plus coexisting bases: the 48.14% is ex-non-recurring - pairing it with attributable figures loses points, and the attributable decline must be computed (derived N4, 0.5% tolerance). 71.14% (cumulative/average) vs 22.75% (single-year) coexist without contradiction - calling it inconsistent is wrong. The dividend base doubled context: 8,000.00 → 10,412.182 万股 via the 3-for-10 capitalization. Q1 FX loss exceeds the prior full year - 'improving in Q1' is a direction error. 25.25/25.30/25.30 are three numbers with three meanings. Evidence quotes remain in the original Chinese."
+}
