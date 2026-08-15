@@ -91,6 +91,14 @@ export interface FactClaim extends ClaimBase {
    * carry no evidence, and its text must say so plainly.
    */
   unverifiable?: boolean
+  /**
+   * A *residual* non-answer: the sources settled the rule, the range or the
+   * procedure, and left the specific quantity undetermined. It coexists with
+   * verified claims about the same sub-question, which is the whole point —
+   * 「发行价格不低于均价的 80%」 and 「每股价格尚未确定」 are both true, and a
+   * memo that publishes only the first has answered a question nobody asked.
+   */
+  residual?: boolean
 }
 
 /** Somebody else's opinion, with that somebody named. */
@@ -296,9 +304,16 @@ export interface AuditRecord {
     /**
      * A gap sentence withdrawn before publication because the same sub-question
      * also carries a verified claim. An absence enumeration may only cover
-     * sub-questions that are still gaps at the end of gap review.
+     * sub-questions that are still gaps at the end of gap review — residual
+     * non-answers (see {@link FactClaim.residual}) are exempt: coexisting with
+     * an answer is what they are for.
      */
     | 'gap_withdrawn_answered'
+    /**
+     * A sub-question answered in its general form only: the rule, range or
+     * procedure is disclosed and the specific quantity is not.
+     */
+    | 'residual_gap_recorded'
     /**
      * A source that was read only in part: a reply truncated, a call that
      * failed, or a document longer than the reading budget. Distinguishes

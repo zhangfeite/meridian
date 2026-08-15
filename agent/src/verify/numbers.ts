@@ -66,7 +66,37 @@ const UNITS: [string, string, bigint][] = [
   ['rmb', 'CNY', 1n],
   ['usd', 'USD', 1n],
   ['hkd', 'HKD', 1n],
+  // Bare currency words, last so the scaled forms above win the alternation. An
+  // English claim about a Chinese filing writes 「7,654,321 yuan」 where the
+  // filing prints the same digits followed by 元; without these the claim's
+  // figure is a bare scalar and its unit is lost before binding ever runs.
+  ['yuan', 'CNY', 1n],
+  ['renminbi', 'CNY', 1n],
+  ['hong kong dollars', 'HKD', 1n],
+  ['hong kong dollar', 'HKD', 1n],
+  ['us dollars', 'USD', 1n],
+  ['us dollar', 'USD', 1n],
+  ['dollars', 'USD', 1n],
+  ['dollar', 'USD', 1n],
 ]
+
+/**
+ * Currency written *before* the figure, as English does: `CNY 7,654,321`,
+ * `RMB 42 million`, `HK$3.14`. The suffix table above cannot see these, and a
+ * prefixed amount that falls through to the scalar pattern loses its unit.
+ */
+const EN_PREFIX_UNITS: [string, string][] = [
+  ['cny', 'CNY'],
+  ['rmb', 'CNY'],
+  ['usd', 'USD'],
+  ['hkd', 'HKD'],
+  ['us\\$', 'USD'],
+  ['hk\\$', 'HKD'],
+]
+const EN_PREFIX_AMOUNT_RE = new RegExp(
+  String.raw`\b(${EN_PREFIX_UNITS.map(([label]) => label).join('|')})\s*([-+]?\d[\d,]*(?:\.\d+)?)\s*(billion|million|thousand)?\b`,
+  'gi',
+)
 
 const UNIT_ALTERNATION = UNITS.map(([label]) => label.replace(/ /g, '\\s+')).join('|')
 
@@ -90,7 +120,15 @@ const UNIT_PRICE_RE =
   /(?<![\d.])(?<number>[-+]?\d[\d,]*(?:\.\d+)?)\s*(?<currency>元|人民币|港元|美元)\s*\/\s*(?:股|份)/g
 
 const PERCENT_RE = /(?<![\w.])[-+]?\d[\d,]*(?:\.\d+)?\s*(?:%|％|percent|百分点)/gi
-const SCALAR_RE = /(?<![\d.])[-+]?\d[\d,]*(?:\.\d+)?(?:\s*倍)?(?![\d.])/g
+/**
+ * A bare figure.
+ *
+ * The trailing guard rejects a *decimal continuation*, not a full stop: with
+ * `(?![\d.])`, an English sentence ending in 「…is 7,654,321.」 backtracked to
+ * `7,654` — a token that is nowhere in the filing, so the sentence carrying the
+ * real figure was rejected as unsourced.
+ */
+const SCALAR_RE = /(?<![\d.])[-+]?\d[\d,]*(?:\.\d+)?(?:\s*倍)?(?!\.?\d)/g
 
 const PREFIX_SCALES: Record<string, bigint> = {
   '': 1n,
@@ -187,6 +225,26 @@ export function extractNumbers(original: string): NumberToken[] {
         end: match.index + match[0].length,
       })
     }
+  }
+
+  for (const match of text.matchAll(EN_PREFIX_AMOUNT_RE)) {
+    const parsed = parseDecimal(match[2] ?? '')
+    if (!parsed) continue
+    const multiplier = PREFIX_SCALES[(match[3] ?? '').toLowerCase()] ?? 1n
+    const currency = EN_PREFIX_UNITS.find(
+      ([label]) => label.replace(/\\/g, '') === (match[1] ?? '').toLowerCase(),
+    )?.[1]
+    if (!currency) continue
+    claim({
+      raw: original.slice(match.index, match.index + match[0].length),
+      kind: 'amount',
+      value: toString(scaleBy(parsed, multiplier)),
+      unit: currency,
+      numericRaw: toString(parsed),
+      multiplier: multiplier.toString(),
+      start: match.index,
+      end: match.index + match[0].length,
+    })
   }
 
   for (const match of text.matchAll(PREFIX_AMOUNT_RE)) {
@@ -341,6 +399,20 @@ export function matchesToken(
   hints: UnitHint[] = [],
 ): { basis: 'verbatim' } | { basis: 'declared_unit'; hint: UnitHint } | undefined {
   if (sameQuantityTokens(candidate, wanted)) return { basis: 'verbatim' }
+
+  // A claim that writes the digits without a unit is justified by a quote that
+  // prints the same digits with one: a filing reading 「…7,654,321元」 answers
+  // "7,654,321" in an English sentence. Nothing is smuggled in — the claim
+  // asserts no unit, so there is no unit to be wrong about. The comparison is
+  // against the *printed* figure, not the scaled value: 「2,468.13万元」
+  // justifies 2,468.13 and not 24,681,300, because only the first is on the page.
+  if (wanted.kind === 'scalar' && candidate.kind === 'amount') {
+    const printed = candidate.numericRaw
+    const left = printed === undefined ? undefined : parseDecimal(printed)
+    const right = parseDecimal(wanted.value)
+    if (left && right && equals(left, right)) return { basis: 'verbatim' }
+  }
+
   if (wanted.kind !== 'amount' || wanted.numericRaw === undefined) return undefined
   const figure = candidate.kind === 'amount' ? candidate.numericRaw : candidate.value
   if (figure === undefined) return undefined

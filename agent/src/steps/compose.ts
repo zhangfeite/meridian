@@ -75,6 +75,11 @@ export interface ComposeInput {
    * memo has to say the narrower of the two.
    */
   rejected?: { questionId?: string }[]
+  /**
+   * Sub-questions step 4d judged answered in their general form only: the rule,
+   * range or procedure is disclosed and the specific figure is not.
+   */
+  residuals?: { questionId: string; missing: string }[]
 }
 
 /** Composition output: the artifact and its rendering. */
@@ -99,6 +104,11 @@ const STRINGS: Record<
      * the announcement's first sentence.
      */
     unlocatedSuffix: (question: string, reason: string) => string
+    /**
+     * A sub-question whose rule the sources settled and whose value they did
+     * not. Sits beside the answer it qualifies, not instead of it.
+     */
+    residualSuffix: (question: string) => string
     noSources: string
     advisoryRefusal: string
   }
@@ -108,6 +118,8 @@ const STRINGS: Record<
       `关于「${question}」:所提供的原始文件中没有相应披露${reason ? `(${reason})` : ''},无法核实。`,
     unlocatedSuffix: (question, reason) =>
       `关于「${question}」:本备忘录未能在所提供的原始文件中找到相应内容${reason ? `(${reason})` : ''},无法核实。`,
+    residualSuffix: (question) =>
+      `关于「${question}」:原始文件只给出了规则、区间或程序,具体数值尚未确定,无法核实。`,
     noSources: '本次运行未能取得任何原始文件,以下内容无法核实。',
     advisoryRefusal:
       '本备忘录只整理已公开披露的事实与其出处,不能替你做投资决定——那取决于你自己的风险承受能力、期限与目标,也取决于原始文件尚未披露的信息。',
@@ -117,6 +129,8 @@ const STRINGS: Record<
       `關於「${question}」:所提供的原始文件中沒有相應揭露${reason ? `(${reason})` : ''},無法核實。`,
     unlocatedSuffix: (question, reason) =>
       `關於「${question}」:本備忘錄未能在所提供的原始文件中找到相應內容${reason ? `(${reason})` : ''},無法核實。`,
+    residualSuffix: (question) =>
+      `關於「${question}」:原始文件只給出了規則、區間或程序,具體數值尚未確定,無法核實。`,
     noSources: '本次執行未能取得任何原始文件,以下內容無法核實。',
     advisoryRefusal:
       '本備忘錄只整理已公開揭露的事實與其出處,不能替你做投資決定——那取決於你自己的風險承受能力、期限與目標,也取決於原始文件尚未揭露的資訊。',
@@ -126,6 +140,8 @@ const STRINGS: Record<
       `On "${question}": the primary sources provided do not disclose this${reason ? ` (${reason})` : ''}, so it cannot be verified.`,
     unlocatedSuffix: (question, reason) =>
       `On "${question}": this memo could not locate an answer in the primary sources provided${reason ? ` (${reason})` : ''}, so it cannot be verified.`,
+    residualSuffix: (question) =>
+      `On "${question}": the primary sources state only the rule, range or procedure — the specific figure has not yet been determined, so it cannot be verified.`,
     noSources: 'This run retrieved no primary sources, so nothing below could be verified.',
     advisoryRefusal:
       'This memo organizes disclosed facts and their sources. It cannot make an investment decision for you — that depends on your own risk tolerance, horizon, and objectives, and on information the filings do not disclose.',
@@ -202,6 +218,9 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
   const sections: MemoSection[] = []
   const openQuestions: string[] = []
   const nextGapClaimId = idAllocator('U')
+  const residualByQuestion = new Map(
+    (input.residuals ?? []).map((item) => [item.questionId, item.missing]),
+  )
   // claimId → evidence id of the passage that explains that claim's absence.
   const absenceSupport = new Map<string, string>()
 
@@ -227,10 +246,41 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
           }
         }
       }
+      // Answered in general, open in particular. The residual sentence goes in
+      // beside the answers, through the same citation path as any other gap: a
+      // filing that says the price will be set after registration is exactly
+      // the evidence a reader wants next to "not yet determined".
+      const residualIds: string[] = []
+      if (residualByQuestion.has(question.id)) {
+        const support = selectSupportingPassage(input.documents, question.text)
+        const evidence = support ? locateSupport(support, input.documents, input.pool) : undefined
+        const residualId = nextGapClaimId()
+        claims.push({
+          id: residualId,
+          type: 'fact',
+          text: strings.residualSuffix(quotable(question.text)),
+          questionId: question.id,
+          evidenceIds: evidence ? [evidence.id] : [],
+          numbers: [],
+          unverifiable: true,
+          residual: true,
+        })
+        if (evidence) absenceSupport.set(residualId, evidence.id)
+        residualIds.push(residualId)
+        openQuestions.push(safeHeading(question.text, input.lang))
+        audit.push({
+          step: 'compose',
+          action: 'residual_gap_recorded',
+          claimId: residualId,
+          detail: `${question.id} is answered in its general form only; still undetermined: ${
+            residualByQuestion.get(question.id) || 'the specific figure'
+          }`,
+        })
+      }
       sections.push({
         questionId: question.id,
         heading: safeHeading(question.text, input.lang),
-        claimIds: owned.map((claim) => claim.id),
+        claimIds: [...owned.map((claim) => claim.id), ...residualIds],
       })
       continue
     }
@@ -305,7 +355,15 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
     claims.filter((claim) => !(claim.type === 'fact' && claim.unverifiable)).map((claim) => claim.questionId),
   )
   const contradictoryGaps = claims.filter(
-    (claim) => claim.type === 'fact' && claim.unverifiable && answeredQuestions.has(claim.questionId),
+    (claim) =>
+      claim.type === 'fact' &&
+      claim.unverifiable &&
+      // A residual is *meant* to sit next to an answer: it says the rule is
+      // settled and the figure is not, which is one statement in two halves.
+      // The disjointness rule is about the other kind — a blanket "not
+      // disclosed" over a question the memo answers.
+      !claim.residual &&
+      answeredQuestions.has(claim.questionId),
   )
   for (const gap of contradictoryGaps) {
     audit.push({

@@ -358,6 +358,22 @@ class ScoringTests(unittest.TestCase):
         ]:
             self.assertTrue(_ABSENCE_RE.search(phrase), msg=phrase)
 
+    def test_sentence_final_period_does_not_truncate_number(self):
+        gold = [{"id": "N1", "verbatim": "1,234,567元", "canonical": {"value": "1234567", "unit": "CNY"},
+                 "source_quote": "确认的货款1,234,567元"}]
+        result = score_number_fidelity(
+            "The claim is CNY 1,234,567. It is confirmed by the ruling.",
+            gold, source_text="确认的货款1,234,567元",
+        )
+        self.assertEqual(result["score"], 1.0, msg=json.dumps(result, ensure_ascii=False, default=str)[:400])
+
+    def test_english_currency_forms_parse_as_amounts(self):
+        from meridian_bench.scoring.numbers import extract_numbers
+        tokens = extract_numbers("The cap is 360,000.00 万元, i.e. HKD 5,000 and 1,500 yuan.")
+        kinds = {(t.raw.strip(), t.kind, t.unit) for t in tokens}
+        self.assertIn(("HKD 5,000", "amount", "HKD"), kinds)
+        self.assertTrue(any(k[1] == "amount" and k[2] == "CNY" and "yuan" in k[0] for k in kinds), kinds)
+
     def test_mb_t04_right_quote_wrong_source_file_loses_k2_citation(self):
         trap = json.loads((FIXTURES_DIR / "MB-T04-planted.json").read_text(encoding="utf-8"))
         task = self.tasks[trap["source_task"]]

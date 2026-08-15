@@ -91,6 +91,8 @@ test('the happy path publishes verified claims and a pipeline-computed ratio', a
       gaps: [],
     }),
     JSON.stringify({ claims: [], gaps: [] }),
+    // Step 4d: every answered sub-question is settled, not merely answered.
+    JSON.stringify({ results: [] }),
     JSON.stringify({
       derivations: [
         {
@@ -135,9 +137,11 @@ test('the happy path publishes verified claims and a pipeline-computed ratio', a
     lang: 'zh-CN',
   })
 
+  // Three calls inside step 4: extraction, the repair round, and the residual
+  // review that asks whether an answered sub-question is actually settled.
   assert.deepEqual(
     result.trace.modelCalls.map((call) => call.step),
-    ['intent', 'plan', 'extract', 'extract', 'metrics', 'counter', 'compose'],
+    ['intent', 'plan', 'extract', 'extract', 'extract', 'metrics', 'counter', 'compose'],
   )
 
   // The fabrication never reaches the memo, and the rejection is recorded.
@@ -205,6 +209,8 @@ test('a question the filing does not answer is answered "无法核实", not inve
         { question_id: 'Q2', verdict: 'absent', claims: [], reason: '公告未对下半年计提作出预计' },
       ],
     }),
+    // Step 4d: every answered sub-question is settled, not merely answered.
+    JSON.stringify({ results: [] }),
     NO_POLISH,
   ])
 
@@ -611,6 +617,8 @@ test('an inference with no counter-evidence but a verifiable factual core is dow
       ],
       gaps: [],
     }),
+    // Step 4d: the sub-question is settled, so no residual sentence.
+    JSON.stringify({ results: [] }),
     JSON.stringify({ derivations: [], claims: [] }),
     JSON.stringify({
       results: [

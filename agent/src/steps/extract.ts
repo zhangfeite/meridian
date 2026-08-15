@@ -37,14 +37,14 @@ import type {
 import { EvidencePool } from '../evidence-pool.ts'
 import { idAllocator } from '../ids.ts'
 import { readJsonReply, type ModelClient } from '../model.ts'
-import { extractionPrompt, gapChallengePrompt, repairPrompt } from '../prompts.ts'
+import { extractionPrompt, gapChallengePrompt, repairPrompt, residualReviewPrompt } from '../prompts.ts'
 import type { SourceDocument } from '../source/types.ts'
 import type { ExtractionResult, Intent, RejectedClaim } from '../types.ts'
 import { bindNumbers } from '../verify/bind.ts'
 import { scanCompliance } from '../verify/compliance.ts'
 import { locateQuote } from '../verify/evidence.ts'
 import type { Skill } from '../skills/types.ts'
-import { detectUnitHints } from '../verify/numbers.ts'
+import { detectUnitHints, extractNumbers } from '../verify/numbers.ts'
 import { foldScript } from '../verify/script.ts'
 import { candidatePassages, splitPassages } from '../verify/text.ts'
 import { asWindowView, boundDocuments, selectWindows, windowDocument } from '../verify/window.ts'
@@ -59,6 +59,10 @@ interface RawClaim {
   assumptions?: string[]
   confidence?: string
   triggers?: string[]
+}
+
+interface ResidualReviewReply {
+  results?: { question_id?: string; verdict?: string; missing?: string }[]
 }
 
 interface GapReviewReply {
@@ -290,12 +294,41 @@ export async function extractAndVerify(
   const answered = new Set(claims.map((claim) => claim.questionId))
   const survivingGaps = gaps.filter((gap) => !answered.has(gap.questionId))
 
+  // Step 4d. Answered is not the same as settled: a filing that fixes the
+  // pricing basis and leaves the price open has answered the rule and nothing
+  // else. Without this the memo publishes the rule and drops the finding.
+  const residuals: { questionId: string; missing: string }[] = []
+  const settleable = intent.subQuestions
+    .map((question) => ({
+      questionId: question.id,
+      question: question.text,
+      answers: claims
+        .filter((claim) => claim.questionId === question.id && !(claim.type === 'fact' && claim.unverifiable))
+        .map((claim) => claim.text),
+    }))
+    .filter((item) => item.answers.length > 0)
+  if (settleable.length > 0) {
+    const reviewed = await askForJson<ResidualReviewReply>(
+      model,
+      residualReviewPrompt(settleable, lang),
+      '残余复核',
+      notes,
+    )
+    for (const result of reviewed?.results ?? []) {
+      const questionId = (result?.question_id ?? '').trim()
+      if (result?.verdict !== 'residual') continue
+      if (!settleable.some((item) => item.questionId === questionId)) continue
+      residuals.push({ questionId, missing: (result.missing ?? '').trim() })
+    }
+  }
+
   return {
     claims,
     evidence: pool.items,
     rejected,
     gaps: survivingGaps,
     gapsClosed: closed,
+    ...(residuals.length > 0 ? { residuals } : {}),
     ...(notes.length > 0 ? { notes } : {}),
   }
 }
@@ -384,11 +417,29 @@ function verifyBatch(
     if (bound.unbound.length > 0) {
       rejected.push({
         text,
+        // A transliterated case number shatters into three unbound integers,
+        // none of which is in the filing, and the figure standing next to it
+        // dies with them. Naming the cause here is what lets the repair round
+        // fix it in one move instead of retyping the same sentence.
         reason: `these numbers do not appear in the cited quotes: ${bound.unbound
           .map((token) => token.raw)
-          .join(', ')}`,
+          .join(', ')}${transliteratedIdentifier(text) ? IDENTIFIER_HINT : ''}`,
         questionId,
         unboundNumbers: bound.unbound.map((token) => token.raw),
+      })
+      continue
+    }
+
+    // A unit is part of the figure. When the filing prints 「…元」 and the claim
+    // writes "yuan" or "CNY", the sentence carries a figure that is not on the
+    // page — the reader cannot match it back, and neither can any checker. The
+    // prompt asks for this; the verifier is what makes it true.
+    const translated = translatedUnit(text, evidence)
+    if (translated) {
+      rejected.push({
+        text,
+        reason: `unit was translated: the filing prints 「${translated.printed}」 and this claim writes 「${translated.written}」. Keep the source's unit characters, whatever language the sentence is in.`,
+        questionId,
       })
       continue
     }
@@ -457,6 +508,56 @@ function verifyBatch(
 
   return { accepted, rejected }
 }
+
+/** Currency spelled in Latin letters, as an English sentence tends to. */
+const LATIN_UNIT = /(?:cny|rmb|yuan|renminbi|hkd|usd|dollars?|hk\$|us\$|[$¥])/i
+/** Currency as the filing prints it. */
+const CJK_UNIT = /[元股份]|人民币|人民幣|港元|美元/
+
+/**
+ * Find a figure whose unit the claim translated away from the source.
+ *
+ * @param text - the claim's text.
+ * @param evidence - the quotes it cites.
+ * @returns the offending pair, or undefined when every unit survived intact.
+ */
+function translatedUnit(
+  text: string,
+  evidence: EvidenceRef[],
+): { written: string; printed: string } | undefined {
+  const claimed = extractNumbers(text).filter(
+    (token) => token.kind === 'amount' && LATIN_UNIT.test(token.raw) && !CJK_UNIT.test(token.raw),
+  )
+  if (claimed.length === 0) return undefined
+  for (const token of claimed) {
+    for (const item of evidence) {
+      for (const candidate of extractNumbers(item.quote)) {
+        if (candidate.kind !== 'amount' || !CJK_UNIT.test(candidate.raw)) continue
+        if (candidate.value !== token.value && candidate.numericRaw !== token.numericRaw) continue
+        return { written: token.raw.trim(), printed: candidate.raw.trim() }
+      }
+    }
+  }
+  return undefined
+}
+
+/**
+ * Does this claim spell a Chinese identifier out in Latin letters?
+ *
+ * A case number like 「（YYYY）省NN…N号」 is a name. Rendered as
+ * "(YYYY) Prov NN ... No. N" it is not in the document at all, and the number
+ * binder sees three loose integers instead of one identifier.
+ *
+ * @param text - the claim's text.
+ * @returns true when it looks transliterated.
+ */
+function transliteratedIdentifier(text: string): boolean {
+  return /[（(]\s*(?:19|20)\d{2}\s*[）)]\s*[A-Za-z]/.test(text)
+}
+
+/** Appended to a rejection so the repair round knows what to change. */
+const IDENTIFIER_HINT =
+  '。注意:案号、文号、文书名是标识符,必须按原文字形整段引用(不得音译或转写),否则它在文件里不存在,连同旁边的金额一起被拒。'
 
 /**
  * Passages that contain a figure verbatim.

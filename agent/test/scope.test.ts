@@ -28,6 +28,7 @@ const FILING = [
   '公司于 2026 年 8 月 13 日收到浙江省宁波市中级人民法院送达的《通知书》。',
   '《通知书》仅表明法院已立案审查，截至本公告披露日，公司尚未收到法院决定对公司进行预重整的文件。',
   '公司债权人上海某贸易有限公司以公司不能清偿到期债务为由，向法院申请对公司进行重整。',
+  '本次发行价格尚未确定，最终发行价格由公司与主承销商在监管同意后协商确定。',
 ].join('\n')
 
 const documents: SourceDocument[] = [
@@ -49,9 +50,11 @@ async function composeMemo(
   evidence: EvidenceRef[],
   lang: MeridianLang = 'zh-CN',
   rejected: { questionId?: string }[] = [],
+  residuals: { questionId: string; missing: string }[] = [],
 ) {
   return compose({
     rejected,
+    residuals,
     intent: intent(questions, lang),
     retrieval: { documents, failures: [], mode: 'direct' },
     documents,
@@ -238,4 +241,99 @@ test('a question whose claims were refused is not reported as a silent filing', 
   const record = memo.audit.find((item) => item.action === 'gap_unevidenced')
   assert.ok(record)
   assert.match(record.detail, /refused/)
+})
+
+test('a rule without its figure keeps the residual sentence beside the answer', async () => {
+  // 「规则已定,数值未定」, the shape MB-009 is built around. Publishing the
+  // pricing rule and stopping there answers a question nobody asked: the reader
+  // wants to know the price, and the finding is that it does not exist yet.
+  const quote = '公司债权人上海某贸易有限公司以公司不能清偿到期债务为由，向法院申请对公司进行重整。'
+  const { memo, markdown } = await composeMemo(
+    [{ id: 'Q1', text: '本次发行价格是每股多少元?' }],
+    [fact('C-A', 'Q1', '发行价格不低于定价基准日前二十个交易日均价的百分之八十。', ['E1'])],
+    [evidence('E1', quote)],
+    'zh-CN',
+    [],
+    [{ questionId: 'Q1', missing: '每股发行价格' }],
+  )
+
+  // Both halves are published, in one section, in this order.
+  const section = memo.sections.find((item) => item.questionId === 'Q1')
+  assert.equal(section?.claimIds.length, 2)
+  assert.equal(section?.claimIds[0], 'C-A')
+  const residual = memo.claims.find((claim): claim is FactClaim => claim.type === 'fact' && Boolean(claim.residual))
+  assert.ok(residual, 'the residual sentence must exist')
+  assert.equal(residual.questionId, 'Q1')
+  assert.equal(residual.unverifiable, true)
+  assert.match(residual.text, /具体数值尚未确定/)
+  assert.ok(markdown.includes('百分之八十'), 'the rule survives')
+  assert.ok(markdown.includes('尚未确定'), 'and so does the residual')
+
+  // It is a finding, so it is cited like one, and it is advertised as open.
+  assert.equal(residual.evidenceIds.length, 1)
+  assert.equal(memo.openQuestions.length, 1)
+  assert.ok(memo.audit.some((record) => record.action === 'residual_gap_recorded'))
+})
+
+test('the disjointness rule does not eat a residual', async () => {
+  // M8 withdraws a blanket "not disclosed" that shares a sub-question with a
+  // verified claim. A residual shares one *by design* — the two rules have to
+  // coexist, or this package would delete its own output.
+  const quote = '公司债权人上海某贸易有限公司以公司不能清偿到期债务为由，向法院申请对公司进行重整。'
+  const blanket = gapClaim('U-Z', 'Q1', '关于「本次发行价格是每股多少元」:所提供的原始文件中没有相应披露,无法核实。')
+  const { memo } = await composeMemo(
+    [{ id: 'Q1', text: '本次发行价格是每股多少元?' }],
+    [fact('C-A', 'Q1', '发行价格不低于定价基准日前二十个交易日均价的百分之八十。', ['E1']), blanket],
+    [evidence('E1', quote)],
+    'zh-CN',
+    [],
+    [{ questionId: 'Q1', missing: '每股发行价格' }],
+  )
+
+  assert.equal(memo.claims.some((claim) => claim.id === 'U-Z'), false, 'the blanket claim still goes')
+  assert.equal(
+    memo.claims.some((claim) => claim.type === 'fact' && claim.residual),
+    true,
+    'the residual stays',
+  )
+  assert.ok(memo.audit.some((record) => record.action === 'gap_withdrawn_answered'))
+  assert.ok(memo.audit.some((record) => record.action === 'residual_gap_recorded'))
+})
+
+test('a settled sub-question gets no residual sentence', async () => {
+  const quote = '公司债权人上海某贸易有限公司以公司不能清偿到期债务为由，向法院申请对公司进行重整。'
+  const { memo } = await composeMemo(
+    [{ id: 'Q1', text: '谁提出了重整申请?' }],
+    [fact('C-A', 'Q1', '重整申请由公司债权人上海某贸易有限公司提出。', ['E1'])],
+    [evidence('E1', quote)],
+  )
+  assert.equal(memo.claims.some((claim) => claim.type === 'fact' && claim.residual), false)
+  assert.equal(memo.openQuestions.length, 0)
+})
+
+test('the residual wording passes the gate in all three locales', async () => {
+  const quote = '公司债权人上海某贸易有限公司以公司不能清偿到期债务为由，向法院申请对公司进行重整。'
+  for (const lang of ['zh-CN', 'zh-TW', 'en'] as MeridianLang[]) {
+    const { memo } = await composeMemo(
+      [{ id: 'Q1', text: '本次发行价格是每股多少元?' }],
+      [fact('C-A', 'Q1', '发行价格不低于定价基准日前二十个交易日均价的百分之八十。', ['E1'])],
+      [evidence('E1', quote)],
+      lang,
+      [],
+      [{ questionId: 'Q1', missing: '每股发行价格' }],
+    )
+    const residual = memo.claims.find((claim): claim is FactClaim => claim.type === 'fact' && Boolean(claim.residual))
+    assert.ok(residual, `${lang}: residual missing`)
+    // The gate requires an unverifiable claim to say so in its own locale.
+    assert.deepEqual(
+      memo.gate.contractViolations.filter((item) => item.claimId === residual.id),
+      [],
+      `${lang}: ${residual.text}`,
+    )
+    assert.deepEqual(
+      memo.gate.numberViolations.filter((item) => item.display === residual.id),
+      [],
+      `${lang}: ${residual.text}`,
+    )
+  }
 })

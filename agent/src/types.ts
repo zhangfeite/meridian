@@ -86,6 +86,12 @@ export interface ExtractionResult {
    */
   gapsClosed: string[]
   /**
+   * Sub-questions answered only in their general form: the rule, range or
+   * procedure is disclosed and the specific quantity is not. Each one owes the
+   * reader a sentence saying so, next to the answer it qualifies.
+   */
+  residuals?: { questionId: string; missing: string }[]
+  /**
    * Disclosures about how completely the sources were read: a truncated reply,
    * a call that failed, a document longer than the reading budget. Every one of
    * them means the memo may be missing something the filing does say.

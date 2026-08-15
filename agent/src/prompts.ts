@@ -227,6 +227,10 @@ Hard requirements:
 - Keep the source's units exactly (万元 stays 万元; do not convert to 元 or 亿元). When a table
   declares its unit in a header line ("单位:人民币万元") and the rows carry bare figures, you may
   write that declared unit next to a figure quoted from that table — and no other unit.
+- A unit is part of the figure, not part of the sentence: 元, 万元, 股, % stay in the source's own
+  characters even when the sentence around them is English. Write "the claim amount is 1,234.56 元",
+  not "1,234.56 yuan" and not "CNY 1,234.56" — a translated unit is a figure the filing does not
+  contain, and it is the reader's only way to check the number against the page.
 - Do not compute percentages, sums, or growth rates here — a later step does arithmetic. Only state
   figures that are printed in the document.
 - Be thorough and granular. Each sub-question normally needs 2-5 claims, not one. Split a compound
@@ -311,6 +315,56 @@ ${rejected
 
 Source documents:
 ${documents.map((document) => `--- document_id: ${document.id} | ${document.title} ---\n${document.text}`).join('\n\n')}`,
+  }
+}
+
+/**
+ * Step 4d: does the answer answer the question, or only describe the rule?
+ *
+ * The most common shape in a filing is 「规则已定,数值未定」: the pricing basis
+ * is fixed and the price is not, the ceiling is stated and the actual amount is
+ * not. Extraction is good at the first half, and the pipeline used to treat a
+ * sub-question as settled the moment any claim landed on it — so the memo
+ * published the rule and never told the reader the number itself was still
+ * open. That is the finding a reader of a placement announcement most needs.
+ *
+ * The reviewer only judges. Nothing it writes reaches the page: the residual
+ * sentence is the pipeline's own fixed wording, and the sub-question it names is
+ * already published as that section's heading.
+ */
+export function residualReviewPrompt(
+  questions: { questionId: string; question: string; answers: string[] }[],
+  lang: MeridianLang,
+): Prompt {
+  return {
+    system: `${HOUSE_RULES}
+
+You are STEP 4d of 7: RESIDUAL REVIEW. Each sub-question below already has verified claims. Decide,
+for each, whether those claims state the specific thing the question asks for, or only the rule,
+range, condition or procedure around it.
+
+Output schema:
+{"results": [{"question_id": "Q4", "verdict": "settled"|"residual", "missing": string}]}
+
+How to decide:
+- "settled" — the claims state the very quantity, identity or date the question asks for. A question
+  asking 「多少元」 is settled by a figure in 元; 「哪家机构」 by a named institution.
+- "residual" — the claims describe how it will be determined, or bound it, without stating it: a
+  pricing basis instead of a price, a ceiling instead of the actual number, a range of eligible
+  investors instead of the final list, "to be determined after approval" instead of a date. Being
+  bounded is not being stated: 「不超过X」 answers 「上限是多少」 and does not answer 「实际是多少」.
+- Judge only against the claims shown. Do not consult the filings, and do not invent an answer.
+- "missing" names, in a few words, the specific thing still undetermined. It is used for the audit
+  trail only; nothing you write is published.
+${LANGUAGE_CLAUSE[lang]}`,
+    user: questions
+      .map(
+        (item) =>
+          `question_id: ${item.questionId}\nquestion: ${item.question}\nverified claims:\n${item.answers
+            .map((answer) => `  - ${answer}`)
+            .join('\n')}`,
+      )
+      .join('\n\n'),
   }
 }
 

@@ -26,7 +26,7 @@ _DOC_RE = re.compile(r"[（(]\s*\d{4}\s*[）)]\s*[^，。；;\n]{0,24}?\d+\s*[�
 _DATE_CN_RE = re.compile(r"(?<!\d)\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日")
 _DATE_ISO_RE = re.compile(r"(?<!\d)\d{4}[-/]\d{1,2}[-/]\d{1,2}(?!\d)")
 _PREFIX_AMOUNT_RE = re.compile(
-    r"(?P<prefix>[$¥￥])\s*(?P<number>[-+]?\d[\d,]*(?:\.\d+)?)\s*"
+    r"(?P<prefix>[$¥￥]|CNY|RMB|USD|HKD)\s*(?P<number>[-+]?\d[\d,]*(?:\.\d+)?)\s*"
     r"(?P<scale>billion|million|thousand)?",
     re.IGNORECASE,
 )
@@ -34,11 +34,11 @@ _AMOUNT_RE = re.compile(
     r"(?<![\d.])(?P<number>[-+]?\d[\d,]*(?:\.\d+)?)\s*"
     r"(?P<unit>万亿元|萬億元|亿元|億元|万元|萬元|千元|百万元|百萬元|元人民币|元人民幣|人民币|人民幣|元|万港元|萬港元|港元|"
     r"万美元|萬美元|美元|million\s+(?:yuan|rmb|cny|dollars?)|"
-    r"billion\s+(?:yuan|rmb|cny|dollars?)|(?:cny|rmb|usd|hkd))(?![a-zA-Z])",
+    r"billion\s+(?:yuan|rmb|cny|dollars?)|yuan|(?:cny|rmb|usd|hkd))(?![a-zA-Z])",
     re.IGNORECASE,
 )
 _PERCENT_RE = re.compile(r"(?<![\d.])[-+]?\d[\d,]*(?:\.\d+)?\s*(?:%|％|percent|百分[点點])", re.IGNORECASE)
-_SCALAR_RE = re.compile(r"(?<![\d.])[-+]?\d[\d,]*(?:\.\d+)?(?:\s*倍)?(?![\d.])")
+_SCALAR_RE = re.compile(r"(?<![\d.])[-+]?\d[\d,]*(?:\.\d+)?(?:\s*倍)?(?!\.?\d)")
 
 
 _UNIT_MAP: Dict[str, Tuple[str, Decimal]] = {
@@ -51,6 +51,7 @@ _UNIT_MAP: Dict[str, Tuple[str, Decimal]] = {
     "亿元": ("CNY", Decimal("100000000")),
     "万亿元": ("CNY", Decimal("1000000000000")),
     "cny": ("CNY", Decimal("1")),
+    "yuan": ("CNY", Decimal("1")),
     "rmb": ("CNY", Decimal("1")),
     "million yuan": ("CNY", Decimal("1000000")),
     "million rmb": ("CNY", Decimal("1000000")),
@@ -110,7 +111,8 @@ def _amount_token(raw: str, numeric: str, unit_label: str) -> NumberToken:
 def _prefix_amount_token(match: re.Match[str]) -> NumberToken:
     prefix = match.group("prefix")
     scale = (match.group("scale") or "").casefold()
-    unit = "USD" if prefix == "$" else "CNY"
+    prefix_key = prefix.upper()
+    unit = {"$": "USD", "USD": "USD", "HKD": "HKD"}.get(prefix_key, "CNY")
     multiplier = {"": Decimal("1"), "thousand": Decimal("1000"), "million": Decimal("1000000"), "billion": Decimal("1000000000")}[scale]
     numeric_value = _decimal(match.group("number"))
     return NumberToken(

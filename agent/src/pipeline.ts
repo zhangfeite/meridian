@@ -214,6 +214,9 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   for (const note of extraction.notes ?? []) {
     audit.push({ step: 'extract', action: 'source_read_partial', detail: note })
   }
+  // The residual records themselves are written by compose, where each one is
+  // tied to the claim it produced. Recording them here as well would double
+  // every entry in the audit trail.
   for (const questionId of extraction.gapsClosed) {
     audit.push({
       step: 'extract',
@@ -299,6 +302,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     },
     model,
     rejected: extraction.rejected,
+    ...(extraction.residuals ? { residuals: extraction.residuals } : {}),
     ...(choice ? { skill: choice.skill } : {}),
     ...(options.audit === undefined ? {} : { auditChecklist: options.audit }),
   })
