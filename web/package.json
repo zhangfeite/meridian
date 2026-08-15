@@ -1,0 +1,28 @@
+{
+  "name": "@meridian/web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Local, self-hosted browser client for verified Meridian research memos.",
+  "bin": {
+    "meridian-web": "bin/serve.ts"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "scripts": {
+    "start": "node bin/serve.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --test-concurrency=1 \"test/*.test.ts\"",
+    "check:dsh-boundary": "node ../adapter/scripts/check-dsh-boundary.mjs .."
+  },
+  "dependencies": {
+    "@meridian/agent": "file:../agent",
+    "pdf-parse": "^2.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "typescript": "^5.9.3"
+  }
+}

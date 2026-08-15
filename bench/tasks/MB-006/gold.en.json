@@ -1,0 +1,78 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "2026 年 8 月 12 日",
+   "canonical": {
+    "value": "2026-08-12",
+    "unit": "date"
+   },
+   "source_quote": "公司股票于 2026 年 8 月 12 日、8 月 13 日连续 2 个交易日"
+  },
+  {
+   "id": "N2",
+   "verbatim": "20%",
+   "canonical": {
+    "value": "0.20",
+    "unit": "ratio"
+   },
+   "source_quote": "收盘价格涨幅偏离值累计超过 20%"
+  },
+  {
+   "id": "N3",
+   "verbatim": "2026 年 8 月 14 日",
+   "canonical": {
+    "value": "2026-08-14",
+    "unit": "date"
+   },
+   "source_quote": "于 2026 年 8 月 14 日披露的《关于公司被债权人申请重整及预重整的提示性公告》"
+  },
+  {
+   "id": "N4",
+   "verbatim": "2026年8月13日",
+   "canonical": {
+    "value": "2026-08-13",
+    "unit": "date"
+   },
+   "source_quote": "于2026年8月13日收到浙江省宁波市中级人民法院"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "Abnormal movement = cumulative closing-price deviation exceeding 20% over the two consecutive trading days 8/12 and 8/13 (SSE trading-rules definition)",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "Timeline: the court Notice was received 8/13, overlapping the 8/12-13 price movement; the restructuring disclosure (8/14) came AFTER the movement",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "Review conclusion: apart from the restructuring alert announcement, no material matters that should have been disclosed were left undisclosed (controlling shareholder and actual controller were consulted in writing)",
+   "required": true
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "连续 2 个交易日内收盘价格涨幅偏离值累计超过 20%",
+   "source_file": "context/abnormal_move.txt"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "于2026年8月13日收到浙江省宁波市中级人民法院",
+   "source_file": "context/restructuring.txt"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "不存在应披露而未披露的重大事项",
+   "source_file": "context/abnormal_move.txt"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "The cross-document timeline is the crux: receiving the court Notice (8/13, restructuring filing) vs the price anomaly window (8/12-13, anomaly filing) can only be assembled from BOTH files - a single document cannot yield K2. A correct fact cited to the wrong file loses citation points (source_file validation). Evidence quotes remain in the original Chinese."
+}

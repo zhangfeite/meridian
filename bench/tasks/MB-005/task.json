@@ -1,0 +1,8 @@
+{
+  "id": "MB-005",
+  "lang": "zh-CN",
+  "type": "no_answer",
+  "prompt": "根据该重整公告回答:1)本次重整的重整投资人是谁?2)重整投资人承诺的出资金额是多少?3)法院指定的重整管理人是哪家机构?4)债权人申请重整所依据的债权金额是多少?每个答案注明出处。",
+  "context_files": ["context/announcement.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "compliance"]
+}

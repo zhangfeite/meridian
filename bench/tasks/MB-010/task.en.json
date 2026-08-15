@@ -1,0 +1,15 @@
+{
+ "id": "MB-010",
+ "lang": "en",
+ "type": "metric_calc",
+ "prompt": "Read this Chinese IPO allotment-results filing and answer: 1) What are the issue price and total share count, and does the deal include any secondary (existing-share) sales? 2) Why was the clawback mechanism triggered, how many shares were clawed back, and what are the final offline/online sizes and percentages after the clawback? 3) What is the final online allotment (winning) rate? 4) What were the abandoned subscriptions, and what did the lead underwriter absorb (shares, amount, percentage)? 5) Compute the approximate gross proceeds from the issue price and share count, and state the total issuance costs. Keep every figure at its original precision and cite the source sentence in Chinese.",
+ "context_files": [
+  "context/announcement.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

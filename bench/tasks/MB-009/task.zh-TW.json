@@ -1,0 +1,8 @@
+{
+  "id": "MB-009",
+  "lang": "zh-TW",
+  "type": "no_answer",
+  "prompt": "根據這三份定增相關公告回答:1)本次發行的發行價格是每股多少元?2)最終發行對象是哪些機構?3)本次實際發行的股份數量是多少股?4)本次募集資金總額上限是多少?每個答案註明出處。",
+  "context_files": ["context/board_resolution.txt", "context/plan_notice.txt", "context/no_meeting.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "compliance"]
+}

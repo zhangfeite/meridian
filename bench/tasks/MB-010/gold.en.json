@@ -1,0 +1,163 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "150.80 元/股",
+   "canonical": {
+    "value": "150.80",
+    "unit": "CNY"
+   },
+   "source_quote": "本次发行价格为 150.80 元/股"
+  },
+  {
+   "id": "N2",
+   "verbatim": "4,044.6434 万股",
+   "canonical": {
+    "value": "40446434",
+    "unit": "shares"
+   },
+   "source_quote": "发行数量为 4,044.6434 万股"
+  },
+  {
+   "id": "N3",
+   "verbatim": "约为 8,288.82 倍",
+   "canonical": {
+    "value": "8288.82",
+    "unit": "times"
+   },
+   "source_quote": "本次网上初步有效申购倍数约为 8,288.82 倍"
+  },
+  {
+   "id": "N4",
+   "verbatim": "323.6000 万股",
+   "canonical": {
+    "value": "3236000",
+    "unit": "shares"
+   },
+   "source_quote": "即 323.6000 万股）由网下回拨至网上"
+  },
+  {
+   "id": "N5",
+   "verbatim": "2,265.0148 万股",
+   "canonical": {
+    "value": "22650148",
+    "unit": "shares"
+   },
+   "source_quote": "网下最终发行数量为 2,265.0148 万股"
+  },
+  {
+   "id": "N6",
+   "verbatim": "970.7000 万股",
+   "canonical": {
+    "value": "9707000",
+    "unit": "shares"
+   },
+   "source_quote": "网上最终发行数量为 970.7000 万股"
+  },
+  {
+   "id": "N7",
+   "verbatim": "0.01809759%",
+   "canonical": {
+    "value": "0.0001809759",
+    "unit": "ratio"
+   },
+   "source_quote": "网上发行最终中签率为 0.01809759%"
+  },
+  {
+   "id": "N8",
+   "verbatim": "8,734 股",
+   "canonical": {
+    "value": "8734",
+    "unit": "shares"
+   },
+   "source_quote": "包销股份的数量为 8,734 股"
+  },
+  {
+   "id": "N9",
+   "verbatim": "1,317,087.20 元",
+   "canonical": {
+    "value": "1317087.20",
+    "unit": "CNY"
+   },
+   "source_quote": "包销金额为 1,317,087.20 元"
+  },
+  {
+   "id": "N10",
+   "verbatim": "约 60.99 亿元",
+   "canonical": {
+    "value": "6099322247.2",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "150.80*40446434"
+   },
+   "source_quote": "(derived) 发行价 150.80 元/股 × 发行数量 4,044.6434 万股"
+  },
+  {
+   "id": "N11",
+   "verbatim": "18,217.31 万元",
+   "canonical": {
+    "value": "182173100",
+    "unit": "CNY"
+   },
+   "source_quote": "本次发行费用合计 18,217.31 万元"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "Issue price 150.80 yuan/share; 4,044.6434 万股 (40,446,434 shares) issued, all new shares, no secondary sales",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "Clawback trigger: the preliminary online effective subscription multiple of ~8,288.82x exceeded 100x, so 10% of the post-strategic-placement offering (323.6000 万股) was clawed back from offline to online",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "After clawback: offline final 2,265.0148 万股 (~70%), online final 970.7000 万股 (~30%); final online winning rate 0.01809759%",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "All abandoned shares were absorbed by lead underwriter CITIC Securities: 8,734 shares / 1,317,087.20 yuan, ~0.03% of the post-strategic-placement offering; zero offline abandonment",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "Gross proceeds ≈ 6.099 billion yuan (150.80 × 40,446,434, derived); total issuance costs 18,217.31 万元",
+   "required": true
+  },
+  {
+   "id": "K6",
+   "point": "The 20.00% strategic placement includes the social security fund, industrial investors (DeepSeek, Tencent-affiliated Qishan) and the sponsor co-investment, with 12-36 month lockups",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "本次发行价格为 150.80 元/股"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "本次网上初步有效申购倍数约为 8,288.82 倍"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "网上发行最终中签率为 0.01809759%"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "包销股份的数量为 8,734 股"
+  },
+  {
+   "point_id": "K5",
+   "evidence_quote": "本次发行费用合计 18,217.31 万元"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "Precision is the crux: writing the 0.01809759% winning rate as 1.8% or 0.018 (ratio confusion), swapping the 8,288.82x multiple with the 10% clawback ratio, or botching the 万股-to-share conversion (4,044.6434 万股 = 40,446,434 shares) all lose points. N10 is the only derived number (0.5% tolerance; ~6.099B yuan / 6,099,322,247.2 yuan both acceptable). Abandoned shares (8,734) and underwritten shares are the same fact seen twice, not two numbers. Evidence quotes remain in the original Chinese."
+}

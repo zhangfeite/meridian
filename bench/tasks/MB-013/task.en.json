@@ -1,0 +1,15 @@
+{
+ "id": "MB-013",
+ "lang": "en",
+ "type": "metric_calc",
+ "prompt": "Read this excerpt from a Chinese placement prospectus' risk disclosures and answer: 1) What was ex-non-recurring net profit attributable to the parent in each reporting period, and under WHICH profit definition is the statement 'the company posted a loss in 2025' made? 2) What were the main causes of the 2025 loss, and what were staff costs and fixed-asset depreciation in 2025 - each with its year-on-year increase and growth rate? 3) What was Q1 2026 ex-non-recurring attributable net profit, its year-on-year growth, and how does that compare with the comparable-company average? 4) What were revenue growth rates for FY2025 and Q1 2026 - and can those two figures be directly compared? 5) What is the company's judgment on the nature of the loss, and is that judgment a fact or a company assertion? Keep original precision; cite the Chinese source for every number.",
+ "context_files": [
+  "context/prospectus_excerpt.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

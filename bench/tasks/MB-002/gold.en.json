@@ -1,0 +1,121 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "4435.88 万元",
+   "canonical": {
+    "value": "44358800",
+    "unit": "CNY"
+   },
+   "source_quote": "虚增营业收入 4435.88 万元,占当期营业收入 5.96%"
+  },
+  {
+   "id": "N2",
+   "verbatim": "5.96%",
+   "canonical": {
+    "value": "0.0596",
+    "unit": "ratio"
+   },
+   "source_quote": "占当期营业收入 5.96%"
+  },
+  {
+   "id": "N3",
+   "verbatim": "908.77 万元",
+   "canonical": {
+    "value": "9087700",
+    "unit": "CNY"
+   },
+   "source_quote": "虚增利润总额 908.77 万元"
+  },
+  {
+   "id": "N4",
+   "verbatim": "119.46%",
+   "canonical": {
+    "value": "1.1946",
+    "unit": "ratio"
+   },
+   "source_quote": "占当期利润总额 119.46%"
+  },
+  {
+   "id": "N5",
+   "verbatim": "2032.40 万元",
+   "canonical": {
+    "value": "20324000",
+    "unit": "CNY"
+   },
+   "source_quote": "虚增营业收入 2032.40 万元"
+  },
+  {
+   "id": "N6",
+   "verbatim": "6468.28 万元",
+   "canonical": {
+    "value": "64682800",
+    "unit": "CNY"
+   },
+   "source_quote": "虚增 2023 年度营业收入 6468.28 万元"
+  },
+  {
+   "id": "N7",
+   "verbatim": "157.11%",
+   "canonical": {
+    "value": "1.5711",
+    "unit": "ratio"
+   },
+   "source_quote": "占当期利润总额 157.11%"
+  },
+  {
+   "id": "N8",
+   "verbatim": "500 万元",
+   "canonical": {
+    "value": "5000000",
+    "unit": "CNY"
+   },
+   "source_quote": "警告,并处以 500 万元罚款"
+  },
+  {
+   "id": "N9",
+   "verbatim": "250 万元",
+   "canonical": {
+    "value": "2500000",
+    "unit": "CNY"
+   },
+   "source_quote": "警告,并处以 250 万元罚款"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "Two 2023 mechanisms: unrecorded customer returns (inflating revenue by 4435.88 万元 and total profit by 908.77 万元, 119.46% of period total profit) and unrecorded cash discounts (inflating revenue by 2032.40 万元); in total revenue was inflated by 6468.28 万元 and total profit by 157.11%",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "Company: warning plus a 5,000,000-yuan fine; responsible individuals fined in tiers",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "The violations do not trigger mandatory delisting for material illegality, but do trigger 'other risk alert' status - the stock is already under other risk alert (ST)",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "Timeline: case filing (2025-09-29) and the penalty notification (2026-06-09)",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K2",
+   "evidence_quote": "警告,并处以 500 万元罚款"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "风险警示"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "The >100% ratios (119.46%/157.11%) are the comprehension trap: an agent that 'corrects' them to 19.46% or questions the data loses points - when the inflated amount exceeds the period's total profit, the ratio naturally exceeds 100%. Evidence quotes remain in the original Chinese. Correction (2026-08-15): the original K1 'covering at least two years' was an authoring error - the filing covers only fiscal 2023 with two mechanisms; correctly stating 'only 2023' must score, and claiming multiple years is a fabrication."
+}

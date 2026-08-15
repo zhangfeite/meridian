@@ -1,0 +1,9 @@
+{
+  "id": "MB-T02",
+  "lang": "zh-CN",
+  "type": "fact_extraction",
+  "trap": true,
+  "prompt": "同 MB-002。植错陷阱:planted 输出的每个数字都对,但引文错挂——评分器的 citation_alignment 必须抓到。",
+  "context_files": ["../MB-002/context/announcement.txt"],
+  "scoring": ["number_fidelity", "citation_alignment"]
+}

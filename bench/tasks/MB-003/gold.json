@@ -1,0 +1,96 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "-10.84 万元",
+   "canonical": {
+    "value": "-108400",
+    "unit": "CNY"
+   },
+   "source_quote": "信用减值损失 -10.84 应收票据坏账准备"
+  },
+  {
+   "id": "N2",
+   "verbatim": "1,533.98 万元",
+   "canonical": {
+    "value": "15339800",
+    "unit": "CNY"
+   },
+   "source_quote": "信用减值损失 1,533.98 应收账款坏账准备"
+  },
+  {
+   "id": "N3",
+   "verbatim": "92.53 万元",
+   "canonical": {
+    "value": "925300",
+    "unit": "CNY"
+   },
+   "source_quote": "信用减值损失 92.53 其他应收款坏账准备"
+  },
+  {
+   "id": "N4",
+   "verbatim": "7,199.78 万元",
+   "canonical": {
+    "value": "71997800",
+    "unit": "CNY"
+   },
+   "source_quote": "资产减值损失 7,199.78 存货跌价准备"
+  },
+  {
+   "id": "N5",
+   "verbatim": "8,815.45 万元",
+   "canonical": {
+    "value": "88154500",
+    "unit": "CNY"
+   },
+   "source_quote": "合计 8,815.45"
+  },
+  {
+   "id": "N6",
+   "verbatim": "约 81.7%",
+   "canonical": {
+    "value": "0.8167",
+    "unit": "ratio",
+    "derived": true,
+    "formula": "7199.78/8815.45"
+   },
+   "source_quote": "(derived) 存货跌价准备 7,199.78 / 合计 8,815.45"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "四项明细:应收票据坏账准备 -10.84 万元、应收账款坏账准备 1,533.98 万元、其他应收款坏账准备 92.53 万元、存货跌价准备 7,199.78 万元,单位均为人民币万元",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "合计 8,815.45 万元",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "占比最大为存货跌价准备(约 82%)",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "应收票据坏账准备为负数(-10.84 万元,转回)",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K2",
+   "evidence_quote": "合计 8,815.45"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "资产减值损失 7,199.78 存货跌价准备"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "单位是本题命门:全表为「万元」,任何按「元」表述(如 8,815.45 元)或漏单位都应重罚;N6 为唯一允许的衍生数(derived=true,允许 81%~82.0% 区间);负数 N1 的符号丢失应记失分。"
+}

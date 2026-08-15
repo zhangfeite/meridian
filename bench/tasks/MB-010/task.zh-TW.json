@@ -1,0 +1,8 @@
+{
+  "id": "MB-010",
+  "lang": "zh-TW",
+  "type": "metric_calc",
+  "prompt": "閱讀該 IPO 發行結果公告,回答:1)發行價格與發行總數量是多少?是否含老股轉讓?2)回撥機制為何啟動?回撥了多少股?回撥後網下、網上最終發行數量與佔比各是多少?3)網上發行最終中籤率是多少?4)投資者棄購與保薦人包銷的情況(股數、金額、佔比)?5)按發行價與發行數量計算,本次募集資金總額約為多少?發行費用合計多少?所有數字保持原文精度並註明出處。",
+  "context_files": ["context/announcement.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

@@ -1,0 +1,161 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "3,707.31 万元",
+   "canonical": {
+    "value": "37073100",
+    "unit": "CNY"
+   },
+   "source_quote": "净利润分别为 3,707.31 万元、1,860.10 万元、-3,841.06 万元和 3,894.93 万元"
+  },
+  {
+   "id": "N2",
+   "verbatim": "1,860.10 万元",
+   "canonical": {
+    "value": "18601000",
+    "unit": "CNY"
+   },
+   "source_quote": "3,707.31 万元、1,860.10 万元"
+  },
+  {
+   "id": "N3",
+   "verbatim": "-3,841.06 万元",
+   "canonical": {
+    "value": "-38410600",
+    "unit": "CNY"
+   },
+   "source_quote": "1,860.10 万元、-3,841.06 万元"
+  },
+  {
+   "id": "N4",
+   "verbatim": "3,894.93 万元",
+   "canonical": {
+    "value": "38949300",
+    "unit": "CNY"
+   },
+   "source_quote": "-3,841.06 万元和 3,894.93 万元"
+  },
+  {
+   "id": "N5",
+   "verbatim": "8,154.92 万元",
+   "canonical": {
+    "value": "81549200",
+    "unit": "CNY"
+   },
+   "source_quote": "2025 年职工薪酬金额为 8,154.92 万元"
+  },
+  {
+   "id": "N6",
+   "verbatim": "22.82%",
+   "canonical": {
+    "value": "0.2282",
+    "unit": "ratio"
+   },
+   "source_quote": "增加 1,515.03 万元,增长 22.82%"
+  },
+  {
+   "id": "N7",
+   "verbatim": "2,504.15 万元",
+   "canonical": {
+    "value": "25041500",
+    "unit": "CNY"
+   },
+   "source_quote": "2025 年固定资产折旧金额为 2,504.15 万元"
+  },
+  {
+   "id": "N8",
+   "verbatim": "30.09%",
+   "canonical": {
+    "value": "0.3009",
+    "unit": "ratio"
+   },
+   "source_quote": "增加 579.24 万元,增长 30.09%"
+  },
+  {
+   "id": "N9",
+   "verbatim": "25.04%",
+   "canonical": {
+    "value": "0.2504",
+    "unit": "ratio"
+   },
+   "source_quote": "公司营业收入同比增长 25.04% 和 215.86%"
+  },
+  {
+   "id": "N10",
+   "verbatim": "215.86%",
+   "canonical": {
+    "value": "2.1586",
+    "unit": "ratio"
+   },
+   "source_quote": "同比增长 25.04% 和 215.86%"
+  },
+  {
+   "id": "N11",
+   "verbatim": "995.39%",
+   "canonical": {
+    "value": "9.9539",
+    "unit": "ratio"
+   },
+   "source_quote": "同比增长 995.39%"
+  },
+  {
+   "id": "N12",
+   "verbatim": "146.83%",
+   "canonical": {
+    "value": "1.4683",
+    "unit": "ratio"
+   },
+   "source_quote": "平均增长率 146.83%"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "The four-period ex-non-recurring attributable net profit series is 3,707.31 / 1,860.10 / -3,841.06 / 3,894.93 万元; the '2025 loss' statement is made under the EX-NON-RECURRING attributable-net-profit definition (that measure was -3,841.06 万元 in 2025)",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "2025 loss drivers: raw-material price rises plus capacity ramp-up at the Hefei and Ruyuan projects (materials, depreciation, labor) compressing gross margin, and higher period expenses; 2025 staff costs 8,154.92 万元 (+1,515.03 万元, +22.82%), fixed-asset depreciation 2,504.15 万元 (+579.24 万元, +30.09%)",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "Q1 2026 ex-non-recurring attributable net profit 3,894.93 万元, up 995.39% year-on-year, above the comparable-company average of 146.83%",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "Revenue growth: +25.04% for FY2025 vs +215.86% for Q1 2026 - a full year and a single quarter are different periods and the two rates cannot be directly compared or interchanged",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "'The loss is phase-specific and temporary' and 'the adverse impact will not persist' are the company's own judgments (attributed statements); the return-dilution remedies explicitly do not constitute a profit forecast",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "净利润分别为 3,707.31 万元、1,860.10 万元、-3,841.06 万元和 3,894.93 万元"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "2025 年职工薪酬金额为 8,154.92 万元"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "同比增长 995.39%"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "公司营业收入同比增长 25.04% 和 215.86%"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "Definition and period alignment are the crux: (1) the '2025 loss' is anchored to the ex-non-recurring measure - dropping the qualifier or restating it as an attributable-net-profit loss is a definition error (K1); (2) losing the minus sign on N3 loses points; (3) 25.04% (FY2025) and 215.86% (Q1 2026) belong to different periods - mixing them fails K4; (4) 995.39% is the company's own growth and 146.83% the peer average - subject confusion loses points; (5) 'phase-specific and temporary' is a company assertion, not a fact (K5). The four-number series tests position alignment: only the third period (2025) is negative. Evidence quotes remain in the original Chinese."
+}

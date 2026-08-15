@@ -1,0 +1,15 @@
+{
+ "id": "MB-001",
+ "lang": "en",
+ "type": "fact_extraction",
+ "prompt": "Read the attached Chinese-language filing. Extract all key facts about this restructuring petition: who filed what with which court and when, the claim amount and legal instruments relied upon, and the company's current procedural status. Answer in English; cite the original Chinese sentence for every fact.",
+ "context_files": [
+  "context/announcement.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

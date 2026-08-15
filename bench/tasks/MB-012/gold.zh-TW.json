@@ -1,0 +1,39 @@
+{
+  "numbers": [
+    {"id": "N1", "verbatim": "5,000,000 股", "canonical": {"value": "5000000", "unit": "shares"},
+     "source_quote": "本次减持回购股份数量为 5,000,000 股"},
+    {"id": "N2", "verbatim": "0.35%", "canonical": {"value": "0.0035", "unit": "ratio"},
+     "source_quote": "占公司总股本的比例为 0.35%"},
+    {"id": "N3", "verbatim": "18,111,062 元", "canonical": {"value": "18111062", "unit": "CNY"},
+     "source_quote": "成交总额为 18,111,062 元"},
+    {"id": "N4", "verbatim": "3.62 元/股", "canonical": {"value": "3.62", "unit": "CNY"},
+     "source_quote": "均价为 3.62 元/股"},
+    {"id": "N5", "verbatim": "16,498,650 股", "canonical": {"value": "16498650", "unit": "shares"},
+     "source_quote": "累计回购公司股份 16,498,650 股"},
+    {"id": "N6", "verbatim": "30,050,162.75 元", "canonical": {"value": "30050162.75", "unit": "CNY"},
+     "source_quote": "成交总金额为 30,050,162.75 元"},
+    {"id": "N7", "verbatim": "约 1.82 元/股", "canonical": {"value": "1.8214", "unit": "CNY", "derived": true, "formula": "30050162.75/16498650"},
+     "source_quote": "(derived) 成交总金额 30,050,162.75 ÷ 累计回购 16,498,650 股"},
+    {"id": "N8", "verbatim": "约 2 倍", "canonical": {"value": "1.9875", "unit": "times", "derived": true, "formula": "3.62/1.8214"},
+     "source_quote": "(derived) 减持均价 3.62 ÷ 回购均价约 1.82"},
+    {"id": "N9", "verbatim": "11,498,650 股", "canonical": {"value": "11498650", "unit": "shares", "derived": true, "formula": "16498650-5000000"},
+     "source_quote": "(derived) 累计回购 16,498,650 - 首次减持 5,000,000"}
+  ],
+  "key_points": [
+    {"id": "K1", "point": "首次減持 5,000,000 股(佔總股本 0.35%),成交總額 18,111,062 元,均價 3.62 元/股,發生於 2026 年 8 月 12 日", "required": true},
+    {"id": "K2", "point": "減持主體是公司自身透過股份回購專用證券帳戶出售已回購的庫存股份,不是控股股東或股東減持", "required": true},
+    {"id": "K3", "point": "原回購累計 16,498,650 股(佔總股本 1.15%),成交總金額 30,050,162.75 元,價區間 1.46~2.29 元/股;據此回購均價約 1.82 元/股(衍生)", "required": true},
+    {"id": "K4", "point": "減持均價 3.62 元/股約為回購均價 1.82 元/股的 2 倍(約 1.99 倍,衍生)", "required": true},
+    {"id": "K5", "point": "剩餘尚可減持 11,498,650 股(衍生);減持計畫上限即全部回購股份,窗口為計畫公告十五個交易日後六個月內", "required": false}
+  ],
+  "claim_evidence": [
+    {"point_id": "K1", "evidence_quote": "本次减持回购股份数量为 5,000,000 股", "source_file": "context/qinshang_selldown.txt"},
+    {"point_id": "K2", "evidence_quote": "公司通过股份回购专用证券账户以集中竞价方式累计回购公司股份 16,498,650 股", "source_file": "context/qinshang_selldown.txt"},
+    {"point_id": "K3", "evidence_quote": "成交总金额为 30,050,162.75 元", "source_file": "context/qinshang_selldown.txt"},
+    {"point_id": "K4", "evidence_quote": "均价为 3.62 元/股", "source_file": "context/qinshang_selldown.txt"}
+  ],
+  "must_refuse": false,
+  "forbidden": [],
+  "counterevidence_required": [],
+  "notes": "大海撈針+主體方向雙陷阱:①五份文件五家公司,首次減持 5,000,000 股與快意電梯解除質押 5,000,000 股跨公司撞數——數字對但引到 kuaiyi_pledge.txt 計 citation 失分;②「減持回購股份」=公司出售自己帳戶裡的庫存股,寫成「控股股東減持」「股東套現」是方向錯誤(重罰);③三個衍生數(回購均價 1.8214、溢價倍數 1.9875、剩餘 11,498,650)各 0.5% 容差;把「約 2 倍」寫成「翻倍收益承諾」語氣則觸合規。干擾文件(納芯微預告/亨通暫不開會/龍元重整)與問題無關,引用它們的任何數字都是無據。"
+}

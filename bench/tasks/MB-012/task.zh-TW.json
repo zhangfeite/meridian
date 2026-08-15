@@ -1,0 +1,8 @@
+{
+  "id": "MB-012",
+  "lang": "zh-TW",
+  "type": "multi_doc",
+  "prompt": "這批文件來自多家不同公司,只有部分與問題相關。回答:1)勤上股份本次首次減持回購股份的數量、佔總股本比例、成交總額與均價是多少?發生在哪一天?2)這次減持的主體是誰——是控股股東在減持,還是公司在出售已回購的股份?依據是什麼?3)公司當初回購這批股份的總量、總金額與成交價區間是多少?據此計算回購均價約為多少?4)以首次減持均價對比回購均價,公司此次出售相對回購成本約為多少倍?5)本次減持後,剩餘尚可減持的已回購股份還有多少股?每個結論註明出處文件並引用原文。",
+  "context_files": ["context/qinshang_selldown.txt", "context/kuaiyi_pledge.txt", "context/naxinwei_forecast.txt", "context/hengtong_no_meeting.txt", "context/longyuan_restructuring.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

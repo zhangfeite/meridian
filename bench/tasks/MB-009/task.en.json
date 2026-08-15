@@ -1,0 +1,16 @@
+{
+ "id": "MB-009",
+ "lang": "en",
+ "type": "no_answer",
+ "prompt": "Based on these three placement filings, answer: 1) What is the issue price per share? 2) Which institutions are the final subscribers? 3) How many shares will actually be issued? 4) What is the fundraising cap? Cite sources for every answer; answer in English.",
+ "context_files": [
+  "context/board_resolution.txt",
+  "context/plan_notice.txt",
+  "context/no_meeting.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "compliance"
+ ]
+}

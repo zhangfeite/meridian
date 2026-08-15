@@ -1,0 +1,15 @@
+{
+ "id": "MB-003",
+ "lang": "en",
+ "type": "metric_calc",
+ "prompt": "Read this Chinese impairment filing and answer: how much was provided for each category of impairment this period? What is the total? Which item is the largest, and roughly what share of the total does it represent? Preserve the original units (万元) in your answer and cite the source for every number.",
+ "context_files": [
+  "context/announcement.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

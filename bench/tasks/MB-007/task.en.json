@@ -1,0 +1,16 @@
+{
+ "id": "MB-007",
+ "lang": "en",
+ "type": "multi_doc",
+ "prompt": "These are two filings disclosed by the same company on the same day: an interim impairment-provision announcement and a voluntary interim earnings forecast. Using both, answer: 1) What is the total impairment provision, and what impact does the filing state it has on H1 2026 net profit attributable to the parent and on period-end equity attributable to the parent? 2) What are the forecast net profit attributable to the parent and the ex-non-recurring net profit, and how do they compare with the prior-year period? 3) What is the main source and size of the non-recurring gain? 4) Cross-check: without this impairment, roughly what would H1 net profit attributable to the parent have been? Name the source file and quote the original Chinese sentence for every number.",
+ "context_files": [
+  "context/impairment.txt",
+  "context/forecast.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

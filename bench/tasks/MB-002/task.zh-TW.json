@@ -1,0 +1,9 @@
+{
+  "id": "MB-002",
+  "lang": "zh-TW",
+  "type": "fact_extraction",
+  "prompt": "閱讀該行政處罰公告,梳理:1)公司分年度虛增營業收入與利潤總額的金額及佔比;2)對公司及各責任人的處罰決定分別是什麼;3)本次處罰對公司上市地位的影響。所有數字保持原文表述並註明出處。",
+  "_tw_note": "「利潤總額」為中國會計準則科目,台灣財報對應「稅前淨利」;此處沿用原文科目名,確保與公告引句一致。",
+  "context_files": ["context/announcement.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

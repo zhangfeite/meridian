@@ -1,0 +1,8 @@
+{
+  "id": "MB-008",
+  "lang": "zh-CN",
+  "type": "multi_doc",
+  "prompt": "这是同一家公司围绕一次定向增发在两天内披露的三份公告:董事会决议、预案披露提示性公告、暂不召开股东会公告。结合三份文件回答:1)这笔定增目前走到了哪一步?已完成哪些程序、尚需哪些程序才能实施?2)股东会何时召开?为什么?3)发行价格的定价规则是什么?4)发行数量上限如何约定(含总股本基数与单一对象上限)?5)募集资金总额上限是多少、投向哪些项目、各拟投入多少?每个结论注明出自哪份公告并引用原文。",
+  "context_files": ["context/board_resolution.txt", "context/plan_notice.txt", "context/no_meeting.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

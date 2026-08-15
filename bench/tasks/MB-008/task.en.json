@@ -1,0 +1,17 @@
+{
+ "id": "MB-008",
+ "lang": "en",
+ "type": "multi_doc",
+ "prompt": "These are three filings the same company published within two days around a private placement: the board resolution, the plan-disclosure notice, and an announcement that a shareholder meeting will NOT yet be convened. Using all three, answer: 1) Where does this placement currently stand procedurally - what has been completed, and which approvals are still required before it can proceed? 2) When will the shareholder meeting be held, and why? 3) What is the pricing rule for the issue price? 4) How is the issue size capped (base share count and single-subscriber limit)? 5) What is the fundraising cap, which projects will the proceeds fund, and how much goes to each? Name the source file and quote the original Chinese sentence for every conclusion.",
+ "context_files": [
+  "context/board_resolution.txt",
+  "context/plan_notice.txt",
+  "context/no_meeting.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

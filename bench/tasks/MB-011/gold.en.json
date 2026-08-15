@@ -1,0 +1,136 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "5,000,000 股",
+   "canonical": {
+    "value": "5000000",
+    "unit": "shares"
+   },
+   "source_quote": "快意股权 是 5,000,000 4.07% 1.49% 2026-06-17 2026-08-13 东吴证券股份有限公司"
+  },
+  {
+   "id": "N2",
+   "verbatim": "4.07%",
+   "canonical": {
+    "value": "0.0407",
+    "unit": "ratio"
+   },
+   "source_quote": "快意股权 是 5,000,000 4.07% 1.49%"
+  },
+  {
+   "id": "N3",
+   "verbatim": "1.49%",
+   "canonical": {
+    "value": "0.0149",
+    "unit": "ratio"
+   },
+   "source_quote": "5,000,000 4.07% 1.49% 2026-06-17"
+  },
+  {
+   "id": "N4",
+   "verbatim": "67,500,000 股",
+   "canonical": {
+    "value": "67500000",
+    "unit": "shares"
+   },
+   "source_quote": "快意股权 122,791,228 36.47% 67,500,000 54.97% 20.05%"
+  },
+  {
+   "id": "N5",
+   "verbatim": "54.97%",
+   "canonical": {
+    "value": "0.5497",
+    "unit": "ratio"
+   },
+   "source_quote": "67,500,000 54.97% 20.05%"
+  },
+  {
+   "id": "N6",
+   "verbatim": "20.05%",
+   "canonical": {
+    "value": "0.2005",
+    "unit": "ratio"
+   },
+   "source_quote": "67,500,000 54.97% 20.05%"
+  },
+  {
+   "id": "N7",
+   "verbatim": "83,540,000 股",
+   "canonical": {
+    "value": "83540000",
+    "unit": "shares"
+   },
+   "source_quote": "合计 223,203,508 66.29% 83,540,000 37.43% 24.81%"
+  },
+  {
+   "id": "N8",
+   "verbatim": "37.43%",
+   "canonical": {
+    "value": "0.3743",
+    "unit": "ratio"
+   },
+   "source_quote": "83,540,000 37.43% 24.81%"
+  },
+  {
+   "id": "N9",
+   "verbatim": "24.81%",
+   "canonical": {
+    "value": "0.2481",
+    "unit": "ratio"
+   },
+   "source_quote": "83,540,000 37.43% 24.81%"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "Released 5,000,000 shares, 4.07% of the holder's shares / 1.49% of total share capital; pledgee Soochow Securities; release date 2026-08-13",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "After the release the controlling shareholder still has 67,500,000 shares pledged - 54.97% of its holdings (over half) / 20.05% of total capital; together with concert parties 83,540,000 shares (37.43% / 24.81%)",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "'No margin-call or forced-transfer risk' and 'sound creditworthiness' are the company/shareholder's own assertions (attributed statements); the filing provides no verifiable basis such as loan balances or warning/liquidation lines",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "However, over half (54.97%) of the controlling shareholder's holdings remain pledged - a structural risk of top-up pledges or forced disposal if the share price falls sharply or the shareholder's finances deteriorate; the company itself commits to keep monitoring pledge risk",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "Of concert party Luo Aiwen's pledged shares, 67.44% (10,817,500 shares) are restricted/frozen/marked",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "快意股权 是 5,000,000 4.07% 1.49% 2026-06-17 2026-08-13 东吴证券股份有限公司"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "快意股权 122,791,228 36.47% 67,500,000 54.97% 20.05%"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "其所质押的股份不存在平仓风险或被强制过户风险"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "公司将持续关注控股股东及其一致行动人的股份质押变动情况及风险"
+  }
+ ],
+ "counterevidence_required": [
+  "K4"
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "notes": "Fact-vs-assertion is the crux: 'no margin-call risk' comes from the shareholder-creditworthiness paragraph; the correct treatment is to attribute it as a company/shareholder statement (attributed_opinion), not to restate it as objective fact - restating without attribution loses K3. K4 runs through the counterevidence dimension: the answer must flag the over-half pledge (54.97%) as a structural risk in an adversative/risk register. Number traps: the 'of own holdings' vs 'of total capital' bases across single-entity and aggregate rows (4.07/1.49, 54.97/20.05, 37.43/24.81). Evidence quotes remain in the original Chinese."
+}

@@ -1,0 +1,8 @@
+{
+  "id": "MB-006",
+  "lang": "zh-TW",
+  "type": "multi_doc",
+  "prompt": "結合這兩份公告,梳理:1)股價異常波動發生在哪兩個交易日、觸發標準是什麼?2)重整申請的揭露時間與股價異動的先後關係?3)異動核查公告對「是否存在未揭露重大事項」的結論是什麼、該結論有什麼例外?每個結論註明出自哪份公告的哪句原文。",
+  "context_files": ["context/abnormal_move.txt", "context/restructuring.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

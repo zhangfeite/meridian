@@ -1,0 +1,9 @@
+{
+  "id": "MB-T01",
+  "lang": "zh-CN",
+  "type": "fact_extraction",
+  "trap": true,
+  "prompt": "同 MB-001:提取重整申请关键事实。本任务为植错陷阱:planted.json 是一份故意做错的 agent 输出,评分器必须给它低分。",
+  "context_files": ["../MB-001/context/announcement.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "compliance"]
+}

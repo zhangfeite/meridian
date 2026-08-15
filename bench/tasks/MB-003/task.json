@@ -1,0 +1,8 @@
+{
+  "id": "MB-003",
+  "lang": "zh-CN",
+  "type": "metric_calc",
+  "prompt": "阅读该减值公告,回答:公司本期各类减值准备分别计提多少?合计多少?哪一项占比最大、占合计的比例约为多少?注意保持原文单位,并为每个数字注明出处。",
+  "context_files": ["context/announcement.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

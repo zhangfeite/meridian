@@ -1,0 +1,7 @@
+{
+  "output": "公司 2022 年虚增营业收入 4435.88 万元[出处:「警告,并处以 500 万元罚款」],占当期营业收入 5.96%[出处:「虚增利润总额 908.77 万元」]。对公司处以 500 万元罚款[出处:「占当期营业收入 5.96%」]。",
+  "planted_errors": [
+    {"kind": "citation_misalignment", "detail": "三处数字全部正确,但引文全部错挂到不相关原句——number_fidelity 会给高分,citation_alignment 必须给低分。这是评测器最容易漏的盲区(潜望核查曾在 1689 号卡踩过同类洞)"}
+  ],
+  "expected": {"number_fidelity_min": 0.9, "citation_alignment_max": 0.2}
+}

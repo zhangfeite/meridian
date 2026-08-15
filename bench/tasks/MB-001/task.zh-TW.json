@@ -1,0 +1,8 @@
+{
+  "id": "MB-001",
+  "lang": "zh-TW",
+  "type": "fact_extraction",
+  "prompt": "閱讀該公司公告,提取本次重整申請的全部關鍵事實:誰在何時向哪個法院提出了什麼申請、申請依據的債權金額與法律文書、公司目前處於什麼程序狀態。每個事實註明出處原句。",
+  "context_files": ["context/announcement.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

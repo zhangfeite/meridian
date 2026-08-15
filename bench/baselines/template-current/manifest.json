@@ -1,0 +1,25 @@
+{
+  "agent": "python3 meridian/bench/baselines/template_agent.py",
+  "created_at": "2026-08-14T14:11:41.086067+00:00",
+  "protocol": "subprocess",
+  "schema_version": "meridian-bench-run-v1",
+  "tasks": [
+    {
+      "response_file": "responses/MB-001.json",
+      "task_id": "MB-001"
+    },
+    {
+      "response_file": "responses/MB-002.json",
+      "task_id": "MB-002"
+    },
+    {
+      "response_file": "responses/MB-003.json",
+      "task_id": "MB-003"
+    },
+    {
+      "response_file": "responses/MB-004.json",
+      "task_id": "MB-004"
+    }
+  ],
+  "tasks_dir": "../../tasks"
+}

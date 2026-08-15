@@ -1,0 +1,8 @@
+{
+  "id": "MB-007",
+  "lang": "zh-CN",
+  "type": "multi_doc",
+  "prompt": "这是同一家公司同日披露的两份公告:半年度计提减值准备公告与半年度业绩预告。结合两份文件回答:1)本次计提减值合计多少?公告称其对 2026 年上半年归母净利润和期末归母所有者权益的影响分别是多少?2)业绩预告的归母净利润与扣非归母净利润分别约为多少?与上年同期相比方向如何?3)非经常性收益的主要来源与规模?4)交叉印证:若不计提本次减值,公司上半年归母净利润约为多少?每个数字注明出处文件并引用原文。",
+  "context_files": ["context/impairment.txt", "context/forecast.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

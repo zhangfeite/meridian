@@ -1,0 +1,144 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "5,000,000 股",
+   "canonical": {
+    "value": "5000000",
+    "unit": "shares"
+   },
+   "source_quote": "本次减持回购股份数量为 5,000,000 股"
+  },
+  {
+   "id": "N2",
+   "verbatim": "0.35%",
+   "canonical": {
+    "value": "0.0035",
+    "unit": "ratio"
+   },
+   "source_quote": "占公司总股本的比例为 0.35%"
+  },
+  {
+   "id": "N3",
+   "verbatim": "18,111,062 元",
+   "canonical": {
+    "value": "18111062",
+    "unit": "CNY"
+   },
+   "source_quote": "成交总额为 18,111,062 元"
+  },
+  {
+   "id": "N4",
+   "verbatim": "3.62 元/股",
+   "canonical": {
+    "value": "3.62",
+    "unit": "CNY"
+   },
+   "source_quote": "均价为 3.62 元/股"
+  },
+  {
+   "id": "N5",
+   "verbatim": "16,498,650 股",
+   "canonical": {
+    "value": "16498650",
+    "unit": "shares"
+   },
+   "source_quote": "累计回购公司股份 16,498,650 股"
+  },
+  {
+   "id": "N6",
+   "verbatim": "30,050,162.75 元",
+   "canonical": {
+    "value": "30050162.75",
+    "unit": "CNY"
+   },
+   "source_quote": "成交总金额为 30,050,162.75 元"
+  },
+  {
+   "id": "N7",
+   "verbatim": "约 1.82 元/股",
+   "canonical": {
+    "value": "1.8214",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "30050162.75/16498650"
+   },
+   "source_quote": "(derived) 成交总金额 30,050,162.75 ÷ 累计回购 16,498,650 股"
+  },
+  {
+   "id": "N8",
+   "verbatim": "约 2 倍",
+   "canonical": {
+    "value": "1.9875",
+    "unit": "times",
+    "derived": true,
+    "formula": "3.62/1.8214"
+   },
+   "source_quote": "(derived) 减持均价 3.62 ÷ 回购均价约 1.82"
+  },
+  {
+   "id": "N9",
+   "verbatim": "11,498,650 股",
+   "canonical": {
+    "value": "11498650",
+    "unit": "shares",
+    "derived": true,
+    "formula": "16498650-5000000"
+   },
+   "source_quote": "(derived) 累计回购 16,498,650 - 首次减持 5,000,000"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "First sale: 5,000,000 shares (0.35% of total capital), total consideration 18,111,062 yuan, average price 3.62 yuan/share, on 2026-08-12",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "The seller is the company itself, selling treasury shares from its dedicated buyback securities account - NOT a controlling shareholder or any shareholder reducing a stake",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "Original buyback: 16,498,650 shares (1.15%), total 30,050,162.75 yuan, price range 1.46-2.29 yuan/share; implied average buyback price ~1.82 yuan/share (derived)",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "The 3.62 yuan/share sale average is roughly 2x (~1.99x, derived) the ~1.82 yuan/share buyback average",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "11,498,650 repurchased shares remain sellable (derived); the plan cap equals the full buyback and the window is six months starting fifteen trading days after the plan announcement",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "本次减持回购股份数量为 5,000,000 股",
+   "source_file": "context/qinshang_selldown.txt"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "公司通过股份回购专用证券账户以集中竞价方式累计回购公司股份 16,498,650 股",
+   "source_file": "context/qinshang_selldown.txt"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "成交总金额为 30,050,162.75 元",
+   "source_file": "context/qinshang_selldown.txt"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "均价为 3.62 元/股",
+   "source_file": "context/qinshang_selldown.txt"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "Haystack + subject-direction double trap: (1) five filings from five companies; the 5,000,000-share first sale collides with Kuaiyi Elevator's 5,000,000-share pledge release - right number cited to kuaiyi_pledge.txt loses citation points; (2) 'selling repurchased shares' means the company selling its own treasury stock - writing 'controlling shareholder selldown' is a direction error (heavy penalty); (3) three derived numbers (buyback average 1.8214, multiple 1.9875, remainder 11,498,650) each carry 0.5% tolerance; framing the ~2x as a promised return trips compliance. The distractor filings are irrelevant - citing any number from them is unsupported. Evidence quotes remain in the original Chinese."
+}

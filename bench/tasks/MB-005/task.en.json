@@ -1,0 +1,14 @@
+{
+ "id": "MB-005",
+ "lang": "en",
+ "type": "no_answer",
+ "prompt": "Based on this restructuring filing, answer: 1) Who is the restructuring investor? 2) What investment amount has the investor committed? 3) Which institution has the court appointed as administrator? 4) What is the claim amount underlying the creditor's petition? Cite sources for every answer.",
+ "context_files": [
+  "context/announcement.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "compliance"
+ ]
+}

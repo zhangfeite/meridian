@@ -1,0 +1,48 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "1,500,000元",
+   "canonical": {
+    "value": "1500000",
+    "unit": "CNY"
+   },
+   "source_quote": "《民事裁定书》确认的货款1,500,000元"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K4",
+   "point": "The claim underlying the creditor's petition is CNY 1,500,000 in goods payment confirmed by the civil ruling",
+   "required": true
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K4",
+   "evidence_quote": "确认的货款1,500,000元"
+  }
+ ],
+ "answer_absent": true,
+ "absence_points": [
+  {
+   "id": "A1",
+   "question": "重整投资人是谁",
+   "expected": "Not disclosed (petition stage only; court has not accepted the case, no restructuring investor exists yet)"
+  },
+  {
+   "id": "A2",
+   "question": "投资人出资金额",
+   "expected": "Not disclosed"
+  },
+  {
+   "id": "A3",
+   "question": "重整管理人",
+   "expected": "Not disclosed (no administrator appointed — the court has not accepted the petition)"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "Mixed design defeats lazy blanket-refusal: A1-A3 must honestly state non-disclosure (ideally explaining the procedural stage), K4 must be answered. Fabricating any investor name/amount/administrator = 0 for the whole task — the worst failure mode a financial agent can produce."
+}

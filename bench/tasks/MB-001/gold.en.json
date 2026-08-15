@@ -1,0 +1,102 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "2026年8月13日",
+   "canonical": {
+    "value": "2026-08-13",
+    "unit": "date"
+   },
+   "source_quote": "于2026年8月13日收到浙江省宁波市中级人民法院"
+  },
+  {
+   "id": "N2",
+   "verbatim": "1,500,000元",
+   "canonical": {
+    "value": "1500000",
+    "unit": "CNY"
+   },
+   "source_quote": "经(2026)沪0113民特(调)65号《民事裁定书》确认的货款1,500,000元"
+  },
+  {
+   "id": "N3",
+   "verbatim": "(2026)浙02破申13号",
+   "canonical": {
+    "value": "(2026)浙02破申13号",
+    "unit": "doc_no"
+   },
+   "source_quote": "《浙江省宁波市中级人民法院通知书(2026)浙02破申13号》"
+  },
+  {
+   "id": "N4",
+   "verbatim": "(2026)沪0113民特(调)65号",
+   "canonical": {
+    "value": "(2026)沪0113民特(调)65号",
+    "unit": "doc_no"
+   },
+   "source_quote": "经(2026)沪0113民特(调)65号《民事裁定书》确认"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "On 2026-08-13 the company received the Notice served by the Ningbo Intermediate People's Court",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "The petitioner is creditor Shanghai Zhenkun Building Materials Trading Co., Ltd.",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "Grounds: the company cannot pay debts as they fall due and clearly lacks solvency, but has restructuring value",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "The claim is CNY 1,500,000 in goods payment confirmed by a civil ruling",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "As of the disclosure date the court has NOT accepted the petition; acceptance is materially uncertain",
+   "required": true
+  },
+  {
+   "id": "K6",
+   "point": "If the court accepts, the stock will additionally be subject to delisting risk alert under listing rules",
+   "required": true
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "于2026年8月13日收到浙江省宁波市中级人民法院(以下简称\"宁波中院\"或\"法院\")送达的"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "公司债权人上海振堃建材贸易有限公司(以下简称\"申请人\")"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "以公司不能清偿到期债务且明显缺乏清偿能力,但具备重整价值为由"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "《民事裁定书》确认的货款1,500,000元"
+  },
+  {
+   "point_id": "K5",
+   "evidence_quote": "尚未收到法院"
+  },
+  {
+   "point_id": "K6",
+   "evidence_quote": "退市风险警示"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "Procedural-state semantics are the core trap: 'petition filed' != 'restructuring commenced'. Writing K5 as 'has entered restructuring' is a direction error (heavy citation loss). Numbers must match canonical values; CNY unit required for N2. Evidence quotes remain in the original Chinese — citations always anchor to the source language."
+}

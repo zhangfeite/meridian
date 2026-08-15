@@ -1,0 +1,8 @@
+{
+  "id": "MB-008",
+  "lang": "zh-TW",
+  "type": "multi_doc",
+  "prompt": "這是同一家公司圍繞一次定向增發在兩天內揭露的三份公告:董事會決議、預案揭露提示性公告、暫不召開股東會公告。結合三份文件回答:1)這筆定增目前走到了哪一步?已完成哪些程序、尚需哪些程序才能實施?2)股東會何時召開?為什麼?3)發行價格的定價規則是什麼?4)發行數量上限如何約定(含總股本基數與單一對象上限)?5)募集資金總額上限是多少、投向哪些項目、各擬投入多少?每個結論註明出自哪份公告並引用原文。",
+  "context_files": ["context/board_resolution.txt", "context/plan_notice.txt", "context/no_meeting.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

@@ -1,0 +1,96 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "-10.84 万元",
+   "canonical": {
+    "value": "-108400",
+    "unit": "CNY"
+   },
+   "source_quote": "信用减值损失 -10.84 应收票据坏账准备"
+  },
+  {
+   "id": "N2",
+   "verbatim": "1,533.98 万元",
+   "canonical": {
+    "value": "15339800",
+    "unit": "CNY"
+   },
+   "source_quote": "信用减值损失 1,533.98 应收账款坏账准备"
+  },
+  {
+   "id": "N3",
+   "verbatim": "92.53 万元",
+   "canonical": {
+    "value": "925300",
+    "unit": "CNY"
+   },
+   "source_quote": "信用减值损失 92.53 其他应收款坏账准备"
+  },
+  {
+   "id": "N4",
+   "verbatim": "7,199.78 万元",
+   "canonical": {
+    "value": "71997800",
+    "unit": "CNY"
+   },
+   "source_quote": "资产减值损失 7,199.78 存货跌价准备"
+  },
+  {
+   "id": "N5",
+   "verbatim": "8,815.45 万元",
+   "canonical": {
+    "value": "88154500",
+    "unit": "CNY"
+   },
+   "source_quote": "合计 8,815.45"
+  },
+  {
+   "id": "N6",
+   "verbatim": "约 81.7%",
+   "canonical": {
+    "value": "0.8167",
+    "unit": "ratio",
+    "derived": true,
+    "formula": "7199.78/8815.45"
+   },
+   "source_quote": "(derived) 存货跌价准备 7,199.78 / 合计 8,815.45"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "All four line items: notes-receivable bad-debt provision -10.84 万元, accounts-receivable bad-debt provision 1,533.98 万元, other-receivables bad-debt provision 92.53 万元, inventory write-down provision 7,199.78 万元, all stated in 万元 (RMB)",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "Total 8,815.45 万元",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "The largest item is the inventory write-down provision (~82% of the total)",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "The notes-receivable provision is negative (-10.84 万元, a reversal)",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K2",
+   "evidence_quote": "合计 8,815.45"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "资产减值损失 7,199.78 存货跌价准备"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "Units are the crux: the whole table is in 万元 (10,000 yuan); stating amounts as plain yuan (e.g. 8,815.45 yuan) or dropping the unit must be heavily penalized - an English answer may add a conversion but must preserve the original 万元 figure. N6 is the only allowed derived number (81%~82.0% band). Losing the minus sign on N1 loses points."
+}

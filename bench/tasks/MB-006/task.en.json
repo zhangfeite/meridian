@@ -1,0 +1,16 @@
+{
+ "id": "MB-006",
+ "lang": "en",
+ "type": "multi_doc",
+ "prompt": "Using both Chinese-language filings, reconstruct: 1) On which two trading days did the abnormal stock-price movement occur, and what threshold triggered it? 2) What is the chronological relationship between the restructuring-petition disclosure and the price movement? 3) What did the trading-anomaly review conclude about undisclosed material matters, and what is the stated exception? Answer in English; cite the original Chinese sentence and name the source file for every conclusion.",
+ "context_files": [
+  "context/abnormal_move.txt",
+  "context/restructuring.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

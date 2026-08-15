@@ -1,0 +1,45 @@
+{
+  "numbers": [
+    {"id": "N1", "verbatim": "150.80 元/股", "canonical": {"value": "150.80", "unit": "CNY"},
+     "source_quote": "本次发行价格为 150.80 元/股"},
+    {"id": "N2", "verbatim": "4,044.6434 万股", "canonical": {"value": "40446434", "unit": "shares"},
+     "source_quote": "发行数量为 4,044.6434 万股"},
+    {"id": "N3", "verbatim": "约为 8,288.82 倍", "canonical": {"value": "8288.82", "unit": "times"},
+     "source_quote": "本次网上初步有效申购倍数约为 8,288.82 倍"},
+    {"id": "N4", "verbatim": "323.6000 万股", "canonical": {"value": "3236000", "unit": "shares"},
+     "source_quote": "即 323.6000 万股）由网下回拨至网上"},
+    {"id": "N5", "verbatim": "2,265.0148 万股", "canonical": {"value": "22650148", "unit": "shares"},
+     "source_quote": "网下最终发行数量为 2,265.0148 万股"},
+    {"id": "N6", "verbatim": "970.7000 万股", "canonical": {"value": "9707000", "unit": "shares"},
+     "source_quote": "网上最终发行数量为 970.7000 万股"},
+    {"id": "N7", "verbatim": "0.01809759%", "canonical": {"value": "0.0001809759", "unit": "ratio"},
+     "source_quote": "网上发行最终中签率为 0.01809759%"},
+    {"id": "N8", "verbatim": "8,734 股", "canonical": {"value": "8734", "unit": "shares"},
+     "source_quote": "包销股份的数量为 8,734 股"},
+    {"id": "N9", "verbatim": "1,317,087.20 元", "canonical": {"value": "1317087.20", "unit": "CNY"},
+     "source_quote": "包销金额为 1,317,087.20 元"},
+    {"id": "N10", "verbatim": "约 60.99 亿元", "canonical": {"value": "6099322247.2", "unit": "CNY", "derived": true, "formula": "150.80*40446434"},
+     "source_quote": "(derived) 发行价 150.80 元/股 × 发行数量 4,044.6434 万股"},
+    {"id": "N11", "verbatim": "18,217.31 万元", "canonical": {"value": "182173100", "unit": "CNY"},
+     "source_quote": "本次发行费用合计 18,217.31 万元"}
+  ],
+  "key_points": [
+    {"id": "K1", "point": "發行價 150.80 元/股,發行數量 4,044.6434 萬股,全部新股、無老股轉讓", "required": true},
+    {"id": "K2", "point": "回撥觸發:網上初步有效申購倍數約 8,288.82 倍高於 100 倍,將扣除戰配後發行數量的 10%(323.6000 萬股)由網下回撥至網上", "required": true},
+    {"id": "K3", "point": "回撥後:網下最終 2,265.0148 萬股(約 70%)、網上最終 970.7000 萬股(約 30%),網上最終中籤率 0.01809759%", "required": true},
+    {"id": "K4", "point": "棄購全部由保薦人中信證券包銷:8,734 股、1,317,087.20 元,約佔扣除戰配後發行數量 0.03%;網下零棄購", "required": true},
+    {"id": "K5", "point": "募資總額約 60.99 億元(150.80×4,044.6434 萬股,衍生計算);發行費用合計 18,217.31 萬元", "required": true},
+    {"id": "K6", "point": "戰略配售 20.00% 含社保基金、產業資本(深度求索、騰訊關聯啟善等)與保薦人跟投,鎖定期 12~36 個月", "required": false}
+  ],
+  "claim_evidence": [
+    {"point_id": "K1", "evidence_quote": "本次发行价格为 150.80 元/股"},
+    {"point_id": "K2", "evidence_quote": "本次网上初步有效申购倍数约为 8,288.82 倍"},
+    {"point_id": "K3", "evidence_quote": "网上发行最终中签率为 0.01809759%"},
+    {"point_id": "K4", "evidence_quote": "包销股份的数量为 8,734 股"},
+    {"point_id": "K5", "evidence_quote": "本次发行费用合计 18,217.31 万元"}
+  ],
+  "must_refuse": false,
+  "forbidden": [],
+  "counterevidence_required": [],
+  "notes": "精度是本題命門:中籤率 0.01809759% 寫成 1.8%/0.018 比例混淆、8,288.82 倍與回撥比例 10% 張冠李戴、萬股→股換算錯位(4,044.6434 萬股=40,446,434 股)都應失分。N10 為唯一衍生數(0.5% 容差,約 60.99 億元/6,099,322,247.2 元均可);棄購股數(8,734)與包銷股數相同是同一事實的兩個視角,不是兩個數。"
+}

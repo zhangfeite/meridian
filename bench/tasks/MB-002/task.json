@@ -1,0 +1,8 @@
+{
+  "id": "MB-002",
+  "lang": "zh-CN",
+  "type": "fact_extraction",
+  "prompt": "阅读该行政处罚公告,梳理:1)公司分年度虚增营业收入与利润总额的金额及占比;2)对公司及各责任人的处罚决定分别是什么;3)本次处罚对公司上市地位的影响。所有数字保持原文表述并注明出处。",
+  "context_files": ["context/announcement.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

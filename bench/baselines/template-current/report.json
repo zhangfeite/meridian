@@ -1,0 +1,119 @@
+{
+  "agent": "python3 meridian/bench/baselines/template_agent.py",
+  "by_language": {
+    "en": {
+      "dimensions": {
+        "citation_alignment": null,
+        "completeness": null,
+        "compliance": null,
+        "counterevidence": null,
+        "number_fidelity": null
+      },
+      "overall": null,
+      "tasks": 0
+    },
+    "zh-CN": {
+      "dimensions": {
+        "citation_alignment": 0.25,
+        "completeness": 0.0,
+        "compliance": 1.0,
+        "counterevidence": null,
+        "number_fidelity": 1.0
+      },
+      "overall": 0.625,
+      "tasks": 4
+    },
+    "zh-TW": {
+      "dimensions": {
+        "citation_alignment": null,
+        "completeness": null,
+        "compliance": null,
+        "counterevidence": null,
+        "number_fidelity": null
+      },
+      "overall": null,
+      "tasks": 0
+    }
+  },
+  "dimensions": {
+    "citation_alignment": 0.25,
+    "completeness": 0.0,
+    "compliance": 1.0,
+    "counterevidence": null,
+    "number_fidelity": 1.0
+  },
+  "language_dimension_matrix": {
+    "citation_alignment": {
+      "en": null,
+      "zh-CN": 0.25,
+      "zh-TW": null
+    },
+    "completeness": {
+      "en": null,
+      "zh-CN": 0.0,
+      "zh-TW": null
+    },
+    "compliance": {
+      "en": null,
+      "zh-CN": 1.0,
+      "zh-TW": null
+    },
+    "counterevidence": {
+      "en": null,
+      "zh-CN": null,
+      "zh-TW": null
+    },
+    "number_fidelity": {
+      "en": null,
+      "zh-CN": 1.0,
+      "zh-TW": null
+    }
+  },
+  "overall": 0.625,
+  "schema_version": "meridian-bench-report-v1",
+  "task_scores": [
+    {
+      "dimensions": {
+        "citation_alignment": 0.0,
+        "completeness": 0.0,
+        "compliance": 1.0,
+        "number_fidelity": 1.0
+      },
+      "lang": "zh-CN",
+      "overall": 0.5,
+      "task_id": "MB-001"
+    },
+    {
+      "dimensions": {
+        "citation_alignment": 0.0,
+        "completeness": 0.0,
+        "compliance": 1.0,
+        "number_fidelity": 1.0
+      },
+      "lang": "zh-CN",
+      "overall": 0.5,
+      "task_id": "MB-002"
+    },
+    {
+      "dimensions": {
+        "citation_alignment": 0.0,
+        "completeness": 0.0,
+        "compliance": 1.0,
+        "number_fidelity": 1.0
+      },
+      "lang": "zh-CN",
+      "overall": 0.5,
+      "task_id": "MB-003"
+    },
+    {
+      "dimensions": {
+        "citation_alignment": 1.0,
+        "compliance": 1.0
+      },
+      "lang": "zh-CN",
+      "overall": 1.0,
+      "task_id": "MB-004"
+    }
+  ],
+  "tasks": 4
+}

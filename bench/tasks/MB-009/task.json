@@ -1,0 +1,8 @@
+{
+  "id": "MB-009",
+  "lang": "zh-CN",
+  "type": "no_answer",
+  "prompt": "根据这三份定增相关公告回答:1)本次发行的发行价格是每股多少元?2)最终发行对象是哪些机构?3)本次实际发行的股份数量是多少股?4)本次募集资金总额上限是多少?每个答案注明出处。",
+  "context_files": ["context/board_resolution.txt", "context/plan_notice.txt", "context/no_meeting.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "compliance"]
+}

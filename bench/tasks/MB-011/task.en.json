@@ -1,0 +1,16 @@
+{
+ "id": "MB-011",
+ "lang": "en",
+ "type": "risk_identification",
+ "prompt": "Read this Chinese pledge-release filing and answer: 1) How many shares were released from pledge, what are the two ratio bases, and who is the pledgee, on what date? 2) After the release, what pledge levels remain for the controlling shareholder and its concert parties (per entity and in total - keep the two ratio bases 'of own holdings' vs 'of total share capital' straight)? 3) What does the filing say about margin-call risk, and is that statement a verifiable fact or a company/shareholder assertion? 4) From the pledge structure, which risk signals still warrant attention? Cite the source for every conclusion.",
+ "context_files": [
+  "context/announcement.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "counterevidence",
+  "completeness",
+  "compliance"
+ ]
+}

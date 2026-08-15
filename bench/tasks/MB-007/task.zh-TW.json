@@ -1,0 +1,8 @@
+{
+  "id": "MB-007",
+  "lang": "zh-TW",
+  "type": "multi_doc",
+  "prompt": "這是同一家公司同日揭露的兩份公告:半年度計提減值準備公告與半年度業績預告。結合兩份文件回答:1)本次計提減值合計多少?公告稱其對 2026 年上半年歸母淨利潤和期末歸母所有者權益的影響分別是多少?2)業績預告的歸母淨利潤與扣非歸母淨利潤分別約為多少?與上年同期相比方向如何?3)非經常性收益的主要來源與規模?4)交叉印證:若不計提本次減值,公司上半年歸母淨利潤約為多少?每個數字註明出處文件並引用原文。",
+  "context_files": ["context/impairment.txt", "context/forecast.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

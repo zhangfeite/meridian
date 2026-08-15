@@ -1,0 +1,9 @@
+{
+  "id": "MB-003",
+  "lang": "zh-TW",
+  "type": "metric_calc",
+  "prompt": "閱讀該減值公告,回答:公司本期各類減值準備分別計提多少?合計多少?哪一項佔比最大、佔合計的比例約為多少?注意保持原文單位,並為每個數字註明出處。",
+  "_tw_note": "台灣財報慣用「減損」(IFRS),中國會計準則用「減值」;此處依公告原文用語保留「減值準備」。「計提」台灣多說「提列」,因需對應原文,保留「計提」。",
+  "context_files": ["context/announcement.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

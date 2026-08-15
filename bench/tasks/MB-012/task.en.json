@@ -1,0 +1,19 @@
+{
+ "id": "MB-012",
+ "lang": "en",
+ "type": "multi_doc",
+ "prompt": "These filings come from several different companies; only some are relevant. Answer: 1) In Qinshang Optoelectronics' first sale of repurchased shares, how many shares were sold, what share of total capital, at what total consideration and average price, and on what date? 2) WHO is selling here - a controlling shareholder reducing its stake, or the company selling its own repurchased (treasury) shares? On what basis? 3) How many shares did the company originally buy back, for what total amount, in what price range - and what average buyback price does that imply? 4) Comparing the first-sale average price with the buyback average, roughly what multiple of its cost did the company realize? 5) After this first sale, how many repurchased shares remain available for sale? Name the source file and quote the original Chinese for every conclusion.",
+ "context_files": [
+  "context/qinshang_selldown.txt",
+  "context/kuaiyi_pledge.txt",
+  "context/naxinwei_forecast.txt",
+  "context/hengtong_no_meeting.txt",
+  "context/longyuan_restructuring.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

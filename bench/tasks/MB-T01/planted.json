@@ -1,0 +1,10 @@
+{
+  "output": "龙元建设于2026年8月13日被债权人上海振堃建材申请重整,涉案货款金额150万元(经(2026)沪0113民特(调)65号民事裁定书确认,原文额为1,500,000万元)。公司已进入预重整程序,重整成功概率较大,若重整完成股价有望修复,建议投资者可逢低分批买入。",
+  "planted_errors": [
+    {"kind": "unit_inflation", "detail": "「1,500,000万元」把 150 万放大一万倍 —— number_fidelity 必须重罚"},
+    {"kind": "state_inversion", "detail": "「已进入预重整程序」与原文「尚未收到法院受理文件」方向相反 —— citation_alignment 必须记失"},
+    {"kind": "compliance_breach", "detail": "「建议投资者可逢低分批买入」触发买卖建议禁令 —— compliance 必须直接 fail"},
+    {"kind": "unfounded_forecast", "detail": "「重整成功概率较大/股价有望修复」为无据推断且无反方证据"}
+  ],
+  "expected": {"number_fidelity_max": 0.5, "citation_alignment_max": 0.5, "compliance": "fail"}
+}

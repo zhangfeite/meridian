@@ -1,0 +1,580 @@
+/**
+ * `DshKernel` — the DeepSeek Harness implementation of {@link AgentKernel}.
+ *
+ * **This module and `runtime/dsh-runtime-bin.mjs` are the only Meridian files
+ * permitted to import `@deepseek-ai/*`.** `scripts/check-dsh-boundary.mjs`
+ * fails CI on any other import. The point is not purity for its own sake: dsh
+ * is a developer preview whose README promises compatibility-breaking changes,
+ * and PRD §8 budgets a two-week exit. That exit is only two weeks if the blast
+ * radius is one file.
+ *
+ * Topology of one run:
+ *
+ * ```text
+ *  Meridian process                       dsh runtime subprocess
+ *  ┌───────────────────────────┐          ┌──────────────────────────────┐
+ *  │ DshKernel                 │ stdio    │ dsh-sdk-jsonrpc-server       │
+ *  │  └ DeepSeekHarness ───────┼─JSON-RPC─┤ dsh-agent-spine-demo (loop)  │
+ *  │ MCP bridge (HTTP) ◀───────┼──────────┤ dsh-mcp-client               │
+ *  │  └ ToolRegistry           │  MCP     │ dsh-llm-deepseek → API       │
+ *  └───────────────────────────┘          └──────────────────────────────┘
+ * ```
+ *
+ * Tools never enter the harness as dsh plugins; they are published over MCP from
+ * this process, so a Meridian tool stays a plain object (see `mcp-bridge.ts`).
+ *
+ * @module @meridian/kernel-adapter/dsh-kernel
+ */
+
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { randomUUID } from 'node:crypto'
+import { DeepSeekHarness } from '@deepseek-ai/dsh-sdk-client'
+import {
+  KernelClosedError,
+  UnknownSessionError,
+  applyLangContract,
+  type AgentKernel,
+  type AnyToolDefinition,
+  type JsonValue,
+  type KernelEvent,
+  type RunEndReason,
+  type RunPlan,
+  type RunResult,
+  type ToolCallRecord,
+  type Unregister,
+} from './kernel.ts'
+import { startMcpBridge, type McpBridgeHandle } from './mcp-bridge.ts'
+import { EventBus, SessionLogStore, ToolRegistry } from './registry.ts'
+
+/** MCP namespace for Meridian tools; dsh exposes them as `mcp__meridian__<name>`. */
+const MCP_SERVER_NAME = 'meridian'
+
+/** Prefix dsh's MCP bridge prepends to every tool name. */
+const MCP_TOOL_PREFIX = `mcp__${MCP_SERVER_NAME}__`
+
+/** How long to wait for the runtime to report a settled plugin tree. */
+const RUNTIME_READY_TIMEOUT_MS = 60_000
+
+/** Construction options. */
+export interface DshKernelOptions {
+  /**
+   * Provider route registered by `dsh-llm-deepseek`. Only `'deepseek-official'`
+   * is mountable without extra plugins.
+   */
+  provider?: string
+  /** DeepSeek model id (default `'deepseek-v4-flash'`). */
+  model?: string
+  /** Environment variable holding the API key (default `DEEPSEEK_API_KEY`). */
+  apiKeyEnv?: string
+  /** Default persona for runs that do not set `systemPrompt`. */
+  systemPrompt?: string
+  /** Output-token cap handed to the runtime at `initialize`. */
+  maxOutputTokens?: number
+  /** Workspace cwd recorded on SDK sessions (default `process.cwd()`). */
+  cwd?: string
+  /** Directory for the generated `cordis.yml` (default a fresh temp dir). */
+  runtimeDir?: string
+}
+
+/*
+ * Deliberately NOT offered: a runtime-log callback. `HarnessClient` spawns with
+ * piped stdio and exposes no live stderr hook — it keeps a bounded tail it only
+ * surfaces when the runtime dies. Set `MERIDIAN_DSH_LOG=<path>` instead; the
+ * runtime bin tees its own stderr there. See README pitfall 6.
+ */
+
+/** Raised when the environment cannot support a real dsh run. */
+export class DshUnavailableError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'DshUnavailableError'
+  }
+}
+
+/**
+ * Report why a real dsh run is impossible here, so a test suite can skip
+ * honestly instead of silently degrading to the mock.
+ *
+ * @param apiKeyEnv - the credential variable the composition will read.
+ * @returns `undefined` when dsh can run, else a human-readable reason.
+ */
+export function dshUnavailableReason(apiKeyEnv = 'DEEPSEEK_API_KEY'): string | undefined {
+  if (!process.env[apiKeyEnv]) return `${apiKeyEnv} is not set`
+  const [major, minor] = process.versions.node.split('.').map(Number)
+  const ok = (major === 22 && minor >= 19) || major >= 24
+  if (!ok) {
+    return `dsh requires node ^22.19.0 || >=24, found ${process.versions.node}`
+  }
+  return undefined
+}
+
+/**
+ * Compose the runtime's `cordis.yml`.
+ *
+ * Deliberately minimal: no bash, no filesystem tools, no skills, no workspace
+ * context. A research agent that can call `rm` is a liability, and every extra
+ * plugin is extra preview-era surface that can break under us. The only
+ * model-facing capability is the MCP bridge.
+ *
+ * @param options - resolved kernel options.
+ * @param mcpUrl - the Meridian MCP bridge endpoint.
+ * @returns the YAML document text.
+ */
+function composeCordisConfig(
+  options: Required<Pick<DshKernelOptions, 'model' | 'apiKeyEnv' | 'systemPrompt'>>,
+  mcpUrl: string,
+): string {
+  const persona = JSON.stringify(options.systemPrompt)
+  return `# Generated by @meridian/kernel-adapter. Do not edit by hand.
+# Composition contract: the model's ONLY tools come from the Meridian MCP bridge.
+
+- id: sdk-jsonrpc-server
+  name: '@deepseek-ai/dsh-sdk-jsonrpc-server'
+  config:
+    maxTokensAsSuccess: true
+
+- id: llm-deepseek
+  name: '@deepseek-ai/dsh-llm-deepseek'
+  config:
+    apiKeyEnv: ${options.apiKeyEnv}
+    streamIdleTimeoutMs: 300000
+    models:
+      - id: ${options.model}
+        contextWindow: 1000000
+
+- id: agent-spine
+  name: '@deepseek-ai/dsh-agent-spine-demo'
+  config:
+    includeHarnessIdentity: false
+    includeRuntimeContext: false
+    persona: ${persona}
+    workspaceContext: false
+    skills:
+      enabled: false
+    toolBash: false
+    toolJobs: false
+    goals:
+      enabled: false
+
+- id: mcp-meridian
+  name: '@deepseek-ai/dsh-mcp-client'
+  config:
+    serverName: ${MCP_SERVER_NAME}
+    transport: streamable-http
+    url: ${mcpUrl}
+    failOnStartupError: true
+    toolCallTimeoutMs: 60000
+`
+}
+
+/** Minimal structural view of the dsh session events this kernel reads. */
+interface DshSessionEvent {
+  type: string
+  time?: number
+  data?: Record<string, unknown>
+}
+
+/** An `AgentKernel` backed by a real DeepSeek Harness runtime subprocess. */
+export class DshKernel implements AgentKernel {
+  readonly id = 'dsh'
+  readonly #registry = new ToolRegistry(() => this.#assertToolsNotFrozen())
+  readonly #bus = new EventBus()
+  readonly #log = new SessionLogStore()
+  readonly #options: Required<
+    Pick<DshKernelOptions, 'provider' | 'model' | 'apiKeyEnv' | 'systemPrompt' | 'cwd'>
+  > &
+    DshKernelOptions
+
+  #bridge?: McpBridgeHandle
+  #harness?: DeepSeekHarness
+  #runtimeDir?: string
+  #ownsRuntimeDir = false
+  #started = false
+  #closed = false
+
+  /** @param options - provider route, model, persona, and runtime placement. */
+  constructor(options: DshKernelOptions = {}) {
+    this.#options = {
+      ...options,
+      provider: options.provider ?? 'deepseek-official',
+      model: options.model ?? 'deepseek-v4-flash',
+      apiKeyEnv: options.apiKeyEnv ?? 'DEEPSEEK_API_KEY',
+      systemPrompt:
+        options.systemPrompt ??
+        'You are Meridian, a financial research assistant. Use the provided tools to obtain facts. Never invent numbers or titles.',
+      cwd: options.cwd ?? process.cwd(),
+    }
+  }
+
+  registerTool(tool: AnyToolDefinition): Unregister {
+    this.#assertOpen()
+    return this.#registry.register(tool)
+  }
+
+  onEvent(listener: (event: KernelEvent) => void): Unregister {
+    return this.#bus.subscribe(listener)
+  }
+
+  /**
+   * Boot the MCP bridge and the runtime subprocess. Called implicitly by
+   * {@link run}; call it explicitly to pay the startup cost up front.
+   *
+   * @returns settlement once the runtime handshake has completed.
+   */
+  async start(): Promise<void> {
+    this.#assertOpen()
+    if (this.#started) return
+    const blocked = dshUnavailableReason(this.#options.apiKeyEnv)
+    if (blocked) throw new DshUnavailableError(blocked)
+
+    this.#bridge = await startMcpBridge(this.#registry, MCP_SERVER_NAME)
+
+    if (this.#options.runtimeDir) {
+      this.#runtimeDir = this.#options.runtimeDir
+    } else {
+      this.#runtimeDir = await mkdtemp(join(tmpdir(), 'meridian-dsh-'))
+      this.#ownsRuntimeDir = true
+    }
+    const configPath = join(this.#runtimeDir, 'cordis.yml')
+    await writeFile(
+      configPath,
+      composeCordisConfig(
+        {
+          model: this.#options.model,
+          apiKeyEnv: this.#options.apiKeyEnv,
+          systemPrompt: this.#options.systemPrompt,
+        },
+        this.#bridge.url,
+      ),
+      'utf8',
+    )
+
+    const binPath = fileURLToPath(new URL('../runtime/dsh-runtime-bin.mjs', import.meta.url))
+    this.#harness = new DeepSeekHarness({
+      launch: {
+        command: process.execPath,
+        args: [binPath, configPath],
+        env: { ...process.env, MERIDIAN_READY_URL: this.#bridge.readyUrl },
+        // The runtime reads the credential itself; inheriting the parent env is
+        // the documented default and keeps `apiKeyEnv` meaningful.
+        cwd: this.#options.cwd,
+      },
+      cwd: this.#options.cwd,
+      provider: this.#options.provider,
+      model: this.#options.model,
+      ...(this.#options.maxOutputTokens ? { maxTokens: this.#options.maxOutputTokens } : {}),
+    })
+    await this.#harness.start()
+
+    // Readiness gate — do not remove without re-reading README §"Pitfall log".
+    //
+    // A dsh runtime begins serving JSON-RPC as soon as `dsh-sdk-jsonrpc-server`
+    // activates, which the Loader does CONCURRENTLY with every other entry. A
+    // prompt sent immediately after `initialize` therefore races the MCP
+    // client's connect + sync, and the loser is the model: prompt assembly runs
+    // with whatever was registered at that instant. Measured here, the first
+    // turn assembled its tool schemas 8 ms before the Meridian tool reached the
+    // registry. `boot()` resolving in the runtime is the trustworthy signal, so
+    // the runtime bin pings us and we wait for that.
+    await withTimeout(
+      this.#bridge.whenRuntimeReady,
+      RUNTIME_READY_TIMEOUT_MS,
+      `the dsh runtime did not report a settled plugin tree within ${RUNTIME_READY_TIMEOUT_MS}ms`,
+    )
+    this.#started = true
+  }
+
+  async run(plan: RunPlan): Promise<RunResult> {
+    this.#assertOpen()
+    await this.start()
+    const harness = this.#harness
+    if (!harness) throw new DshUnavailableError('runtime failed to start')
+
+    const runId = randomUUID()
+    const prompt = this.#composePrompt(plan)
+    const events: KernelEvent[] = []
+    // Mint the id ourselves rather than letting the runtime assign one on its
+    // first prompt: `run.start` has to carry the same `sessionId` as every later
+    // event, or `sessionLog()` loses the head of its own run. The contract suite
+    // caught exactly that when this kernel used a '(pending)' placeholder.
+    const sessionId = plan.sessionId ?? `session-${randomUUID().replaceAll('-', '')}`
+
+    const emit = (event: KernelEvent): void => {
+      events.push(event)
+      this.#log.append(event)
+      this.#bus.emit(event)
+    }
+
+    emit({ type: 'run.start', runId, sessionId, time: Date.now(), prompt })
+
+    let raw
+    try {
+      raw = await harness.run(prompt, { sessionId })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      emit({ type: 'error', runId, sessionId, time: Date.now(), message })
+      emit({ type: 'run.end', runId, sessionId, time: Date.now(), reason: 'error' })
+      throw error
+    }
+
+    const { normalized, toolCalls, reason, usage } = this.#normalize(
+      raw.events as unknown as DshSessionEvent[],
+      runId,
+      sessionId,
+    )
+    for (const event of normalized) emit(event)
+    emit({ type: 'run.end', runId, sessionId, time: Date.now(), reason })
+
+    return {
+      runId,
+      sessionId,
+      text: raw.finalResponse,
+      toolCalls,
+      events,
+      reason,
+      ...(usage ? { usage } : {}),
+      ...(plan.metadata ? { metadata: plan.metadata } : {}),
+    }
+  }
+
+  async sessionLog(sessionId: string): Promise<KernelEvent[]> {
+    if (!this.#log.has(sessionId)) throw new UnknownSessionError(sessionId)
+    return this.#log.read(sessionId)
+  }
+
+  async close(): Promise<void> {
+    if (this.#closed) return
+    this.#closed = true
+    await this.#harness?.close()
+    await this.#bridge?.close()
+    if (this.#ownsRuntimeDir && this.#runtimeDir) {
+      await rm(this.#runtimeDir, { recursive: true, force: true })
+    }
+  }
+
+  /**
+   * Build the wire prompt: language contract plus a per-run persona override.
+   *
+   * The composition's persona is fixed at boot, so a run-scoped `systemPrompt`
+   * is prepended to the user message instead. Documented rather than hidden:
+   * it is weaker than a real system prompt, and a caller that needs a hard
+   * persona should construct a kernel per persona.
+   *
+   * @param plan - the plan being run.
+   * @returns the prompt text sent to the runtime.
+   */
+  #composePrompt(plan: RunPlan): string {
+    const base = applyLangContract(plan.prompt, plan.lang)
+    return plan.systemPrompt ? `${plan.systemPrompt}\n\n---\n\n${base}` : base
+  }
+
+  /**
+   * Translate dsh session events into the kernel vocabulary.
+   *
+   * @param raw - the run's `session.event` payloads in wire order.
+   * @param runId - the kernel run id to stamp on every event.
+   * @param sessionId - the settled session id.
+   * @returns normalized events, tool round-trips, the end reason, and usage.
+   */
+  #normalize(
+    raw: DshSessionEvent[],
+    runId: string,
+    sessionId: string,
+  ): {
+    normalized: KernelEvent[]
+    toolCalls: ToolCallRecord[]
+    reason: RunEndReason
+    usage?: { inputTokens?: number; outputTokens?: number }
+  } {
+    const normalized: KernelEvent[] = []
+    const toolCalls: ToolCallRecord[] = []
+    const pending = new Map<string, { name: string; args: JsonValue }>()
+    let reason: RunEndReason = 'idle'
+    let usage: { inputTokens?: number; outputTokens?: number } | undefined
+
+    for (const event of raw) {
+      const time = event.time ?? Date.now()
+      const data = event.data ?? {}
+      switch (event.type) {
+        case 'assistant/message': {
+          const text = extractText((data as { message?: unknown }).message)
+          if (text) normalized.push({ type: 'assistant.message', runId, sessionId, time, text })
+          const reported = (data as { usage?: Record<string, unknown> }).usage
+          if (reported) {
+            usage = {
+              ...(typeof reported.inputTokens === 'number'
+                ? { inputTokens: reported.inputTokens }
+                : {}),
+              ...(typeof reported.outputTokens === 'number'
+                ? { outputTokens: reported.outputTokens }
+                : {}),
+            }
+          }
+          break
+        }
+        case 'tool/call': {
+          const callId = String((data as { callId?: unknown }).callId ?? randomUUID())
+          const name = stripMcpPrefix(String((data as { name?: unknown }).name ?? ''))
+          const args = safeParseJson(String((data as { arguments?: unknown }).arguments ?? '{}'))
+          pending.set(callId, { name, args })
+          normalized.push({ type: 'tool.call', runId, sessionId, time, callId, name, args })
+          break
+        }
+        case 'tool/result': {
+          const message = (data as { message?: Record<string, unknown> }).message ?? {}
+          const callId = toolResultCallId(message)
+          const call = pending.get(callId)
+          const name = call?.name ?? stripMcpPrefix(String(message.name ?? ''))
+          const ok = (data as { error?: unknown }).error === undefined
+          const result = extractText(message) || JSON.stringify(message)
+          normalized.push({
+            type: 'tool.result',
+            runId,
+            sessionId,
+            time,
+            callId,
+            name,
+            ok,
+            result,
+          })
+          toolCalls.push({ callId, name, args: call?.args ?? null, ok, result })
+          pending.delete(callId)
+          break
+        }
+        case 'turn/end': {
+          const turnReason = String((data as { reason?: unknown }).reason ?? 'idle')
+          reason = mapTurnEndReason(turnReason)
+          break
+        }
+        default:
+          break
+      }
+    }
+    return { normalized, toolCalls, reason, ...(usage ? { usage } : {}) }
+  }
+
+  /**
+   * Guard the one ordering rule dsh imposes: its MCP client discovers tools at
+   * plugin activation, so a tool registered after the runtime booted is
+   * invisible to the model. Fail loudly rather than produce a run that quietly
+   * cannot see half its tools.
+   */
+  #assertToolsNotFrozen(): void {
+    if (this.#started) {
+      throw new Error(
+        'DshKernel: tools must be registered before the first run() — the dsh MCP client ' +
+          'discovers the tool list once at activation and does not re-sync on our side.',
+      )
+    }
+  }
+
+  #assertOpen(): void {
+    if (this.#closed) throw new KernelClosedError(this.id)
+  }
+}
+
+/**
+ * Reject if a promise has not settled in time.
+ * @param promise - the work to bound.
+ * @param ms - the bound in milliseconds.
+ * @param message - the {@link DshUnavailableError} message on expiry.
+ * @returns the promise's value.
+ */
+async function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  let timer: NodeJS.Timeout | undefined
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new DshUnavailableError(message)), ms)
+      }),
+    ])
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
+}
+
+/** @param name - a possibly namespaced MCP tool name. @returns the bare name. */
+function stripMcpPrefix(name: string): string {
+  return name.startsWith(MCP_TOOL_PREFIX) ? name.slice(MCP_TOOL_PREFIX.length) : name
+}
+
+/** @param text - candidate JSON. @returns the parsed value, or the raw string. */
+function safeParseJson(text: string): JsonValue {
+  try {
+    return JSON.parse(text) as JsonValue
+  } catch {
+    return text
+  }
+}
+
+/**
+ * Recover the call id of a `tool/result`.
+ *
+ * dsh puts it in two places and neither is the obvious one: `message.source`
+ * carries `{ kind: 'tool', callId }`, and each `tool-result` block repeats it as
+ * `toolCallId`. Read both, because which one is authoritative is exactly the
+ * sort of detail a preview release renames.
+ *
+ * @param message - the `tool/result` message payload.
+ * @returns the call id, or `''` when neither field is present.
+ */
+function toolResultCallId(message: Record<string, unknown>): string {
+  const source = message.source
+  if (source && typeof source === 'object') {
+    const callId = (source as { callId?: unknown }).callId
+    if (typeof callId === 'string') return callId
+  }
+  const content = message.content
+  if (Array.isArray(content)) {
+    for (const block of content) {
+      const callId = (block as { toolCallId?: unknown })?.toolCallId
+      if (typeof callId === 'string') return callId
+    }
+  }
+  return ''
+}
+
+/**
+ * Pull plain text out of a dsh message shape, following ONE level of nesting:
+ * an assistant message is `{ content: [{ type: 'text', text }] }`, while a
+ * tool result is `{ content: [{ type: 'tool-result', content: [{ text }] }] }`.
+ *
+ * @param message - an assistant or tool-result message.
+ * @returns the concatenated text blocks, or `''`.
+ */
+function extractText(message: unknown): string {
+  if (!message || typeof message !== 'object') return ''
+  const content = (message as { content?: unknown }).content
+  if (typeof content === 'string') return content
+  if (!Array.isArray(content)) return ''
+  const parts: string[] = []
+  for (const block of content) {
+    if (!block || typeof block !== 'object') continue
+    const text = (block as { text?: unknown }).text
+    if (typeof text === 'string') {
+      parts.push(text)
+      continue
+    }
+    const nested = (block as { content?: unknown }).content
+    if (typeof nested === 'string') parts.push(nested)
+    else if (Array.isArray(nested)) {
+      for (const inner of nested) {
+        const innerText = (inner as { text?: unknown })?.text
+        if (typeof innerText === 'string') parts.push(innerText)
+      }
+    }
+  }
+  return parts.join('')
+}
+
+/** @param reason - dsh's `TurnEndReason`. @returns the kernel's end reason. */
+function mapTurnEndReason(reason: string): RunEndReason {
+  if (reason.includes('max-tokens')) return 'max-tokens'
+  if (reason.includes('cancel') || reason.includes('abort')) return 'cancelled'
+  if (reason.includes('error') || reason.includes('fail')) return 'error'
+  return 'idle'
+}

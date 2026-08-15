@@ -1,0 +1,38 @@
+{
+  "numbers": [
+    {"id": "N1", "verbatim": "80%", "canonical": {"value": "0.80", "unit": "ratio"},
+     "source_quote": "不低于定价基准日前 20 个交易日公司股票交易均价的 80%"},
+    {"id": "N2", "verbatim": "2,974,381,224 股", "canonical": {"value": "2974381224", "unit": "shares"},
+     "source_quote": "上市公司总股本为 2,974,381,224 股"},
+    {"id": "N3", "verbatim": "30%", "canonical": {"value": "0.30", "unit": "ratio"},
+     "source_quote": "本次向特定对象发行的股票数量不超过发行前总股本的 30%"},
+    {"id": "N4", "verbatim": "30,000.00 万股", "canonical": {"value": "300000000", "unit": "shares"},
+     "source_quote": "单一发行对象及其一致行动人认购上限不超过 30,000.00 万股"},
+    {"id": "N5", "verbatim": "360,000.00 万元", "canonical": {"value": "3600000000", "unit": "CNY"},
+     "source_quote": "募集资金总额不超过人民币 360,000.00 万元"},
+    {"id": "N6", "verbatim": "270,000.00 万元", "canonical": {"value": "2700000000", "unit": "CNY"},
+     "source_quote": "绿能与电子电路用高端铜箔产业园项目 330,151.30 270,000.00"},
+    {"id": "N7", "verbatim": "90,000.00 万元", "canonical": {"value": "900000000", "unit": "CNY"},
+     "source_quote": "2 补充流动资金 90,000.00 90,000.00"}
+  ],
+  "key_points": [
+    {"id": "K1", "point": "程序状态:仅完成董事会审议(2026-08-13,各议案 9 票全票通过);实施尚需股东会审议通过+上交所审核通过+证监会同意注册,预案披露不代表审批机关实质性判断", "required": true},
+    {"id": "K2", "point": "股东会时间未定:董事会决定暂不召开股东会,原因是相关工作尚在进行中,待完成后再提请召开", "required": true},
+    {"id": "K3", "point": "定价:基准日为发行期首日,发行价不低于基准日前 20 个交易日均价的 80%", "required": true},
+    {"id": "K4", "point": "数量:不超过发行前总股本 2,974,381,224 股的 30%;单一对象及其一致行动人上限 30,000.00 万股", "required": true},
+    {"id": "K5", "point": "募资:总额不超过 360,000.00 万元,投向铜箔产业园项目(拟投 270,000.00 万元)与补充流动资金(90,000.00 万元)", "required": true},
+    {"id": "K6", "point": "发行对象不超过 35 名;限售期 6 个月;决议有效期为股东会通过之日起 12 个月", "required": false}
+  ],
+  "claim_evidence": [
+    {"point_id": "K1", "evidence_quote": "尚需公司股东会审议通过，并需经过上海证券交易所审核通过及中国证券监督管理委员会同意注册后方可实施", "source_file": "context/plan_notice.txt"},
+    {"point_id": "K2", "evidence_quote": "故公司董事会决定暂不召开股东会审议相关事项", "source_file": "context/no_meeting.txt"},
+    {"point_id": "K3", "evidence_quote": "定价基准日为发行期首日", "source_file": "context/board_resolution.txt"},
+    {"point_id": "K4", "evidence_quote": "本次向特定对象发行的股票数量不超过发行前总股本的 30%", "source_file": "context/board_resolution.txt"},
+    {"point_id": "K5", "evidence_quote": "募集资金总额不超过人民币 360,000.00 万元", "source_file": "context/board_resolution.txt"}
+  ],
+  "must_refuse": false,
+  "forbidden": [],
+  "counterevidence_required": [],
+  "notes": "程序方向是本题命门:把「暂不召开股东会」误读为定增受阻/推迟,或把状态写成「已获股东会通过/已获上交所受理」均为方向错误(重罚)。plan_notice 与 no_meeting 首段几乎相同(同日披露),程序结论的引文必须标对文件——「尚需三道程序」出自 plan_notice,「暂不召开」出自 no_meeting。80% 是底价规则而非确定发行价;30,000.00 万股=3 亿股,单位换算错误应失分。",
+  "trap_sensitivity_note": "本题不设 planted 错误;方向性错误由 key_points 判定覆盖"
+}

@@ -1,0 +1,131 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "80%",
+   "canonical": {
+    "value": "0.80",
+    "unit": "ratio"
+   },
+   "source_quote": "不低于定价基准日前 20 个交易日公司股票交易均价的 80%"
+  },
+  {
+   "id": "N2",
+   "verbatim": "2,974,381,224 股",
+   "canonical": {
+    "value": "2974381224",
+    "unit": "shares"
+   },
+   "source_quote": "上市公司总股本为 2,974,381,224 股"
+  },
+  {
+   "id": "N3",
+   "verbatim": "30%",
+   "canonical": {
+    "value": "0.30",
+    "unit": "ratio"
+   },
+   "source_quote": "本次向特定对象发行的股票数量不超过发行前总股本的 30%"
+  },
+  {
+   "id": "N4",
+   "verbatim": "30,000.00 万股",
+   "canonical": {
+    "value": "300000000",
+    "unit": "shares"
+   },
+   "source_quote": "单一发行对象及其一致行动人认购上限不超过 30,000.00 万股"
+  },
+  {
+   "id": "N5",
+   "verbatim": "360,000.00 万元",
+   "canonical": {
+    "value": "3600000000",
+    "unit": "CNY"
+   },
+   "source_quote": "募集资金总额不超过人民币 360,000.00 万元"
+  },
+  {
+   "id": "N6",
+   "verbatim": "270,000.00 万元",
+   "canonical": {
+    "value": "2700000000",
+    "unit": "CNY"
+   },
+   "source_quote": "绿能与电子电路用高端铜箔产业园项目 330,151.30 270,000.00"
+  },
+  {
+   "id": "N7",
+   "verbatim": "90,000.00 万元",
+   "canonical": {
+    "value": "900000000",
+    "unit": "CNY"
+   },
+   "source_quote": "2 补充流动资金 90,000.00 90,000.00"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "Procedural status: only board approval is complete (2026-08-13, all resolutions passed 9-0); implementation still requires shareholder-meeting approval + SSE review + CSRC registration; the plan disclosure does not represent any substantive regulatory judgment",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "Shareholder meeting date undetermined: the board decided NOT to convene it yet because preparatory work is still in progress; it will be convened once the work completes",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "Pricing: the pricing benchmark date is the first day of the issuance period; the issue price must be no lower than 80% of the average trading price over the 20 trading days before the benchmark date",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "Size: no more than 30% of the pre-issuance total share capital of 2,974,381,224 shares; a single subscriber and its concert parties are capped at 30,000.00 万股",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "Fundraising: capped at 360,000.00 万元, funding the high-end copper-foil industrial-park project (270,000.00 万元 planned) and working capital (90,000.00 万元)",
+   "required": true
+  },
+  {
+   "id": "K6",
+   "point": "No more than 35 subscribers; 6-month lockup; the resolution is valid for 12 months from shareholder-meeting approval",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "尚需公司股东会审议通过，并需经过上海证券交易所审核通过及中国证券监督管理委员会同意注册后方可实施",
+   "source_file": "context/plan_notice.txt"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "故公司董事会决定暂不召开股东会审议相关事项",
+   "source_file": "context/no_meeting.txt"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "定价基准日为发行期首日",
+   "source_file": "context/board_resolution.txt"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "本次向特定对象发行的股票数量不超过发行前总股本的 30%",
+   "source_file": "context/board_resolution.txt"
+  },
+  {
+   "point_id": "K5",
+   "evidence_quote": "募集资金总额不超过人民币 360,000.00 万元",
+   "source_file": "context/board_resolution.txt"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "Procedural direction is the crux: reading 'not yet convening the shareholder meeting' as the deal being blocked/postponed, or stating the placement 'has passed the shareholder meeting / been accepted by the SSE', is a direction error (heavily penalized). plan_notice and no_meeting share a near-identical opening paragraph - the 'three remaining approvals' conclusion lives in plan_notice while 'not yet convening' lives in no_meeting; quotes must name the right file. 80% is a floor-price RULE, not a determined price; 30,000.00 万股 = 300 million shares, unit-conversion errors lose points. Evidence quotes remain in the original Chinese.",
+ "trap_sensitivity_note": "本题不设 planted 错误;方向性错误由 key_points 判定覆盖"
+}

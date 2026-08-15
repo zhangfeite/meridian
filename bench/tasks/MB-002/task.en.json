@@ -1,0 +1,15 @@
+{
+ "id": "MB-002",
+ "lang": "en",
+ "type": "fact_extraction",
+ "prompt": "Read this Chinese administrative-penalty filing and lay out: 1) the amounts of inflated revenue and inflated total profit for each year, with each amount's ratio to the restated figure; 2) the penalty decisions against the company and each responsible individual; 3) the impact of this penalty on the company's listing status. Keep every number exactly as stated in the original and cite the source sentence in Chinese.",
+ "context_files": [
+  "context/announcement.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

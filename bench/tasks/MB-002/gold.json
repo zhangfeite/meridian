@@ -1,0 +1,121 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "4435.88 万元",
+   "canonical": {
+    "value": "44358800",
+    "unit": "CNY"
+   },
+   "source_quote": "虚增营业收入 4435.88 万元,占当期营业收入 5.96%"
+  },
+  {
+   "id": "N2",
+   "verbatim": "5.96%",
+   "canonical": {
+    "value": "0.0596",
+    "unit": "ratio"
+   },
+   "source_quote": "占当期营业收入 5.96%"
+  },
+  {
+   "id": "N3",
+   "verbatim": "908.77 万元",
+   "canonical": {
+    "value": "9087700",
+    "unit": "CNY"
+   },
+   "source_quote": "虚增利润总额 908.77 万元"
+  },
+  {
+   "id": "N4",
+   "verbatim": "119.46%",
+   "canonical": {
+    "value": "1.1946",
+    "unit": "ratio"
+   },
+   "source_quote": "占当期利润总额 119.46%"
+  },
+  {
+   "id": "N5",
+   "verbatim": "2032.40 万元",
+   "canonical": {
+    "value": "20324000",
+    "unit": "CNY"
+   },
+   "source_quote": "虚增营业收入 2032.40 万元"
+  },
+  {
+   "id": "N6",
+   "verbatim": "6468.28 万元",
+   "canonical": {
+    "value": "64682800",
+    "unit": "CNY"
+   },
+   "source_quote": "虚增 2023 年度营业收入 6468.28 万元"
+  },
+  {
+   "id": "N7",
+   "verbatim": "157.11%",
+   "canonical": {
+    "value": "1.5711",
+    "unit": "ratio"
+   },
+   "source_quote": "占当期利润总额 157.11%"
+  },
+  {
+   "id": "N8",
+   "verbatim": "500 万元",
+   "canonical": {
+    "value": "5000000",
+    "unit": "CNY"
+   },
+   "source_quote": "警告,并处以 500 万元罚款"
+  },
+  {
+   "id": "N9",
+   "verbatim": "250 万元",
+   "canonical": {
+    "value": "2500000",
+    "unit": "CNY"
+   },
+   "source_quote": "警告,并处以 250 万元罚款"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "2023 年度两项事项:客户退货未冲减(虚增营业收入 4435.88 万元、虚增利润总额 908.77 万元,占当期利润总额 119.46%);现金折扣未冲减(虚增营业收入 2032.40 万元);合计虚增营业收入 6468.28 万元,虚增利润总额占比 157.11%",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "对公司警告并罚款 500 万元;对责任人分档罚款",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "未触及重大违法强制退市情形,但触及其他风险警示情形,股票已被实施其他风险警示",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "立案(2025-09-29)与处罚告知(2026-06-09)的时间线",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K2",
+   "evidence_quote": "警告,并处以 500 万元罚款"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "风险警示"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "占比>100%(119.46%/157.11%)是理解陷阱:agent 若「纠正」为 19.46% 或质疑数据错误即失分——虚增额超过当期利润总额时占比自然超 100%。 更正(2026-08-15):原 K1「至少覆盖两个年度」是标注错误——公告仅涉及 2023 一个年度的两项事项;正确指出「仅 2023 年度」应得分,声称多年度反而是编造。"
+}

@@ -1,0 +1,8 @@
+{
+  "id": "MB-011",
+  "lang": "zh-TW",
+  "type": "risk_identification",
+  "prompt": "閱讀該解除質押公告,回答:1)本次解除質押的股份數量、兩個口徑的佔比、質權人與解除日期?2)解除後控股股東及其一致行動人的質押水平如何(分主體與合計,注意區分「佔其所持股份」與「佔公司總股本」兩個口徑)?3)公告關於平倉風險的說法是什麼?該說法的性質是可驗證事實還是公司/股東自述?4)從質押結構看,仍需關注哪些風險訊號?每個結論註明出處。",
+  "context_files": ["context/announcement.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "counterevidence", "completeness", "compliance"]
+}

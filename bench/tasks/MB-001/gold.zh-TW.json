@@ -1,0 +1,33 @@
+{
+  "numbers": [
+    {"id": "N1", "verbatim": "2026年8月13日", "canonical": {"value": "2026-08-13", "unit": "date"},
+     "source_quote": "于2026年8月13日收到浙江省宁波市中级人民法院"},
+    {"id": "N2", "verbatim": "1,500,000元", "canonical": {"value": "1500000", "unit": "CNY"},
+     "source_quote": "经(2026)沪0113民特(调)65号《民事裁定书》确认的货款1,500,000元"},
+    {"id": "N3", "verbatim": "(2026)浙02破申13号", "canonical": {"value": "(2026)浙02破申13号", "unit": "doc_no"},
+     "source_quote": "《浙江省宁波市中级人民法院通知书(2026)浙02破申13号》"},
+    {"id": "N4", "verbatim": "(2026)沪0113民特(调)65号", "canonical": {"value": "(2026)沪0113民特(调)65号", "unit": "doc_no"},
+     "source_quote": "经(2026)沪0113民特(调)65号《民事裁定书》确认"}
+  ],
+  "key_points": [
+    {"id": "K1", "point": "公司於2026年8月13日收到寧波市中級人民法院送達的《通知書》", "required": true},
+    {"id": "K2", "point": "申請人為債權人上海振堃建材貿易有限公司", "required": true},
+    {"id": "K3", "point": "申請理由:公司不能清償到期債務且明顯缺乏清償能力,但具備重整價值", "required": true},
+    {"id": "K4", "point": "債權為經民事裁定書確認的貨款1,500,000元", "required": true},
+    {"id": "K5", "point": "截至公告揭露日,公司尚未收到法院受理重整申請的文件,申請能否被受理存在重大不確定性", "required": true},
+    {"id": "K6", "point": "若法院裁定受理,公司股票將按上市規則被疊加實施退市風險警示", "required": true,
+     "_tw_note": "台灣慣用「下市」,此處保留中國交易所制度專名「退市風險警示」(即 *ST),以便與原文引句對應。"}
+  ],
+  "claim_evidence": [
+    {"point_id": "K1", "evidence_quote": "于2026年8月13日收到浙江省宁波市中级人民法院(以下简称\"宁波中院\"或\"法院\")送达的"},
+    {"point_id": "K2", "evidence_quote": "公司债权人上海振堃建材贸易有限公司(以下简称\"申请人\")"},
+    {"point_id": "K3", "evidence_quote": "以公司不能清偿到期债务且明显缺乏清偿能力,但具备重整价值为由"},
+    {"point_id": "K4", "evidence_quote": "《民事裁定书》确认的货款1,500,000元"},
+    {"point_id": "K5", "evidence_quote": "尚未收到法院"},
+    {"point_id": "K6", "evidence_quote": "退市风险警示"}
+  ],
+  "must_refuse": false,
+  "forbidden": [],
+  "counterevidence_required": [],
+  "notes": "程序狀態語義是核心陷阱:「被申請重整」≠「進入重整程序」。把 K5 寫成「已進入重整/預重整程序」應在 citation_alignment 記重失分(方向性錯誤,參照潛望 R-006 教訓)。"
+}

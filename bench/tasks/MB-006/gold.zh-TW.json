@@ -1,0 +1,23 @@
+{
+  "numbers": [
+    {"id": "N1", "verbatim": "2026 年 8 月 12 日", "canonical": {"value": "2026-08-12", "unit": "date"}, "source_quote": "公司股票于 2026 年 8 月 12 日、8 月 13 日连续 2 个交易日"},
+    {"id": "N2", "verbatim": "20%", "canonical": {"value": "0.20", "unit": "ratio"}, "source_quote": "收盘价格涨幅偏离值累计超过 20%"},
+    {"id": "N3", "verbatim": "2026 年 8 月 14 日", "canonical": {"value": "2026-08-14", "unit": "date"}, "source_quote": "于 2026 年 8 月 14 日披露的《关于公司被债权人申请重整及预重整的提示性公告》"},
+    {"id": "N4", "verbatim": "2026年8月13日", "canonical": {"value": "2026-08-13", "unit": "date"}, "source_quote": "于2026年8月13日收到浙江省宁波市中级人民法院"}
+  ],
+  "key_points": [
+    {"id": "K1", "point": "異動 = 8/12、8/13 連續兩交易日漲幅偏離累計超 20%(上交所交易規則口徑)", "required": true},
+    {"id": "K2", "point": "時間關係:收到法院通知書(8/13)與股價異動(8/12-13)重疊,重整公告揭露(8/14)在異動之後", "required": true},
+    {"id": "K3", "point": "核查結論:除重整提示性公告外,不存在應揭露而未揭露的重大事項(含書面徵詢控股股東及實控人)", "required": true,
+     "_tw_note": "「實控人」為中國公告縮略語(實際控制人),台灣多寫「實質控制人」或全稱;保留原公告用語。"}
+  ],
+  "claim_evidence": [
+    {"point_id": "K1", "evidence_quote": "连续 2 个交易日内收盘价格涨幅偏离值累计超过 20%", "source_file": "context/abnormal_move.txt"},
+    {"point_id": "K2", "evidence_quote": "于2026年8月13日收到浙江省宁波市中级人民法院", "source_file": "context/restructuring.txt"},
+    {"point_id": "K3", "evidence_quote": "不存在应披露而未披露的重大事项", "source_file": "context/abnormal_move.txt"}
+  ],
+  "must_refuse": false,
+  "forbidden": [],
+  "counterevidence_required": [],
+  "notes": "跨文件時間線是命門:8/13 收到通知書(重整公告)與 8/12-13 異動(異動公告)的重疊關係必須從兩份文件各取一半才能拼出——單文件讀不出 K2。事實對但引文標錯文件計 citation 失分(source_file 校驗)。"
+}

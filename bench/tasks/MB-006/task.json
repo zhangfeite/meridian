@@ -1,0 +1,8 @@
+{
+  "id": "MB-006",
+  "lang": "zh-CN",
+  "type": "multi_doc",
+  "prompt": "结合这两份公告,梳理:1)股价异常波动发生在哪两个交易日、触发标准是什么?2)重整申请的披露时间与股价异动的先后关系?3)异动核查公告对「是否存在未披露重大事项」的结论是什么、该结论有什么例外?每个结论注明出自哪份公告的哪句原文。",
+  "context_files": ["context/abnormal_move.txt", "context/restructuring.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

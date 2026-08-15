@@ -1,0 +1,23 @@
+{
+  "name": "@meridian/agent",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "license": "MIT",
+  "description": "Meridian seven-step research pipeline: intent → plan → retrieve → extract+verify → metrics → counter-evidence → compose.",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --test-concurrency=1 \"test/*.test.ts\"",
+    "memo": "node bin/meridian-memo.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "typescript": "^5.9.3"
+  }
+}

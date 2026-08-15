@@ -1,0 +1,8 @@
+{
+  "id": "MB-011",
+  "lang": "zh-CN",
+  "type": "risk_identification",
+  "prompt": "阅读该解除质押公告,回答:1)本次解除质押的股份数量、两个口径的占比、质权人与解除日期?2)解除后控股股东及其一致行动人的质押水平如何(分主体与合计,注意区分「占其所持股份」与「占公司总股本」两个口径)?3)公告关于平仓风险的说法是什么?该说法的性质是可验证事实还是公司/股东自述?4)从质押结构看,仍需关注哪些风险信号?每个结论注明出处。",
+  "context_files": ["context/announcement.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "counterevidence", "completeness", "compliance"]
+}

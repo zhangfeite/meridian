@@ -1,0 +1,8 @@
+{
+  "id": "MB-012",
+  "lang": "zh-CN",
+  "type": "multi_doc",
+  "prompt": "这批文件来自多家不同公司,只有部分与问题相关。回答:1)勤上股份本次首次减持回购股份的数量、占总股本比例、成交总额与均价是多少?发生在哪一天?2)这次减持的主体是谁——是控股股东在减持,还是公司在出售已回购的股份?依据是什么?3)公司当初回购这批股份的总量、总金额与成交价区间是多少?据此计算回购均价约为多少?4)以首次减持均价对比回购均价,公司此次出售相对回购成本约为多少倍?5)本次减持后,剩余尚可减持的已回购股份还有多少股?每个结论注明出处文件并引用原文。",
+  "context_files": ["context/qinshang_selldown.txt", "context/kuaiyi_pledge.txt", "context/naxinwei_forecast.txt", "context/hengtong_no_meeting.txt", "context/longyuan_restructuring.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

@@ -1,0 +1,122 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "4435.88 万元",
+   "canonical": {
+    "value": "44358800",
+    "unit": "CNY"
+   },
+   "source_quote": "虚增营业收入 4435.88 万元,占当期营业收入 5.96%"
+  },
+  {
+   "id": "N2",
+   "verbatim": "5.96%",
+   "canonical": {
+    "value": "0.0596",
+    "unit": "ratio"
+   },
+   "source_quote": "占当期营业收入 5.96%"
+  },
+  {
+   "id": "N3",
+   "verbatim": "908.77 万元",
+   "canonical": {
+    "value": "9087700",
+    "unit": "CNY"
+   },
+   "source_quote": "虚增利润总额 908.77 万元"
+  },
+  {
+   "id": "N4",
+   "verbatim": "119.46%",
+   "canonical": {
+    "value": "1.1946",
+    "unit": "ratio"
+   },
+   "source_quote": "占当期利润总额 119.46%"
+  },
+  {
+   "id": "N5",
+   "verbatim": "2032.40 万元",
+   "canonical": {
+    "value": "20324000",
+    "unit": "CNY"
+   },
+   "source_quote": "虚增营业收入 2032.40 万元"
+  },
+  {
+   "id": "N6",
+   "verbatim": "6468.28 万元",
+   "canonical": {
+    "value": "64682800",
+    "unit": "CNY"
+   },
+   "source_quote": "虚增 2023 年度营业收入 6468.28 万元"
+  },
+  {
+   "id": "N7",
+   "verbatim": "157.11%",
+   "canonical": {
+    "value": "1.5711",
+    "unit": "ratio"
+   },
+   "source_quote": "占当期利润总额 157.11%"
+  },
+  {
+   "id": "N8",
+   "verbatim": "500 万元",
+   "canonical": {
+    "value": "5000000",
+    "unit": "CNY"
+   },
+   "source_quote": "警告,并处以 500 万元罚款"
+  },
+  {
+   "id": "N9",
+   "verbatim": "250 万元",
+   "canonical": {
+    "value": "2500000",
+    "unit": "CNY"
+   },
+   "source_quote": "警告,并处以 250 万元罚款"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "2023 年度兩項事項:客戶退貨未沖減(虛增營業收入 4435.88 萬元、虛增利潤總額 908.77 萬元,佔當期利潤總額 119.46%);現金折扣未沖減(虛增營業收入 2032.40 萬元);合計虛增營業收入 6468.28 萬元,虛增利潤總額佔比 157.11%",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "對公司警告並罰款 500 萬元;對責任人分檔罰款",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "未觸及重大違法強制退市情形,但觸及其他風險警示情形,股票已被實施其他風險警示",
+   "required": true,
+   "_tw_note": "「退市」台灣慣稱「下市」;「重大違法強制退市」「其他風險警示」均為中國交易所制度專名,保留原詞。"
+  },
+  {
+   "id": "K4",
+   "point": "立案(2025-09-29)與處罰告知(2026-06-09)的時間線",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K2",
+   "evidence_quote": "警告,并处以 500 万元罚款"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "风险警示"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "佔比>100%(119.46%/157.11%)是理解陷阱:agent 若「糾正」為 19.46% 或質疑數據錯誤即失分——虛增額超過當期利潤總額時佔比自然超 100%。 更正(2026-08-15):原 K1「至少涵蓋兩個年度」是標註錯誤——公告僅涉及 2023 一個年度的兩項事項;正確指出「僅 2023 年度」應得分,聲稱多年度反而是編造。"
+}

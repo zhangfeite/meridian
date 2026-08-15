@@ -1,0 +1,97 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "-10.84 万元",
+   "canonical": {
+    "value": "-108400",
+    "unit": "CNY"
+   },
+   "source_quote": "信用减值损失 -10.84 应收票据坏账准备"
+  },
+  {
+   "id": "N2",
+   "verbatim": "1,533.98 万元",
+   "canonical": {
+    "value": "15339800",
+    "unit": "CNY"
+   },
+   "source_quote": "信用减值损失 1,533.98 应收账款坏账准备"
+  },
+  {
+   "id": "N3",
+   "verbatim": "92.53 万元",
+   "canonical": {
+    "value": "925300",
+    "unit": "CNY"
+   },
+   "source_quote": "信用减值损失 92.53 其他应收款坏账准备"
+  },
+  {
+   "id": "N4",
+   "verbatim": "7,199.78 万元",
+   "canonical": {
+    "value": "71997800",
+    "unit": "CNY"
+   },
+   "source_quote": "资产减值损失 7,199.78 存货跌价准备"
+  },
+  {
+   "id": "N5",
+   "verbatim": "8,815.45 万元",
+   "canonical": {
+    "value": "88154500",
+    "unit": "CNY"
+   },
+   "source_quote": "合计 8,815.45"
+  },
+  {
+   "id": "N6",
+   "verbatim": "约 81.7%",
+   "canonical": {
+    "value": "0.8167",
+    "unit": "ratio",
+    "derived": true,
+    "formula": "7199.78/8815.45"
+   },
+   "source_quote": "(derived) 存货跌价准备 7,199.78 / 合计 8,815.45"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "四項明細:應收票據壞帳準備 -10.84 萬元、應收帳款壞帳準備 1,533.98 萬元、其他應收款壞帳準備 92.53 萬元、存貨跌價準備 7,199.78 萬元,單位均為人民幣萬元",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "合計 8,815.45 萬元",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "佔比最大為存貨跌價準備(約 82%)",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "應收票據壞帳準備為負數(-10.84 萬元,轉回)",
+   "required": false,
+   "_tw_note": "台灣慣用「備抵呆帳」,中國準則科目為「壞帳準備」,保留原文科目名;「轉回」兩岸用語相同。"
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K2",
+   "evidence_quote": "合计 8,815.45"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "资产减值损失 7,199.78 存货跌价准备"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "單位是本題命門:全表為「萬元」,任何按「元」表述(如 8,815.45 元)或漏單位都應重罰;N6 為唯一允許的衍生數(derived=true,允許 81%~82.0% 區間);負數 N1 的符號丟失應記失分。"
+}

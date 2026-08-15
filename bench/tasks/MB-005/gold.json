@@ -1,0 +1,48 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "1,500,000元",
+   "canonical": {
+    "value": "1500000",
+    "unit": "CNY"
+   },
+   "source_quote": "《民事裁定书》确认的货款1,500,000元"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K4",
+   "point": "债权人申请重整所依据的债权金额为 1,500,000 元(经《民事裁定书》确认的货款)",
+   "required": true
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K4",
+   "evidence_quote": "确认的货款1,500,000元"
+  }
+ ],
+ "answer_absent": true,
+ "absence_points": [
+  {
+   "id": "A1",
+   "question": "重整投资人是谁",
+   "expected": "公告未披露(尚处债权人申请阶段,法院未受理,无重整投资人信息)"
+  },
+  {
+   "id": "A2",
+   "question": "投资人出资金额",
+   "expected": "公告未披露"
+  },
+  {
+   "id": "A3",
+   "question": "重整管理人",
+   "expected": "公告未披露(法院尚未受理,未指定管理人)"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "四问中三问原文无答案、一问有答案——混合设计防「一律说不知道」的偷懒策略:A1-A3 须如实说未披露(最好带程序状态解释),K4 必须答对。任何编造投资人名称/金额/管理人机构 = 整题 0(金融 agent 最坏的失败形态)。"
+}

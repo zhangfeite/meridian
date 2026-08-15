@@ -1,0 +1,33 @@
+{
+  "numbers": [
+    {"id": "N1", "verbatim": "8,815.45 万元", "canonical": {"value": "88154500", "unit": "CNY"},
+     "source_quote": "公司计提各项减值准备共计 8,815.45 万元"},
+    {"id": "N2", "verbatim": "约 6,700.00 万元", "canonical": {"value": "67000000", "unit": "CNY"},
+     "source_quote": "实现归属于母公司所有者的净利润约 6,700.00 万元"},
+    {"id": "N3", "verbatim": "约-4,800.00 万元", "canonical": {"value": "-48000000", "unit": "CNY"},
+     "source_quote": "扣除非经常性损益后归属于母公司所有者的净利润约-4,800.00 万元"},
+    {"id": "N4", "verbatim": "约 9,400 万元", "canonical": {"value": "94000000", "unit": "CNY"},
+     "source_quote": "公允价值变动收益约 9,400 万元"},
+    {"id": "N5", "verbatim": "-7,801.00 万元", "canonical": {"value": "-78010000", "unit": "CNY"},
+     "source_quote": "2025 年上半年归属于母公司所有者的净利润-7,801.00 万元"},
+    {"id": "N6", "verbatim": "约 15,515.45 万元", "canonical": {"value": "155154500", "unit": "CNY", "derived": true, "formula": "6700.00+8815.45"},
+     "source_quote": "(derived) 预告归母净利 6,700.00 + 本次减值 8,815.45"}
+  ],
+  "key_points": [
+    {"id": "K1", "point": "減值合計 8,815.45 萬元,等額減少 2026 上半年歸母淨利潤與期末歸母所有者權益", "required": true},
+    {"id": "K2", "point": "預告歸母淨利約 6,700.00 萬元(上年同期 -7,801.00 萬元,扭虧為盈);扣非歸母淨利約 -4,800.00 萬元(仍為虧損,同比收窄)", "required": true},
+    {"id": "K3", "point": "非經常性收益主要係私募基金間接股權投資的公允價值變動收益,約 9,400 萬元", "required": true},
+    {"id": "K4", "point": "交叉印證:減值影響已包含在預告淨利中;若無本次減值,歸母淨利約為 15,515.45 萬元(6,700.00+8,815.45)", "required": true},
+    {"id": "K5", "point": "兩份公告同日(2026-08-14)揭露,數據均未經審計,以正式半年報/年審結果為準", "required": false}
+  ],
+  "claim_evidence": [
+    {"point_id": "K1", "evidence_quote": "公司计提各项减值准备共计 8,815.45 万元", "source_file": "context/impairment.txt"},
+    {"point_id": "K2", "evidence_quote": "实现归属于母公司所有者的净利润约 6,700.00 万元", "source_file": "context/forecast.txt"},
+    {"point_id": "K3", "evidence_quote": "公允价值变动收益约 9,400 万元", "source_file": "context/forecast.txt"},
+    {"point_id": "K4", "evidence_quote": "共计减少 2026 年上半年归属于母公司所有者的净利润 8,815.45 万元", "source_file": "context/impairment.txt"}
+  ],
+  "must_refuse": false,
+  "forbidden": [],
+  "counterevidence_required": [],
+  "notes": "出處混淆是本題命門:同一公司、同日揭露、編號相鄰(2026-044/045),減值數(8,815.45)與預告數(6,700.00/9,400)量級接近——把減值數標到 forecast.txt 或把淨利數標到 impairment.txt 均計 citation 失分(source_file 校驗)。-4,800.00 的負號丟失、「扭虧為盈」方向寫反均應失分;N6 為唯一衍生數(0.5% 容差)。"
+}
