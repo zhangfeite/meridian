@@ -29,20 +29,17 @@ uv --directory bench/runner run bench run \
 
 11 hand-authored tasks from real Chinese filings × 3 languages (zh-CN / zh-TW / en) = 35 scored instances, plus scorer-validation traps. Task format and scoring contract: [`bench/tasks/SCHEMA.md`](bench/tasks/SCHEMA.md).
 
-## Honest numbers (2026-08, deepseek-chat, temperature 0)
+## Honest numbers (2026-08, deepseek-chat, temperature 0, full 20-task set, same scorer version)
 
-| run | bare DeepSeek | Meridian pipeline |
-|---|---|---|
-| zh-CN "new-paradigm" tasks (multi-doc, no-answer, risk; MB-005…011) | 0.951 | **0.950–0.971** ¹ |
-| — of which MB-011 (risk & counter-evidence) | 0.748 | **0.950** |
-| zh-TW, all 11 tasks | 0.716 | — |
-| en, all 11 tasks | 0.579 ² | — |
+| language | bare DeepSeek | Meridian pipeline | Δ |
+|---|---|---|---|
+| zh-CN | 0.9059 | **0.9756** | +0.070 |
+| zh-TW | 0.8529 | **0.9769** | +0.124 |
+| en | 0.6223 | **0.9434** | +0.321 |
 
-¹ Two independent runs of identical code; DeepSeek is not bit-exact at temperature 0, and quote-selection differences move ±0.02. We report the range, not the best run.
-² The en gap is mostly instruction-following: the bare model answers Chinese-language questions in Chinese even when the task language is English.
+60 instances per column, zero failed runs, zero fabrication hard-failures on the pipeline side. Run-to-run variance is ±0.02-0.03 — treat differences below that as noise. Ten scorer defects were found and fixed during dogfooding *before* these numbers were taken (each with positive and negative regression tests; several exonerated the bare model, not the pipeline — see CONTRIBUTING's honest-benchmark rule).
 
-Where the pipeline structurally differs from a bare model: it refuses to fabricate under absence (planted-fabrication traps score 0 by design), it attaches counter-evidence to inferences, and its verifier has caught — in real runs — fabricated quotes, a ×100 percent-operand arithmetic error, and its own writing model's attempts to smuggle unanchored claims. The bare model is genuinely strong at single-document extraction; we say so.
-
+Where the pipeline structurally differs from a bare model: it refuses to fabricate under absence (planted-fabrication traps score 0 by design), it attaches counter-evidence to inferences, every number in prose is placeholder-locked (the writing model literally never sees a digit), derivation chains carry interval uncertainty, and the memo language contract holds across scripts (a zh-TW memo quotes the Simplified filing verbatim while writing Traditional prose). The bare model is genuinely strong at Simplified-Chinese extraction; we say so.
 ## 简体中文
 
 开源、可自托管、BYO-model 的金融分析 Agent——自主拉取原始数据、逐字验证数字、产出每句话都可回溯到原始文件的研究备忘录。A股/港股是一等公民。分析不是建议:我们永不输出买卖动作、目标价、评级档位或收益承诺。

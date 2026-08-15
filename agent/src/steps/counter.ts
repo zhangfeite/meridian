@@ -23,6 +23,7 @@ import { counterEvidencePrompt } from '../prompts.ts'
 import type { SourceDocument } from '../source/types.ts'
 import { bindNumbers } from '../verify/bind.ts'
 import { scanCompliance } from '../verify/compliance.ts'
+import { boundDocuments } from '../verify/window.ts'
 import { locateQuote } from '../verify/evidence.ts'
 import { detectUnitHints } from '../verify/numbers.ts'
 
@@ -65,7 +66,10 @@ export async function findCounterEvidence(
 
   const prompt = counterEvidencePrompt(
     inferences.map((claim) => ({ id: claim.id, text: claim.text, assumptions: claim.assumptions })),
-    documents,
+    // Bounded: this step hunts for the passage that weakens an inference, and a
+    // prospectus does not fit in a prompt. The windows are chosen by what the
+    // inferences are about; quotes are still located against the whole file.
+    boundDocuments(documents, inferences.map((claim) => claim.text)),
     lang,
   )
   const reply = await model.complete({ system: prompt.system, user: prompt.user, json: true })

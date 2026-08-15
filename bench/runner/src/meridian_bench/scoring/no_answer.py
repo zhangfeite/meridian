@@ -13,8 +13,12 @@ _ABSENCE_RE = re.compile(
     r"尚未|仍未|暂未|暂无|尚无|不详|未说明|未提及|未明确|查无|"
     r"无法(?:核实|确认|判断|得知|从[^，。；;\n]{0,20}得出)|无从得知|"
     r"无(?:相关|对应|此类)?(?:信息|资料)|原文未|公告未|材料未|未指定|未确定|"
-    r"沒有(?:披露|說明|提及|明確)|無法(?:核實|確認|判斷)|暫無|尚無|"
-    r"not\s+(?:yet\s+)?(?:disclosed|stated|available|verifiable|determined|specified|finali[sz]ed|set)|"
+    r"沒有(?:披露|說明|提及|明確)|無法(?:核實|確認|判斷|得知)|暫無|尚無|不詳|查無|"
+    r"未(?:予|曾|能)?(?:說明|提及|明確|指定|確定)|原文未|公告未|資料未|無從得知|"
+    r"未在[^，。；;\n]{0,16}中(?:披露|揭露|确定|確定|说明|說明)|"
+    r"not\s+(?:yet\s+)?(?:disclosed|stated|available|verifiable|determined|specified|finali[sz]ed|set|named|designated|identified)|"
+    r"(?:do(?:es)?|did)\s+not\s+(?:disclose|designate|name|state|specify|identify|provide|mention)|"
+    r"\bnor\s+(?:the|any|does|did)\b|"
     r"(?:remains?|is)\s+undetermined|to\s+be\s+determined|\bTBD\b|"
     r"cannot\s+(?:verify|determine|confirm))",
     re.IGNORECASE,

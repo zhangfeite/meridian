@@ -193,6 +193,36 @@ export class ScriptedModel implements ModelClient {
  * @throws when no JSON value can be recovered.
  */
 export function parseJsonReply<T>(text: string): T {
+  const outcome = readJsonReply<T>(text)
+  if (outcome.value === undefined) throw new ModelError(outcome.reason ?? 'model reply was not JSON')
+  return outcome.value
+}
+
+/** What {@link readJsonReply} recovered, and at what cost. */
+export interface JsonReplyOutcome<T> {
+  value?: T
+  /**
+   * True when the reply was cut off mid-structure and only the complete part
+   * was recovered. The caller owes the reader a disclosure: a salvaged reply is
+   * a partial answer, and silently treating it as a whole one is how "the
+   * filing does not say" gets published about a document that does.
+   */
+  salvaged: boolean
+  reason?: string
+}
+
+/**
+ * Recover a JSON value from a model reply, salvaging a truncated one.
+ *
+ * A reply that hits the output-token ceiling mid-array is not garbage: the
+ * twelve claims before the cut are complete, quoted, and verifiable. Throwing
+ * them away — which is what a bare `JSON.parse` does — turns a long document
+ * into a failed task.
+ *
+ * @param text - raw model output.
+ * @returns the parsed value, or the reason nothing could be recovered.
+ */
+export function readJsonReply<T>(text: string): JsonReplyOutcome<T> {
   const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(text)
   const candidates = [fenced?.[1], text].filter((item): item is string => typeof item === 'string')
   for (const candidate of candidates) {
@@ -200,17 +230,72 @@ export function parseJsonReply<T>(text: string): T {
     for (const source of [trimmed, sliceBalanced(trimmed)]) {
       if (!source) continue
       try {
-        return JSON.parse(source) as T
+        return { value: JSON.parse(source) as T, salvaged: false }
       } catch {
         try {
-          return JSON.parse(source.replace(/,\s*([}\]])/g, '$1')) as T
+          return { value: JSON.parse(source.replace(/,\s*([}\]])/g, '$1')) as T, salvaged: false }
         } catch {
           /* try the next candidate */
         }
       }
     }
   }
-  throw new ModelError(`model reply was not JSON: ${text.slice(0, 300)}`)
+  for (const candidate of candidates) {
+    const closed = closeTruncated(candidate.trim())
+    if (closed === undefined) continue
+    try {
+      return { value: JSON.parse(closed) as T, salvaged: true }
+    } catch {
+      /* not recoverable this way either */
+    }
+  }
+  return { salvaged: false, reason: `model reply was not JSON: ${text.slice(0, 300)}` }
+}
+
+/**
+ * Close a reply that was cut off mid-structure.
+ *
+ * Walks to the last position where the value was still well-formed — the end of
+ * a complete array element or object member — drops the partial tail, and shuts
+ * the structures that are still open.
+ *
+ * @param text - a reply believed to be truncated.
+ * @returns parseable JSON, or undefined when there is nothing whole to keep.
+ */
+function closeTruncated(text: string): string | undefined {
+  const start = text.search(/[[{]/)
+  if (start < 0) return undefined
+  const stack: string[] = []
+  let inString = false
+  let escaped = false
+  // The last offset at which a complete element ended. Only closing brackets
+  // count: cutting at a comma inside a half-written object would recover the
+  // fragment as if it were a claim, and a claim missing its quotes is worse
+  // than one that never arrived.
+  let safeEnd = -1
+  let safeDepth = 0
+  for (let index = start; index < text.length; index += 1) {
+    const char = text[index]
+    if (inString) {
+      if (escaped) escaped = false
+      else if (char === '\\') escaped = true
+      else if (char === '"') inString = false
+      continue
+    }
+    if (char === '"') inString = true
+    else if (char === '[' || char === '{') stack.push(char === '[' ? ']' : '}')
+    else if (char === ']' || char === '}') {
+      stack.pop()
+      safeEnd = index + 1
+      safeDepth = stack.length
+    }
+  }
+  if (safeEnd < 0 || safeDepth === 0) return undefined
+  const head = text.slice(start, safeEnd)
+  // Close what is still open, innermost first. `safeDepth` counts the structures
+  // that were open at the safe point, which are exactly the ones to close.
+  const closers = stack.slice(0, safeDepth).reverse().join('')
+  return head + closers
 }
 
 /** Extract the outermost balanced `{...}` or `[...]` run from a string. */

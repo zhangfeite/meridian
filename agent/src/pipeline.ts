@@ -198,7 +198,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   model.step = 'extract'
   const extraction =
     retrieval.documents.length === 0
-      ? { claims: [] as Claim[], evidence: [], rejected: [], gaps: [], gapsClosed: [] }
+      ? { claims: [] as Claim[], evidence: [], rejected: [], gaps: [], gapsClosed: [], notes: [] }
       : await extractAndVerify(intent, retrieval.documents, model, lang, pool, nextClaimId, choice?.skill)
   for (const rejected of extraction.rejected) {
     audit.push({
@@ -206,6 +206,13 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       action: 'claim_rejected_unverifiable_quote',
       detail: `[${rejected.round ?? 'initial'}] ${rejected.reason} — dropped: ${rejected.text}`,
     })
+  }
+  // How completely the sources were actually read. A memo built on a partial
+  // read is still publishable — a hundred-page prospectus read in eight windows
+  // is a real answer — but the reader is told which part of the reading fell
+  // short, because "not disclosed" and "not read" are different sentences.
+  for (const note of extraction.notes ?? []) {
+    audit.push({ step: 'extract', action: 'source_read_partial', detail: note })
   }
   for (const questionId of extraction.gapsClosed) {
     audit.push({
@@ -219,6 +226,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     rejected: extraction.rejected.length,
     gaps: extraction.gaps.length,
     gapsClosed: extraction.gapsClosed.length,
+    ...((extraction.notes ?? []).length > 0 ? { partialReads: (extraction.notes ?? []).length } : {}),
   })
 
   // Step 5.

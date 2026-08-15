@@ -16,6 +16,14 @@
  * Rejected claims get exactly one repair round. Bounded on purpose: an
  * unbounded repair loop is a machine for talking a model into a lie.
  *
+ * A document too long for one prompt is read in windows, in order, one call per
+ * window. Two failures made that necessary and both were silent-looking until
+ * they were not: a truncated reply took the whole task down as "model reply was
+ * not JSON", and a truncated *document* had the model report page eighty's
+ * figures as undisclosed. Nothing here may end a run — a call that cannot be
+ * parsed even after salvage costs that window, is disclosed as a partial read,
+ * and the rest of the document still gets extracted.
+ *
  * @module @meridian/agent/steps/extract
  */
 
@@ -28,7 +36,7 @@ import type {
 } from '../contract.ts'
 import { EvidencePool } from '../evidence-pool.ts'
 import { idAllocator } from '../ids.ts'
-import { parseJsonReply, type ModelClient } from '../model.ts'
+import { readJsonReply, type ModelClient } from '../model.ts'
 import { extractionPrompt, gapChallengePrompt, repairPrompt } from '../prompts.ts'
 import type { SourceDocument } from '../source/types.ts'
 import type { ExtractionResult, Intent, RejectedClaim } from '../types.ts'
@@ -37,7 +45,9 @@ import { scanCompliance } from '../verify/compliance.ts'
 import { locateQuote } from '../verify/evidence.ts'
 import type { Skill } from '../skills/types.ts'
 import { detectUnitHints } from '../verify/numbers.ts'
+import { foldScript } from '../verify/script.ts'
 import { candidatePassages } from '../verify/text.ts'
+import { asWindowView, boundDocuments, selectWindows, windowDocument } from '../verify/window.ts'
 
 interface RawClaim {
   question_id?: string
@@ -68,6 +78,53 @@ interface ExtractionReply {
 const CONFIDENCES: Confidence[] = ['low', 'medium', 'high']
 
 /**
+ * Output budget for one *windowed* extraction call.
+ *
+ * Applied only when a document is being read in several passes: each pass then
+ * has a bounded amount to say, and the thoroughness comes from there being more
+ * passes. A single-pass read is left on the backend's own default — capping it
+ * would cost claims on ordinary filings to solve a problem they do not have,
+ * which is what a first cut of this change did to MB-011.
+ */
+const EXTRACTION_OUTPUT_TOKENS = 8_000
+
+/** How many windows of one document extraction will read before it stops. */
+const MAX_WINDOWS = 8
+
+/** One model call that must not be able to end the run. */
+async function askForJson<T>(
+  model: ModelClient,
+  prompt: { system: string; user: string },
+  label: string,
+  notes: string[],
+  maxOutputTokens?: number,
+): Promise<T | undefined> {
+  let reply
+  try {
+    reply = await model.complete({
+      system: prompt.system,
+      user: prompt.user,
+      json: true,
+      ...(maxOutputTokens === undefined ? {} : { maxOutputTokens }),
+    })
+  } catch (error) {
+    notes.push(`${label}: 模型调用失败,该部分未抽取(${error instanceof Error ? error.message : String(error)})`)
+    return undefined
+  }
+  const outcome = readJsonReply<T>(reply.text)
+  if (outcome.value === undefined) {
+    notes.push(`${label}: 模型回复无法解析为 JSON,该部分未抽取`)
+    return undefined
+  }
+  if (outcome.salvaged) {
+    // Kept, but never quietly: the tail of this reply was cut off, so whatever
+    // it was still going to say about this window is missing from the memo.
+    notes.push(`${label}: 模型回复被截断,已保留其中完整的部分,该段抽取不完整`)
+  }
+  return outcome.value
+}
+
+/**
  * Run extraction, verification, and one repair round.
  *
  * @param intent - step 1 output.
@@ -90,18 +147,43 @@ export async function extractAndVerify(
   const retrievedAt = new Date().toISOString()
   const claims: Claim[] = []
   const gaps: { questionId: string; reason: string }[] = []
-
-  const first = extractionPrompt(intent, documents, lang, skill)
-  const firstReply = await model.complete({ system: first.system, user: first.user, json: true })
-  const parsed = parseJsonReply<ExtractionReply>(firstReply.text)
-
+  const notes: string[] = []
   const forbidden = skill?.forbidden_reinforce ?? []
-  const round = verifyBatch(parsed.claims ?? [], documents, pool, retrievedAt, lang, nextClaimId, forbidden)
-  claims.push(...round.accepted)
-  collectGaps(parsed.gaps, gaps)
+  const focus = intent.subQuestions.map((question) => question.text)
 
-  const rejected: RejectedClaim[] = round.rejected.map((item) => ({ ...item, round: 'initial' as const }))
-  if (round.rejected.length > 0) {
+  // One call per reading pass. A short filing is one pass over everything; a
+  // prospectus is one pass per window, in document order, so a figure on page
+  // eighty is read by *some* call. Verification always runs against the whole
+  // document, so a quote copied out of a window still has to be in the filing.
+  const passes = readingPasses(documents, notes, focus)
+  const rejected: RejectedClaim[] = []
+  for (const pass of passes) {
+    const prompt = extractionPrompt(intent, pass, lang, skill)
+    const parsed = await askForJson<ExtractionReply>(
+      model,
+      prompt,
+      passLabel(pass),
+      notes,
+      passes.length > 1 ? EXTRACTION_OUTPUT_TOKENS : undefined,
+    )
+    if (!parsed) continue
+    const round = verifyBatch(parsed.claims ?? [], documents, pool, retrievedAt, lang, nextClaimId, forbidden)
+    for (const claim of round.accepted) {
+      if (!claims.some((existing) => existing.text.trim() === claim.text.trim())) claims.push(claim)
+    }
+    // A gap is a statement about the whole filing, and one window cannot make
+    // it. Gaps from a windowed read are dropped here and re-derived below from
+    // what every pass together did or did not answer.
+    if (passes.length === 1) collectGaps(parsed.gaps, gaps)
+    rejected.push(...round.rejected.map((item) => ({ ...item, round: 'initial' as const })))
+  }
+  if (passes.length > 1) {
+    for (const question of intent.subQuestions) {
+      if (claims.some((claim) => claim.questionId === question.id)) continue
+      collectGaps([{ question_id: question.id, reason: '分段通读全文后仍未找到相应披露' }], gaps)
+    }
+  }
+  if (rejected.length > 0) {
     // The dominant rejection is a retyped quote, not a wrong fact. Hand the
     // model the passages that actually discuss the claim so the repair round
     // can requote instead of surrender — this is what keeps completeness from
@@ -109,28 +191,26 @@ export async function extractAndVerify(
     // Candidates carry their document id: in a multi-document run the same
     // sentence pattern occurs in both filings, and a repaired claim that names
     // the wrong one is a citation error the memo would publish as fact.
-    const withCandidates = round.rejected.map((item) => ({
+    const withCandidates = rejected.map((item) => ({
       ...item,
       candidates: candidatePassages(documents, item.text).map((candidate) => ({
         documentId: candidate.documentId,
         text: candidate.text,
       })),
     }))
-    const repair = repairPrompt(withCandidates, documents, lang)
-    const repairReply = await model.complete({ system: repair.system, user: repair.user, json: true })
-    let repaired: ExtractionReply = {}
-    try {
-      repaired = parseJsonReply<ExtractionReply>(repairReply.text)
-    } catch {
-      repaired = {}
-    }
+    const repair = repairPrompt(
+      withCandidates,
+      boundDocuments(documents, [...focus, ...rejected.map((item) => item.text)]),
+      lang,
+    )
+    const repaired = (await askForJson<ExtractionReply>(model, repair, '修复轮', notes)) ?? {}
     const second = verifyBatch(repaired.claims ?? [], documents, pool, retrievedAt, lang, nextClaimId, forbidden)
     // Only keep repairs that say something new: a repaired claim whose text
     // duplicates an accepted one adds noise, not coverage.
     for (const claim of second.accepted) {
       if (!claims.some((existing) => existing.text.trim() === claim.text.trim())) claims.push(claim)
     }
-    collectGaps(repaired.gaps, gaps)
+    if (passes.length === 1) collectGaps(repaired.gaps, gaps)
     rejected.push(...second.rejected.map((item) => ({ ...item, round: 'repair' as const })))
   }
 
@@ -153,21 +233,19 @@ export async function extractAndVerify(
           // A question asking "how much" is answered by a passage with a figure
           // in it; plain word overlap ranks the boilerplate that repeats the
           // question's nouns above the sentence that actually answers it.
+          // Folded first: the traditional 「金額」「數量」「價格」 miss this
+          // pattern outright, and a zh-TW run then ranks the boilerplate that
+          // echoes the question above the sentence carrying the figure — which
+          // is how a stated fact ends up published as an unanswerable gap.
           preferNumbers: /多少|金额|数量|比例|上限|规模|价格|股数|how much|how many|amount|price/.test(
-            question.text,
+            foldScript(question.text),
           ),
         }).map((candidate) => ({ documentId: candidate.documentId, text: candidate.text })),
       })),
-      documents,
+      boundDocuments(documents, unanswered.map((question) => question.text)),
       lang,
     )
-    const reply = await model.complete({ system: challenge.system, user: challenge.user, json: true })
-    let reviewed: GapReviewReply = {}
-    try {
-      reviewed = parseJsonReply<GapReviewReply>(reply.text)
-    } catch {
-      reviewed = {}
-    }
+    const reviewed = (await askForJson<GapReviewReply>(model, challenge, '缺口复核', notes)) ?? {}
     for (const answer of reviewed.answers ?? []) {
       const questionId = (answer.question_id ?? '').trim()
       if (!unanswered.some((question) => question.id === questionId)) continue
@@ -201,7 +279,14 @@ export async function extractAndVerify(
   const answered = new Set(claims.map((claim) => claim.questionId))
   const survivingGaps = gaps.filter((gap) => !answered.has(gap.questionId))
 
-  return { claims, evidence: pool.items, rejected, gaps: survivingGaps, gapsClosed: closed }
+  return {
+    claims,
+    evidence: pool.items,
+    rejected,
+    gaps: survivingGaps,
+    gapsClosed: closed,
+    ...(notes.length > 0 ? { notes } : {}),
+  }
 }
 
 /** Standalone `C-A`, `C-B`, … allocator for callers that run this step alone. */
@@ -359,4 +444,53 @@ function verifyBatch(
   }
 
   return { accepted, rejected }
+}
+
+/**
+ * Split the retrieved documents into reading passes.
+ *
+ * Everything that fits goes in one pass. A document too long for a prompt is
+ * read window by window, in document order — every window is read, because the
+ * alternative is deciding by word overlap which pages the filing is allowed to
+ * have said something on.
+ *
+ * @param documents - retrieved documents.
+ * @param notes - disclosure sink; a document read only in part says so here.
+ * @returns one document set per model call.
+ */
+function readingPasses(
+  documents: SourceDocument[],
+  notes: string[],
+  focus: string[] = [],
+): SourceDocument[][] {
+  const long = documents.filter((document) => windowDocument(document.text).length > 1)
+  if (long.length === 0) return [documents]
+
+  const short = documents.filter((document) => !long.includes(document))
+  const passes: SourceDocument[][] = []
+  if (short.length > 0) passes.push(short)
+  for (const document of long) {
+    const windows = windowDocument(document.text)
+    // Over the budget, the opening window is kept unconditionally — filings put
+    // 「重大事项提示」 at the front — and the rest are chosen by relevance rather
+    // than by position, or a needle in the last chapter is unreachable by
+    // construction.
+    const read = selectWindows(windows, focus, MAX_WINDOWS)
+    if (read.length < windows.length) {
+      notes.push(
+        `${document.title}: 全文分为 ${windows.length} 段,本次通读其中 ${read.length} 段(第 ${read
+          .map((window) => window.index)
+          .join('、')} 段),其余段落未抽取`,
+      )
+    }
+    for (const window of read) passes.push([asWindowView(document, window)])
+  }
+  return passes
+}
+
+/** A short label for one reading pass, used in disclosures. */
+function passLabel(pass: SourceDocument[]): string {
+  const first = pass[0]
+  if (!first) return '抽取'
+  return pass.length === 1 ? first.title : `${first.title} 等 ${pass.length} 份文件`
 }

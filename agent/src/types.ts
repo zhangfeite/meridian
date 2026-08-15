@@ -77,6 +77,12 @@ export interface ExtractionResult {
    * answer. A non-empty list is the pipeline catching its own over-refusal.
    */
   gapsClosed: string[]
+  /**
+   * Disclosures about how completely the sources were read: a truncated reply,
+   * a call that failed, a document longer than the reading budget. Every one of
+   * them means the memo may be missing something the filing does say.
+   */
+  notes?: string[]
 }
 
 /** Everything the run produced, step by step. */

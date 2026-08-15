@@ -45,9 +45,28 @@ function asData(text: string): string {
 /** Version stamp recorded in memo provenance. Bump on any wording change. */
 export const PROMPT_SET_VERSION = 'meridian-prompts-v0.1'
 
+/**
+ * The output language contract.
+ *
+ * The Chinese clauses name the conflict that makes them necessary. A filing is
+ * printed in one script and the reader asked for the other; quotes keep the
+ * filing's characters because a quote is a pointer, so the model is copying
+ * source characters all day and then writes its own sentences in the same
+ * shapes without noticing. Observed on live zh-TW runs: a memo whose headings
+ * were 繁體 and whose every finding was 简体.
+ */
 const LANGUAGE_CLAUSE: Record<MeridianLang, string> = {
+  // zh-CN is left as it was. The leak runs one way in practice — filings are
+  // printed in 简体 and a 繁體 memo drifts toward them — and an unnecessary
+  // paragraph in a working prompt is not free: adding one here cost MB-011 a
+  // citation point in testing.
   'zh-CN': 'Write every human-readable field (text, reason, label, heading) in 简体中文.',
-  'zh-TW': 'Write every human-readable field (text, reason, label, heading) in 繁體中文.',
+  'zh-TW':
+    'Write every human-readable field (text, reason, label, heading) in 繁體中文. Source documents ' +
+    'are usually printed in 简体字: quotes are copied verbatim and keep the source\'s characters, ' +
+    'but every sentence you write yourself — claim text, reasons, headings, labels — must be in ' +
+    '繁體字. Copying the source\'s character forms into your own sentences is a language error, and ' +
+    'a memo whose findings are 简体 has not answered a 繁體 question.',
   en: 'Write every human-readable field (text, reason, label, heading) in English.',
 }
 

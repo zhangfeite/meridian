@@ -316,6 +316,48 @@ class ScoringTests(unittest.TestCase):
         absence = score["details"]["absence"]
         self.assertFalse(absence["hard_failure"], msg=json.dumps(absence["fabrications"], ensure_ascii=False))
 
+    def test_declared_table_unit_licenses_bare_source_scalars(self):
+        source = "单位：万元\n序号 项目 项目总投资 拟投入募集资金\n1 产业园项目 330,151.30 270,000.00\n2 补充流动资金 90,000.00 90,000.00"
+        gold = []
+        result = score_number_fidelity(
+            "产业园项目总投资 330,151.30 万元,拟投入募集资金 270,000.00 万元。", gold, source_text=source
+        )
+        self.assertEqual(result["violations"], [], msg=json.dumps(result["violations"], ensure_ascii=False, default=str)[:300])
+        self.assertEqual(result["score"], 1.0)
+
+    def test_script_fold_bridges_traditional_output_to_simplified_anchor(self):
+        from meridian_bench.scoring.text import coverage
+        self.assertGreaterEqual(coverage("发行对象尚未确定", "發行對象尚未確定,以詢價結果為準。"), 0.99)
+
+    def test_verbatim_covenant_quote_is_not_advice(self):
+        source = "可转债持有人有权将其持有的可转债全部或部分回售给公司。回售价格为面值加当期应计利息。"
+        result = scan_compliance(
+            "关于回售条款,原文约定:「可转债持有人有权将其持有的可转债全部或部分回售给公司」,该条款属于发行安排的客观描述。",
+            "zh-CN", [], source_text=source,
+        )
+        self.assertEqual(result["hits"], [], msg=json.dumps(result["hits"], ensure_ascii=False))
+
+    def test_paraphrase_inside_quotes_earns_no_shelter(self):
+        result = scan_compliance(
+            "我们认为「现在应该买入这只转债」。", "zh-CN", [], source_text="与买入无关的原文。",
+        )
+        self.assertTrue(result["hits"])
+
+    def test_absence_re_covers_traditional_and_located_forms(self):
+        from meridian_bench.scoring.no_answer import _ABSENCE_RE
+        for phrase in ["未在本公告中披露", "未在文件中確定", "公告未說明", "尚未確定", "查無相關資料"]:
+            self.assertTrue(_ABSENCE_RE.search(phrase), msg=phrase)
+
+    def test_active_voice_english_absence_recognized(self):
+        from meridian_bench.scoring.no_answer import _ABSENCE_RE
+        for phrase in [
+            "The announcement does not designate any restructuring investor",
+            "does not disclose any committed capital contribution amount",
+            "does not name any restructuring administrator",
+            "the filing did not specify the amount",
+        ]:
+            self.assertTrue(_ABSENCE_RE.search(phrase), msg=phrase)
+
     def test_mb_t04_right_quote_wrong_source_file_loses_k2_citation(self):
         trap = json.loads((FIXTURES_DIR / "MB-T04-planted.json").read_text(encoding="utf-8"))
         task = self.tasks[trap["source_task"]]

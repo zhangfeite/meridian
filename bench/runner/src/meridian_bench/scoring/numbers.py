@@ -241,6 +241,29 @@ def _is_unit_mismatch(output: NumberToken, gold: NumberToken) -> bool:
     return output.value == gold.value and output.unit != gold.unit
 
 
+_UNIT_DECL_RE = re.compile(
+    r"[单單]位[:：]\s*(?:人民[币幣])?\s*(万亿元|萬億元|亿元|億元|万元|萬元|千元|元)"
+)
+
+
+def _declared_unit_multipliers(source_text: str):
+    """Table-level unit declarations (单位：万元) that license bare source scalars.
+
+    A filing table prints "330,151.30" under a 单位：万元 header; an answer that
+    writes "330,151.30 万元" states the same quantity. Mirrors the per-claim
+    unit-window rule the agent-side verifier applies (its P1-5 review fix) —
+    without this the bench flags correctly-united restatements as fabricated.
+    """
+    found = []
+    for match in _UNIT_DECL_RE.finditer(source_text):
+        label = match.group(1).translate(_TRADITIONAL_UNIT_CHARS)
+        if label in _UNIT_MAP:
+            pair = _UNIT_MAP[label]
+            if pair not in found:
+                found.append(pair)
+    return found
+
+
 def score_number_fidelity(
     output: str,
     gold_numbers: Iterable[Dict[str, Any]],
@@ -254,6 +277,7 @@ def score_number_fidelity(
         if (item.get("canonical") or {}).get("derived")
     ]
     source_tokens = extract_numbers(source_text)
+    declared_units = _declared_unit_multipliers(source_text)
     matches: List[Dict[str, Any]] = []
     derivable: List[Dict[str, Any]] = []
     violations: List[Dict[str, Any]] = []
@@ -271,6 +295,25 @@ def score_number_fidelity(
         if source_match is not None:
             derivable.append({"output": asdict(token), "source": asdict(source_match)})
             continue
+        if token.kind == "amount":
+            hinted = None
+            for unit, multiplier in declared_units:
+                if token.unit != unit:
+                    continue
+                for source in source_tokens:
+                    if source.kind != "scalar":
+                        continue
+                    try:
+                        if Decimal(source.value) * multiplier == Decimal(token.value):
+                            hinted = source
+                            break
+                    except (ArithmeticError, ValueError):
+                        continue
+                if hinted is not None:
+                    break
+            if hinted is not None:
+                derivable.append({"output": asdict(token), "source": asdict(hinted), "via": "declared_unit"})
+                continue
         if token.kind == "scalar" and token.value.isdigit() and 1900 <= int(token.value) <= 2100:
             violations.append({"kind": "unlisted_structural_year", "output": asdict(token), "near_gold": None})
             continue

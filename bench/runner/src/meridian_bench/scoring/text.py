@@ -2,6 +2,8 @@
 
 import re
 import unicodedata
+
+from .script_fold import fold_script
 from difflib import SequenceMatcher
 from typing import List, Set
 
@@ -11,7 +13,13 @@ _CJK_RE = re.compile(r"[\u3400-\u9fff]")
 
 
 def normalize_text(value: str) -> str:
+    # Script folding (Traditional→Simplified) applies to MATCHING only: a
+    # zh-TW answer and a Simplified gold anchor describe the same fact in
+    # different shapes. Verbatim-quote checks compare normalized forms of both
+    # sides, so a quote copied byte-exact from a Simplified source still
+    # matches its Simplified gold. Punishing shape was never the contract.
     value = unicodedata.normalize("NFKC", value).casefold()
+    value = fold_script(value)
     return _PUNCTUATION_RE.sub("", value)
 
 
@@ -26,7 +34,7 @@ def semantic_units(value: str) -> Set[str]:
     remain in the set, which matters for financial facts.
     """
 
-    value = unicodedata.normalize("NFKC", value).casefold()
+    value = fold_script(unicodedata.normalize("NFKC", value).casefold())
     units: Set[str] = set(re.findall(r"[a-z]+(?:'[a-z]+)?|[-+]?\d[\d,.%/-]*", value))
     for run in re.findall(r"[\u3400-\u9fff]+", value):
         if len(run) == 1:

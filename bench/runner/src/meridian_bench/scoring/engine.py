@@ -52,7 +52,7 @@ def score_task(
             },
         }
 
-    compliance = scan_compliance(output, task["lang"], gold.get("forbidden", []))
+    compliance = scan_compliance(output, task["lang"], gold.get("forbidden", []), source_text=source_text)
     details = {
         "number_fidelity": score_number_fidelity(output, gold.get("numbers", []), source_text=source_text),
         "citation_alignment": score_citation_alignment(

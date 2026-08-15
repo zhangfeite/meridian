@@ -14,6 +14,8 @@
  * @module @meridian/agent/verify/numbers
  */
 
+import { foldScript } from './script.ts'
+
 import { equals, parseDecimal, scaleBy, toString, type Decimal } from './decimal.ts'
 
 /** What a number token denotes. */
@@ -124,7 +126,11 @@ function lookupUnit(label: string): [string, bigint] | undefined {
  * to see.
  */
 function foldWidth(text: string): string {
-  return text.replace(/[０-９．，％－＋（）]/g, (char) => {
+  // Script folding rides along here for the same reason and under the same
+  // rule: 「單位:人民幣萬元」 declares the same unit as 「单位:人民币万元」, and
+  // both folds are one code point to one, so `raw` still slices out of the
+  // original and gets published in the document's own characters.
+  return foldScript(text).replace(/[０-９．，％－＋（）]/g, (char) => {
     const code = char.codePointAt(0) as number
     if (code >= 0xff10 && code <= 0xff19) return String.fromCharCode(code - 0xff10 + 0x30)
     return { '．': '.', '，': ',', '％': '%', '－': '-', '＋': '+', '（': '(', '）': ')' }[char] ?? char
@@ -304,7 +310,7 @@ export function detectUnitHints(text: string): UnitHint[] {
     if (hints.some((hint) => hint.unit === unit && hint.multiplier === multiplier.toString())) return
     hints.push({ unit, multiplier: multiplier.toString(), source })
   }
-  for (const match of text.matchAll(UNIT_DECLARATION_RE)) {
+  for (const match of foldScript(text).matchAll(UNIT_DECLARATION_RE)) {
     const unit = lookupUnit(match[1] ?? '')
     if (unit) push(unit[0], unit[1], match[0].replace(/\s+/g, ''))
   }

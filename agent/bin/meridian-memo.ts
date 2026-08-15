@@ -137,6 +137,22 @@ function writeArtifacts(directory: string, result: PipelineResult): void {
   writeFileSync(join(directory, 'trace.json'), `${JSON.stringify(result.trace, null, 2)}\n`, 'utf8')
 }
 
+/**
+ * Write to stdout and wait for it to actually leave.
+ *
+ * `process.stdout.write` is asynchronous when stdout is a pipe, and
+ * `process.exit` discards whatever is still buffered. A memo under the pipe
+ * buffer survives that; a 80KB one from a hundred-page prospectus is cut off at
+ * exactly 64KB, and the reader downstream reports a UTF-8 decode error in the
+ * middle of a character. Latent until windowed reading made memos this large.
+ *
+ * @param text - the bytes to emit.
+ */
+async function emit(text: string): Promise<void> {
+  if (process.stdout.write(text)) return
+  await new Promise<void>((resolve) => process.stdout.once('drain', () => resolve()))
+}
+
 async function main(): Promise<number> {
   const args = parseArgs(process.argv.slice(2))
   const model = OpenAICompatibleModel.fromEnv()
@@ -167,7 +183,7 @@ async function main(): Promise<number> {
     })
     const outRoot = process.env.MERIDIAN_MEMO_OUT
     if (outRoot) writeArtifacts(join(resolve(outRoot), taskId), result)
-    process.stdout.write(`${JSON.stringify({ output: result.markdown })}\n`)
+    await emit(`${JSON.stringify({ output: result.markdown })}\n`)
     return 0
   }
 
@@ -186,7 +202,7 @@ async function main(): Promise<number> {
       onStep: (step, detail) => process.stderr.write(`[${step}] ${JSON.stringify(detail)}\n`),
     })
     if (args.out) writeArtifacts(args.out, result)
-    else process.stdout.write(result.markdown)
+    else await emit(result.markdown)
     return result.memo.gate.passed ? 0 : 1
   }
 
@@ -216,7 +232,7 @@ async function main(): Promise<number> {
       onStep: (step, detail) => process.stderr.write(`[${step}] ${JSON.stringify(detail)}\n`),
     })
     if (args.out) writeArtifacts(args.out, result)
-    else process.stdout.write(result.markdown)
+    else await emit(result.markdown)
     return result.memo.gate.passed ? 0 : 1
   }
 
@@ -232,7 +248,7 @@ async function main(): Promise<number> {
       onStep: (step, detail) => process.stderr.write(`[${step}] ${JSON.stringify(detail)}\n`),
     })
     if (args.out) writeArtifacts(args.out, result)
-    else process.stdout.write(result.markdown)
+    else await emit(result.markdown)
     return result.memo.gate.passed ? 0 : 1
   }
 
@@ -242,10 +258,16 @@ async function main(): Promise<number> {
   return 2
 }
 
+// `process.exitCode` rather than `process.exit()`: exiting outright discards
+// whatever stdout still has queued, and for a pipe that is everything past the
+// 64KB buffer. Setting the code lets Node leave once the write has actually
+// gone out — the difference between a memo and a memo cut off mid-character.
 main().then(
-  (code) => process.exit(code),
+  (code) => {
+    process.exitCode = code
+  },
   (error: unknown) => {
     process.stderr.write(`meridian-memo: ${error instanceof Error ? error.stack ?? error.message : String(error)}\n`)
-    process.exit(2)
+    process.exitCode = 2
   },
 )

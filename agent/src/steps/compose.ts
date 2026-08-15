@@ -41,6 +41,7 @@ import { bindNumbers } from '../verify/bind.ts'
 import { scanCompliance } from '../verify/compliance.ts'
 import { locateQuote } from '../verify/evidence.ts'
 import { detectUnitHints, extractNumbers, verifyNumbers } from '../verify/numbers.ts'
+import { matchesScript } from '../verify/script.ts'
 import { coverage, maskNonContent, selectSupportingPassage, touchesTopic } from '../verify/text.ts'
 import { renderMemoMarkdown } from '../render.ts'
 
@@ -317,6 +318,18 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
     .filter((claim) => !(claim.type === 'fact' && claim.unverifiable))
     .map((claim) => claim.text)
     .join(' ')
+  // The memo's own sentences, in the script the reader asked for? Quotes are
+  // excluded on purpose: they carry the filing's characters by design. Observed
+  // on live zh-TW runs — 繁體 headings wrapped around 简体 findings, which reads
+  // to a Taiwanese reader as a machine that did not listen.
+  if (input.lang !== 'en' && !matchesScript(published, input.lang)) {
+    audit.push({
+      step: 'compose',
+      action: 'output_language_mixed',
+      detail: `memo prose is not written in ${input.lang}; the sources' character forms leaked into the pipeline's own sentences`,
+    })
+  }
+
   const checklist = (input.skill?.risk_checklist ?? []).map((item) => {
     const covered = touchesTopic(item, published)
     if (!covered) {

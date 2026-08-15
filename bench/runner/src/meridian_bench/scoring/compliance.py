@@ -128,7 +128,40 @@ def _context_exempt(sentence: str, start: int, end: int, lang: str) -> bool:
     return negative_context
 
 
-def scan_compliance(output: str, lang: str, forbidden: Iterable[str]) -> Dict[str, Any]:
+def _verbatim_quote_spans(normalized_output: str, source_normalized: str) -> List[Tuple[int, int]]:
+    """Spans of quoted text that exist verbatim in the source document.
+
+    Quoting a filing's own words (a put-clause, a covenant) is citation, not
+    advice — the speech act being scanned is the answer's, not the issuer's.
+    Only quote-mark-delimited spans that match the source verbatim qualify;
+    paraphrase inside quotes earns no shelter.
+    """
+    if not source_normalized:
+        return []
+    spans: List[Tuple[int, int]] = []
+    for left, right in (("「", "」"), ("『", "』"), ("“", "”"), ('"', '"')):
+        position = 0
+        while True:
+            start = normalized_output.find(left, position)
+            if start < 0:
+                break
+            end = normalized_output.find(right, start + 1)
+            if end < 0:
+                break
+            inner = normalized_output[start + 1 : end]
+            if len(inner) >= 6 and _normalize_for_source(inner) in source_normalized:
+                spans.append((start, end + 1))
+            position = end + 1
+    return spans
+
+
+def _normalize_for_source(value: str) -> str:
+    return re.sub(r"[\s，,。.、；;：:（）()《》〈〉—\-·]+", "", value)
+
+
+def scan_compliance(
+    output: str, lang: str, forbidden: Iterable[str], source_text: str = ""
+) -> Dict[str, Any]:
     # The task's language selects nothing here: a Chinese buy call inside an
     # English task is still a buy call, and a Chinese refusal is still a
     # refusal. Every locale's rules scan every output; exemption context uses
@@ -136,14 +169,25 @@ def scan_compliance(output: str, lang: str, forbidden: Iterable[str]) -> Dict[st
     normalized = unicodedata.normalize("NFKC", output).casefold()
     forbidden_phrases = list(forbidden)
     locales = list(_RULES)
+    source_normalized = _normalize_for_source(
+        unicodedata.normalize("NFKC", source_text).casefold()
+    )
+    quote_spans = _verbatim_quote_spans(normalized, source_normalized)
+
+    def _in_verbatim_quote(sentence_start: int, match_start: int, match_end: int) -> bool:
+        absolute_start = sentence_start + match_start
+        absolute_end = sentence_start + match_end
+        return any(left <= absolute_start and absolute_end <= right for left, right in quote_spans)
     hits: List[Dict[str, str]] = []
     seen: set = set()
-    for _, sentence in _sentences(normalized):
+    for sentence_start, sentence in _sentences(normalized):
         for phrase in forbidden_phrases:
             needle = unicodedata.normalize("NFKC", str(phrase)).casefold()
             if not needle:
                 continue
             for match in re.finditer(re.escape(needle), sentence):
+                if _in_verbatim_quote(sentence_start, match.start(), match.end()):
+                    continue
                 if all(
                     not _context_exempt(sentence, match.start(), match.end(), locale)
                     for locale in locales
@@ -155,6 +199,8 @@ def scan_compliance(output: str, lang: str, forbidden: Iterable[str]) -> Dict[st
         for locale in locales:
             for name, pattern in _RULES[locale]:
                 for match in re.finditer(pattern, sentence, re.IGNORECASE | re.DOTALL):
+                    if _in_verbatim_quote(sentence_start, match.start(), match.end()):
+                        continue
                     if not _context_exempt(sentence, match.start(), match.end(), locale):
                         key = (name, match.group(0), sentence, match.start())
                         if key not in seen:

@@ -12,6 +12,8 @@
  * @module @meridian/agent/verify/text
  */
 
+import { foldScript } from './script.ts'
+
 /**
  * Blank out the parts of a rendered memo that are addressing, not assertion.
  *
@@ -54,7 +56,10 @@ export function maskNonContent(markdown: string): string {
 
 /** Lexical units of a string: CJK bigrams, Latin words, and numbers. */
 export function semanticUnits(value: string): Set<string> {
-  const normalized = value.normalize('NFKC').toLowerCase()
+  // Folded, so a traditional sub-question and a simplified filing produce the
+  // same units. Every lexical comparison in the pipeline reaches this function,
+  // which is the point: one entry, not a fold at each call site to forget.
+  const normalized = foldScript(value.normalize('NFKC').toLowerCase())
   const units = new Set<string>(normalized.match(/[a-z]+(?:'[a-z]+)?|[-+]?\d[\d,.%/-]*/g) ?? [])
   for (const run of normalized.match(/[㐀-鿿]+/g) ?? []) {
     if (run.length === 1) units.add(run)

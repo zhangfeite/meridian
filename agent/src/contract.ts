@@ -286,6 +286,17 @@ export interface AuditRecord {
     | 'gap_recorded'
     /** A declared gap that gap review overturned: the sources did answer it. */
     | 'gap_reopened'
+    /**
+     * A source that was read only in part: a reply truncated, a call that
+     * failed, or a document longer than the reading budget. Distinguishes
+     * "the filing does not say" from "this run did not read all of it".
+     */
+    | 'source_read_partial'
+    /**
+     * The memo's own prose is not in the requested script: a 繁體 question
+     * answered in 简体 findings, because the filing was printed that way.
+     */
+    | 'output_language_mixed'
     /** A skill checklist item with nothing in the memo answering it. */
     | 'skill_checklist_unmet'
     /** A figure the recipe requires that no derivation produced. */

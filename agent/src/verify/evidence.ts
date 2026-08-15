@@ -13,6 +13,8 @@
  * @module @meridian/agent/verify/evidence
  */
 
+import { foldScript } from './script.ts'
+
 /** Where a quote was found. */
 export interface QuoteLocation {
   /** The document's own text at the located span — this is what gets published. */
@@ -41,10 +43,26 @@ export function locateQuote(documentText: string, quote: string): QuoteLocation 
     return { quote: trimmed, charStart: direct, charEnd: direct + trimmed.length, exact: true }
   }
 
+  // Same span, other glyph shapes: a model answering in traditional characters
+  // retypes a simplified filing's sentence, and the exact search misses a quote
+  // that is genuinely there. The fold is length-preserving, so an offset into
+  // the folded document is an offset into the document — and what gets
+  // published is a slice of the *original*, in the filing's own characters.
+  const shaped = foldScript(documentText).indexOf(foldScript(trimmed))
+  if (shaped >= 0) {
+    return {
+      quote: documentText.slice(shaped, shaped + trimmed.length),
+      charStart: shaped,
+      charEnd: shaped + trimmed.length,
+      exact: false,
+    }
+  }
+
   // Whitespace-insensitive search: strip whitespace from both sides while
-  // keeping an index map back to the original offsets.
-  const { stripped, offsets } = stripWhitespace(documentText)
-  const needle = trimmed.replace(WHITESPACE, '')
+  // keeping an index map back to the original offsets. Folded too, so a quote
+  // needs to differ in only one of the two ways to still be found.
+  const { stripped, offsets } = stripWhitespace(foldScript(documentText))
+  const needle = foldScript(trimmed).replace(WHITESPACE, '')
   if (!needle) return undefined
   const index = stripped.indexOf(needle)
   if (index < 0) return undefined
