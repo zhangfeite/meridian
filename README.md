@@ -2,7 +2,7 @@
 
 > An open-source, self-hostable financial research agent that pulls primary sources, verifies every number verbatim, and writes memos where every claim traces back to the original filing — with China A-share & HK markets as first-class citizens.
 
-**Status: v0.1 — early but real.** Three entry points (CLI · local Web UI · benchmark harness), five official skills, and an honest benchmark. Expect sharp edges; the trust discipline is the part we consider stable.
+**Status: pre-release incubation. Not yet published.**
 
 ## What lives here
 

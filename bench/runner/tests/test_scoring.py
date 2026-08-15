@@ -292,6 +292,18 @@ class ScoringTests(unittest.TestCase):
         )
         self.assertEqual(result["score"], 1.0, msg=json.dumps(result, ensure_ascii=False, default=str)[:400])
 
+    def test_nested_curly_quotes_do_not_truncate_citation(self):
+        key = ("MB-001", "zh-CN") if ("MB-001", "zh-CN") in self.tasks else "MB-001"
+        task = self.tasks[key]
+        output = (
+            "- [C-A] 公司于2026年8月13日收到宁波中院送达的《通知书》。 出处原句:"
+            "「龙元建设集团股份有限公司（以下简称“公司”）于2026年8月13日收到浙江省宁波市中级人民法院"
+            "（以下简称“宁波中院”或“法院”）送达的《浙江省宁波市中级人民法院通知书（2026）浙02破申13号》」"
+        )
+        score = score_task(task.task, task.gold, output, source_text="\n".join(text for _, text in task.contexts))
+        checks = {c["point_id"]: c for c in score["details"]["citation_alignment"]["checks"]}
+        self.assertGreaterEqual(checks["K1"]["best_overlap"], 0.99, msg=json.dumps(checks["K1"], ensure_ascii=False))
+
     def test_mb_t04_right_quote_wrong_source_file_loses_k2_citation(self):
         trap = json.loads((FIXTURES_DIR / "MB-T04-planted.json").read_text(encoding="utf-8"))
         task = self.tasks[trap["source_task"]]

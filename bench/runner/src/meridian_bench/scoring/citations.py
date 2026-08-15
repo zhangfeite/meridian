@@ -8,7 +8,12 @@ from .text import coverage, overlap, semantic_units, split_nonempty_lines
 
 
 _QUOTED_PATTERNS = [
-    re.compile(r"[“「『](.+?)[”」』]", re.DOTALL),
+    # Per-delimiter pairing: 「…」 may legitimately contain nested “…” (e.g.
+    # 以下简称“公司”) — a combined character class would close at the first
+    # inner curly quote and truncate the citation (real MB-001 failure).
+    re.compile(r"「([^「」]+)」", re.DOTALL),
+    re.compile(r"『([^『』]+)』", re.DOTALL),
+    re.compile(r"“([^“”]+)”", re.DOTALL),
     re.compile(r'"([^"\n]{4,})"'),
     re.compile(
         r"(?:出处原句|出处|原文|source|evidence|quote)\s*[:：]\s*(?![“「『\"])([^\n。；;\]]+)",
