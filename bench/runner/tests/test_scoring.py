@@ -374,6 +374,21 @@ class ScoringTests(unittest.TestCase):
         self.assertIn(("HKD 5,000", "amount", "HKD"), kinds)
         self.assertTrue(any(k[1] == "amount" and k[2] == "CNY" and "yuan" in k[0] for k in kinds), kinds)
 
+    def test_source_backed_year_is_not_penalized_and_unlisted_years_dedup(self):
+        gold = []
+        result = score_number_fidelity(
+            "两期永续中票均于 2028 进入赎回期;2028 为关键年份,2028 需关注。",
+            gold, source_text="2028 年 8 月4 日进入第一次赎回期 债券余额 2,000,000,000",
+        )
+        self.assertEqual([v for v in result["violations"] if v["kind"] == "unlisted_structural_year"], [])
+        result2 = score_number_fidelity(
+            "预计 2031 完成;2031 与 2031 均为估计。", gold, source_text="与年份无关的原文 1,234 元。",
+        )
+        years = [v for v in result2["violations"] if v["kind"] == "unlisted_structural_year"]
+        self.assertEqual(len(years), 3)
+        self.assertGreaterEqual(result2["score"], 0.0)
+        self.assertAlmostEqual(result2["score"], max(0.0, result2["score"]))
+
     def test_mb_t04_right_quote_wrong_source_file_loses_k2_citation(self):
         trap = json.loads((FIXTURES_DIR / "MB-T04-planted.json").read_text(encoding="utf-8"))
         task = self.tasks[trap["source_task"]]

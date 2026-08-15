@@ -317,7 +317,18 @@ def score_number_fidelity(
                 derivable.append({"output": asdict(token), "source": asdict(hinted), "via": "declared_unit"})
                 continue
         if token.kind == "scalar" and token.value.isdigit() and 1900 <= int(token.value) <= 2100:
-            violations.append({"kind": "unlisted_structural_year", "output": asdict(token), "near_gold": None})
+            # A bare year the source itself carries (inside any date or as a
+            # bare figure) is period context, not an invented label.
+            year = token.value
+            in_source = any(
+                (source.kind == "date" and source.value.startswith(year))
+                or (source.kind == "scalar" and source.value == year)
+                for source in source_tokens
+            )
+            if in_source:
+                derivable.append({"output": asdict(token), "source": None, "via": "source_year"})
+            else:
+                violations.append({"kind": "unlisted_structural_year", "output": asdict(token), "near_gold": None})
             continue
         unit_mismatch = next(
             (gold for gold in [*gold_tokens, *source_tokens] if _is_unit_mismatch(token, gold)), None
@@ -343,7 +354,10 @@ def score_number_fidelity(
         # A bare period label is recorded as an error but carries less weight
         # than a fabricated financial value. Dates explicitly authored in gold
         # are compound date tokens and receive normal matching behavior.
-        score = max(0.0, score - 0.1 * sum(item["kind"] == "unlisted_structural_year" for item in violations))
+        distinct_unlisted_years = {
+            item["output"]["value"] for item in violations if item["kind"] == "unlisted_structural_year"
+        }
+        score = max(0.0, score - 0.1 * len(distinct_unlisted_years))
         if any(item["kind"] == "unit_mismatch" for item in violations):
             score = min(score, 0.5)
     return {

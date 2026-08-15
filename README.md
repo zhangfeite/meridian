@@ -27,20 +27,19 @@ uv --directory bench/runner run bench run \
   --tasks MB-001 --lang zh-CN --output ./meridian-run
 ```
 
-20 hand-authored tasks from real Chinese filings × 3 languages (zh-CN / zh-TW / en) = 62 scored instances, plus scorer-validation traps. Task format and scoring contract: [`bench/tasks/SCHEMA.md`](bench/tasks/SCHEMA.md).
+25 hand-authored tasks from real Chinese filings × 3 languages (zh-CN / zh-TW / en) = 77 scored instances, plus scorer-validation traps. Task format and scoring contract: [`bench/tasks/SCHEMA.md`](bench/tasks/SCHEMA.md).
 
-## Honest numbers (2026-08, deepseek-chat, temperature 0, full 20-task set, same scorer version)
+## Honest numbers (2026-08, deepseek-chat, temperature 0, full 25-task set, same scorer version)
 
 | language | bare DeepSeek | Meridian pipeline | Δ |
 |---|---|---|---|
-| zh-CN | 0.9059 | **0.9756** | +0.070 |
-| zh-TW | 0.8529 | **0.9769** | +0.124 |
-| en | 0.6223 | **0.9434** | +0.321 |
+| zh-CN | 0.8467 | **0.9856** | +0.139 |
+| zh-TW | 0.8408 | **0.9767** | +0.136 |
+| en | 0.5346 | **0.9493** | +0.415 |
 
-60 instances per column, zero failed runs, zero fabrication hard-failures on the pipeline side. Run-to-run variance is ±0.02-0.03 — treat differences below that as noise. Ten scorer defects were found and fixed during dogfooding *before* these numbers were taken (each with positive and negative regression tests; several exonerated the bare model, not the pipeline — see CONTRIBUTING's honest-benchmark rule).
+75 instances per column, zero failed runs. The pipeline recorded **zero fabrication hard-failures**; the bare model fabricated on 4 instances — including writing "20亿 − 5亿 = **15亿** remaining" in all three languages on a task whose filing never discloses the quota-management basis (the tempting-but-unfounded-arithmetic trap working exactly as designed). Run-to-run variance is ±0.02–0.03; treat smaller differences as noise. Twelve scorer defects were found and fixed during dogfooding before these numbers were taken — several fixes raised the *bare model's* scores (see CONTRIBUTING's honest-benchmark rule). Integration guide for third-party agents: [`bench/RUNNING.md`](bench/RUNNING.md).
 
-Where the pipeline structurally differs from a bare model: it refuses to fabricate under absence (planted-fabrication traps score 0 by design), it attaches counter-evidence to inferences, every number in prose is placeholder-locked (the writing model literally never sees a digit), derivation chains carry interval uncertainty, and the memo language contract holds across scripts (a zh-TW memo quotes the Simplified filing verbatim while writing Traditional prose). The bare model is genuinely strong at Simplified-Chinese extraction; we say so.
-
+Where the pipeline structurally differs from a bare model: it refuses to fabricate under absence (planted-fabrication traps score 0 by design), states residual non-disclosure even after answering the rule ("capped at X" answers the cap, not the value), attaches counter-evidence to inferences, placeholder-locks every number in prose (the writing model never sees a digit), carries interval uncertainty on derivation chains, and holds the memo language contract across scripts. The bare model remains genuinely strong at Simplified-Chinese extraction; we say so.
 ## 简体中文
 
 开源、可自托管、BYO-model 的金融分析 Agent——自主拉取原始数据、逐字验证数字、产出每句话都可回溯到原始文件的研究备忘录。A股/港股是一等公民。分析不是建议:我们永不输出买卖动作、目标价、评级档位或收益承诺。
