@@ -30,7 +30,7 @@ export interface NumberToken {
   value: string
   /** `CNY` | `USD` | `HKD` | `percent` | `date` | `doc_no` | `scalar` | `multiple`. */
   unit: string
-  /** The written figure before its unit multiplier (`7,199.78` → `7199.78`). */
+  /** The written figure before its unit multiplier (`987.65` → `7199.78`). */
   numericRaw?: string
   /** The unit multiplier applied (`万元` → `10000`). */
   multiplier?: string
@@ -141,7 +141,7 @@ function foldWidth(text: string): string {
  * Extract every financial number from a string without double-counting digits.
  *
  * Order matters: compound forms (document numbers, dates, amounts with units)
- * claim their span first, so `1,500,000元` yields one CNY amount rather than a
+ * claim their span first, so `1,234,567元` yields one CNY amount rather than a
  * bare scalar plus a stray unit.
  *
  * @param text - text to scan.
@@ -347,8 +347,8 @@ export function matchesToken(
   const a = parseDecimal(figure)
   const b = parseDecimal(wanted.numericRaw)
   if (!a || !b || !equals(a, b)) return undefined
-  // A bare figure in the quote (`7,199.78`) plus a unit the document declares
-  // (`单位:人民币万元`) justifies `7,199.78 万元` — and only that unit.
+  // A bare figure in the quote (`987.65`) plus a unit the document declares
+  // (`单位:人民币万元`) justifies `987.65 万元` — and only that unit.
   if (candidate.kind === 'amount' && candidate.multiplier !== '1') return undefined
   const hint = hints.find((item) => item.unit === wanted.unit && item.multiplier === wanted.multiplier)
   return hint ? { basis: 'declared_unit', hint } : undefined

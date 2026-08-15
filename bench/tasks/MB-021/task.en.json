@@ -1,0 +1,16 @@
+{
+ "id": "MB-021",
+ "lang": "en",
+ "type": "multi_doc",
+ "prompt": "Two different companies acted on the SAME convertible-bond price-revision mechanism at nearly the same time - in opposite directions. Answer: 1) What did each company decide, with the key prices and effective arrangements? 2) What is Sugon's trigger condition, and how is the 92.56 yuan/share threshold derived from the initial conversion price and the clause ratio? 3) What period does Sugon's no-revision commitment cover, and when does the next trigger window restart? 4) What are Guizhou Gas's suspension/resumption arrangements, and roughly how large is this downward revision? 5) Which TWO kinds of adjustments has Guizhou Gas's conversion price been through since inception? Name the source file and quote the Chinese original for every conclusion.",
+ "context_files": [
+  "context/shuguang_no_revision.txt",
+  "context/guiran_downward_revision.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

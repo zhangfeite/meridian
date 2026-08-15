@@ -149,7 +149,7 @@ export async function computeMetrics(
 
     // A chained claim rests on every quote in its chain, not only on the last
     // link's operands — the reader checking 1.99× must be able to reach the
-    // 30,050,162.75 元 that produced the 1.82 元/股 underneath it.
+    // 24,690,135.00 元 that produced the per-share average underneath it.
     const chainEvidence = (derivation: DerivedNumber, seen = new Set<string>()): string[] => {
       if (seen.has(derivation.id)) return []
       seen.add(derivation.id)

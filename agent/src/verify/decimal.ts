@@ -21,7 +21,7 @@ const DECIMAL_RE = /^[-+]?\d+(?:\.\d+)?$/
  * Parse a decimal literal. Thousands separators and surrounding space are
  * tolerated; anything else returns `undefined` rather than a wrong number.
  *
- * @param value - the literal, e.g. `-1,533.98`.
+ * @param value - the literal, e.g. `-1,234.56`.
  * @returns the parsed decimal, or `undefined` when it is not one.
  */
 export function parseDecimal(value: string): Decimal | undefined {

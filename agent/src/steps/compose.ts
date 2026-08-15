@@ -67,6 +67,14 @@ export interface ComposeInput {
   skill?: Skill
   /** Set false to skip the step-7b checklist audit. */
   auditChecklist?: boolean
+  /**
+   * Claims the verifier refused, by sub-question.
+   *
+   * A question whose claims were rejected is not a question the filing is
+   * silent about — it is one this run could not verify an answer for, and the
+   * memo has to say the narrower of the two.
+   */
+  rejected?: { questionId?: string }[]
 }
 
 /** Composition output: the artifact and its rendering. */
@@ -81,6 +89,16 @@ const STRINGS: Record<
   MeridianLang,
   {
     unverifiableSuffix: (question: string, reason: string) => string
+    /**
+     * Wording for a gap the pipeline cannot evidence.
+     *
+     * 「The filing does not disclose X」 is a claim about the filing, and this
+     * pipeline does not publish claims about documents it cannot cite. With no
+     * passage to stand on, what we actually know is narrower: we looked and did
+     * not find it. MB-005 en published the strong form about a fact printed in
+     * the announcement's first sentence.
+     */
+    unlocatedSuffix: (question: string, reason: string) => string
     noSources: string
     advisoryRefusal: string
   }
@@ -88,6 +106,8 @@ const STRINGS: Record<
   'zh-CN': {
     unverifiableSuffix: (question, reason) =>
       `关于「${question}」:所提供的原始文件中没有相应披露${reason ? `(${reason})` : ''},无法核实。`,
+    unlocatedSuffix: (question, reason) =>
+      `关于「${question}」:本备忘录未能在所提供的原始文件中找到相应内容${reason ? `(${reason})` : ''},无法核实。`,
     noSources: '本次运行未能取得任何原始文件,以下内容无法核实。',
     advisoryRefusal:
       '本备忘录只整理已公开披露的事实与其出处,不能替你做投资决定——那取决于你自己的风险承受能力、期限与目标,也取决于原始文件尚未披露的信息。',
@@ -95,6 +115,8 @@ const STRINGS: Record<
   'zh-TW': {
     unverifiableSuffix: (question, reason) =>
       `關於「${question}」:所提供的原始文件中沒有相應揭露${reason ? `(${reason})` : ''},無法核實。`,
+    unlocatedSuffix: (question, reason) =>
+      `關於「${question}」:本備忘錄未能在所提供的原始文件中找到相應內容${reason ? `(${reason})` : ''},無法核實。`,
     noSources: '本次執行未能取得任何原始文件,以下內容無法核實。',
     advisoryRefusal:
       '本備忘錄只整理已公開揭露的事實與其出處,不能替你做投資決定——那取決於你自己的風險承受能力、期限與目標,也取決於原始文件尚未揭露的資訊。',
@@ -102,6 +124,8 @@ const STRINGS: Record<
   en: {
     unverifiableSuffix: (question, reason) =>
       `On "${question}": the primary sources provided do not disclose this${reason ? ` (${reason})` : ''}, so it cannot be verified.`,
+    unlocatedSuffix: (question, reason) =>
+      `On "${question}": this memo could not locate an answer in the primary sources provided${reason ? ` (${reason})` : ''}, so it cannot be verified.`,
     noSources: 'This run retrieved no primary sources, so nothing below could be verified.',
     advisoryRefusal:
       'This memo organizes disclosed facts and their sources. It cannot make an investment decision for you — that depends on your own risk tolerance, horizon, and objectives, and on information the filings do not disclose.',
@@ -212,9 +236,6 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
     }
     const reason = gapByQuestion.get(question.id) ?? ''
     const quoted = quotable(question.text)
-    const text = input.documents.length === 0
-      ? `${strings.noSources}${strings.unverifiableSuffix(quoted, reason)}`
-      : strings.unverifiableSuffix(quoted, reason)
     // A gap is a finding, and a finding is cited. Filings do not say "we are not
     // disclosing this"; they say the stage has not been reached — 「截至本公告
     // 披露日，公司尚未收到法院……的文件」 — and that sentence is exactly what a
@@ -222,6 +243,20 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
     // an absence; with it, the absence is evidenced like everything else.
     const support = selectSupportingPassage(input.documents, question.text)
     const supportEvidence = support ? locateSupport(support, input.documents, input.pool) : undefined
+    // And when there is no such sentence, the memo says the narrower true thing.
+    // 「The sources do not disclose X」 is an assertion about the filing; with
+    // nothing to cite, all we know is that we did not find it. MB-005 en made
+    // the strong claim about a fact printed in the announcement's first line.
+    // The filing is only "silent" when nothing about this question reached the
+    // verifier. If a claim was proposed and refused — an unquotable figure, a
+    // retyped passage — then what the memo knows is that it could not verify an
+    // answer, which is a different sentence. MB-005 en refused the claim amount
+    // four times and then published the amount as undisclosed.
+    const refused = (input.rejected ?? []).some((item) => item.questionId === question.id)
+    const suffix = supportEvidence && !refused ? strings.unverifiableSuffix : strings.unlocatedSuffix
+    const text = input.documents.length === 0
+      ? `${strings.noSources}${suffix(quoted, reason)}`
+      : suffix(quoted, reason)
     const gapClaimId = nextGapClaimId()
     claims.push({
       id: gapClaimId,
@@ -233,6 +268,16 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
       unverifiable: true,
     })
     if (supportEvidence) absenceSupport.set(gapClaimId, supportEvidence.id)
+    if (!supportEvidence || refused) {
+      audit.push({
+        step: 'compose',
+        action: 'gap_unevidenced',
+        claimId: gapClaimId,
+        detail: refused
+          ? `${question.id}: claims were proposed and refused by verification, so the memo reports that it could not verify an answer rather than asserting the filing is silent`
+          : `${question.id}: no passage explains the absence, so the memo reports that it could not locate an answer rather than asserting the filing is silent`,
+      })
+    }
     audit.push({
       step: 'compose',
       action: 'gap_recorded',
@@ -248,6 +293,43 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
       claimIds: [gapClaimId],
       gap: reason || 'not disclosed in the retrieved sources',
     })
+  }
+
+  // Pre-publication consistency: an absence statement may only cover a
+  // sub-question that is still a gap when gap review is done. If a question
+  // carries a verified claim, the memo has the answer in hand, and saying "not
+  // disclosed" about it in the same document is a contradiction — the reader has
+  // no way to tell which half to believe. Guaranteed by construction above; kept
+  // as a check because construction changes and this failure is silent.
+  const answeredQuestions = new Set(
+    claims.filter((claim) => !(claim.type === 'fact' && claim.unverifiable)).map((claim) => claim.questionId),
+  )
+  const contradictoryGaps = claims.filter(
+    (claim) => claim.type === 'fact' && claim.unverifiable && answeredQuestions.has(claim.questionId),
+  )
+  for (const gap of contradictoryGaps) {
+    audit.push({
+      step: 'compose',
+      action: 'gap_withdrawn_answered',
+      claimId: gap.id,
+      detail: `${gap.questionId} carries a verified claim, so the absence statement was withdrawn before publication: ${gap.text}`,
+    })
+    const index = claims.indexOf(gap)
+    if (index >= 0) claims.splice(index, 1)
+    for (const section of sections) {
+      section.claimIds = section.claimIds.filter((id) => id !== gap.id)
+    }
+    absenceSupport.delete(gap.id)
+  }
+  if (contradictoryGaps.length > 0) {
+    const withdrawnQuestions = new Set(contradictoryGaps.map((gap) => gap.questionId))
+    for (const questionId of withdrawnQuestions) {
+      const heading = sections.find((section) => section.questionId === questionId)?.heading
+      if (heading) {
+        const at = openQuestions.indexOf(heading)
+        if (at >= 0) openQuestions.splice(at, 1)
+      }
+    }
   }
 
   const usedEvidenceIds = new Set(

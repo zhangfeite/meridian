@@ -1,0 +1,142 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "92.56 元/股",
+   "canonical": {
+    "value": "92.56",
+    "unit": "CNY"
+   },
+   "source_quote": "低于当期转股价格的 85%（即 92.56 元/股）"
+  },
+  {
+   "id": "N2",
+   "verbatim": "85%",
+   "canonical": {
+    "value": "0.85",
+    "unit": "ratio"
+   },
+   "source_quote": "收盘价低于当期转股价格的 85%"
+  },
+  {
+   "id": "N3",
+   "verbatim": "108.89 元/股",
+   "canonical": {
+    "value": "108.89",
+    "unit": "CNY"
+   },
+   "source_quote": "初始转股价格为 108.89 元/股"
+  },
+  {
+   "id": "N4",
+   "verbatim": "约 92.56 元/股",
+   "canonical": {
+    "value": "92.5565",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "108.89*0.85"
+   },
+   "source_quote": "(derived) 初始转股价 108.89 × 85%"
+  },
+  {
+   "id": "N5",
+   "verbatim": "7.10 元/股",
+   "canonical": {
+    "value": "7.10",
+    "unit": "CNY"
+   },
+   "source_quote": "修正前转股价格：7.10 元/股"
+  },
+  {
+   "id": "N6",
+   "verbatim": "6.42 元/股",
+   "canonical": {
+    "value": "6.42",
+    "unit": "CNY"
+   },
+   "source_quote": "修正后转股价格：6.42 元/股"
+  },
+  {
+   "id": "N7",
+   "verbatim": "2026 年 8 月 17 日",
+   "canonical": {
+    "value": "2026-08-17",
+    "unit": "date"
+   },
+   "source_quote": "本次转股价格调整生效日期：2026 年 8 月 17 日"
+  },
+  {
+   "id": "N8",
+   "verbatim": "约 9.58%",
+   "canonical": {
+    "value": "0.0958",
+    "unit": "ratio",
+    "derived": true,
+    "formula": "1-6.42/7.10"
+   },
+   "source_quote": "(derived) 1 − 6.42/7.10"
+  },
+  {
+   "id": "N9",
+   "verbatim": "2026 年 11 月 14 日",
+   "canonical": {
+    "value": "2026-11-14",
+    "unit": "date"
+   },
+   "source_quote": "从 2026 年 11 月 14 日"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "Opposite directions: Sugon's board, despite the clause being triggered, decided NOT to revise downward - and committed not to propose a revision if re-triggered between 2026-08-14 and 2026-11-13; Guizhou Gas DID revise downward, from 7.10 to 6.42 yuan/share, effective 2026-08-17",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "Sugon's trigger: closing price below 85% of the prevailing conversion price (92.56 yuan/share) on at least 15 of any 30 consecutive trading days; the threshold derives from the 108.89 initial conversion price × 85% (~92.56, derived check)",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "Sugon's next trigger window restarts on 2026-11-14 (rolled forward if not a trading day), when the board will meet again to decide",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "Guizhou Gas suspension: conversion suspended for the full day 2026-08-14, resuming 2026-08-17 under the revised price; this revision is roughly a 9.58% cut (derived)",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "Guizhou Gas's conversion price went through TWO kinds of adjustments: an active downward revision (10.17→7.22) and passive dividend-driven adjustments (7.22→7.18→7.15→…→7.10) - different mechanisms",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "公司董事会决定本次不向下修正转股价格",
+   "source_file": "context/shuguang_no_revision.txt"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "低于当期转股价格的 85%（即 92.56 元/股）",
+   "source_file": "context/shuguang_no_revision.txt"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "从 2026 年 11 月 14 日",
+   "source_file": "context/shuguang_no_revision.txt"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "修正后转股价格：6.42 元/股",
+   "source_file": "context/guiran_downward_revision.txt"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "Same mechanism, opposite decisions - swapping WHICH company revised is the gravest direction error (K1 plus source_file both guard it); Sugon's three-month pledge is a commitment, not an executed revision. The 92.56 threshold must reconcile with 108.89 × 85% (derived N4). Conflating active revisions with dividend-driven passive adjustments fails K5. The two bonds' names/codes are near-collisions (113708 vs 110084); citing to the wrong file loses citation points. Evidence quotes remain in the original Chinese."
+}

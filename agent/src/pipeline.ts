@@ -298,6 +298,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         : {}),
     },
     model,
+    rejected: extraction.rejected,
     ...(choice ? { skill: choice.skill } : {}),
     ...(options.audit === undefined ? {} : { auditChecklist: options.audit }),
   })

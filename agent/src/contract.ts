@@ -56,7 +56,7 @@ export interface EvidenceRef {
 
 /** A number appearing in claim text, bound to how it was validated. */
 export interface NumberRef {
-  /** Canonical token as rendered in the claim, e.g. `8,815.45 万元`. */
+  /** Canonical token as rendered in the claim, e.g. `1,234.56 万元`. */
   display: string
   /** How this number earned its place in the memo. */
   provenance: 'verbatim' | 'derived'
@@ -103,7 +103,7 @@ export interface AttributedOpinionClaim extends ClaimBase {
 /** The model's own reasoning. The expensive type. */
 export interface ModelInferenceClaim extends ClaimBase {
   type: 'model_inference'
-  /** Period the inference is about, e.g. `2026H1` or `2026-08-13 起至公告日`. */
+  /** Period the inference is about, e.g. `2026H1` or `2026-01-06 起至公告日`. */
   timeRange: string
   /** Assumptions that, if false, break the inference. At least one. */
   assumptions: string[]
@@ -143,7 +143,7 @@ export interface DerivedNumber {
   /** Rendered by the pipeline (never by the model), e.g. `81.67%`. */
   display: string
   unit: string
-  /** Human-readable derivation, e.g. `7,199.78 / 8,815.45`. */
+  /** Human-readable derivation, e.g. `987.65 / 1,234.56`. */
   formula: string
   /**
    * Relative uncertainty, as a decimal string (`0.0014` = 0.14%).
@@ -172,7 +172,7 @@ export interface DerivedInput {
   /** Canonical decimal string. */
   value: string
   unit: string
-  /** Verbatim rendering in the source, e.g. `7,199.78 万元`. */
+  /** Verbatim rendering in the source, e.g. `987.65 万元`. */
   display: string
   /** Evidence whose quote contains this operand verbatim. Leaf operands only. */
   evidenceId?: string
@@ -286,6 +286,19 @@ export interface AuditRecord {
     | 'gap_recorded'
     /** A declared gap that gap review overturned: the sources did answer it. */
     | 'gap_reopened'
+    /**
+     * A gap with no passage to cite. The memo reports that it could not locate
+     * an answer instead of asserting that the filing does not disclose one —
+     * the second is a claim about the document, and this pipeline does not make
+     * claims about documents it cannot quote.
+     */
+    | 'gap_unevidenced'
+    /**
+     * A gap sentence withdrawn before publication because the same sub-question
+     * also carries a verified claim. An absence enumeration may only cover
+     * sub-questions that are still gaps at the end of gap review.
+     */
+    | 'gap_withdrawn_answered'
     /**
      * A source that was read only in part: a reply truncated, a call that
      * failed, or a document longer than the reading budget. Distinguishes

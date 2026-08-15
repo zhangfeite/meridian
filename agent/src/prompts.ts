@@ -220,6 +220,10 @@ Hard requirements:
   filings usually state the same fact again, more plainly, further down. Find that sentence.
 - Every number, date, and document number appearing in a claim's "text" must also appear in one of
   that claim's own quotes. If you cannot quote it, do not write it.
+- Identifiers are names, not prose: case numbers, document numbers, instrument titles and registered
+  entity names keep the source's own characters even when you are writing in another language. A
+  reader cannot look up a transliterated case number, and a transliteration is not in the document,
+  so the claim carrying it is rejected — with the figures beside it.
 - Keep the source's units exactly (万元 stays 万元; do not convert to 元 or 亿元). When a table
   declares its unit in a header line ("单位:人民币万元") and the rows carry bare figures, you may
   write that declared unit next to a figure quoted from that table — and no other unit.
@@ -317,8 +321,10 @@ ${documents.map((document) => `--- document_id: ${document.id} | ${document.titl
  * the model's word. That asymmetry has one failure mode, and it is the
  * expensive one: a question the filing *does* answer gets published as
  * "无法核实". The filing rarely uses the questioner's vocabulary — a question
- * about 「债权金额」 is answered by 「经《民事裁定书》确认的货款1,500,000元」 —
- * so the pipeline hands over the passages that best match and asks again.
+ * about 「债权金额」 is answered by a sentence that never uses the phrase, naming
+ * instead the ruling that fixed the sum — so the pipeline hands over the
+ * passages that best match, plus any passage carrying a figure the verifier
+ * refused, and asks again.
  */
 export function gapChallengePrompt(
   gaps: { questionId: string; question: string; reason: string; candidates: { documentId: string; text: string }[] }[],
@@ -350,13 +356,23 @@ Output schema — the extraction schema, plus a verdict per question:
 }
 
 How to decide:
-- A filing answers in its own vocabulary, not the question's. If the question asks for 「债权金额」
-  and a passage reads 「经…《民事裁定书》确认的货款1,500,000元」, that IS the answer — set
-  "answered" and produce the claim. A figure that a passage states plainly is never a gap.
-- Being stated conditionally or as a ceiling is still being stated: 「募集资金总额不超过X」 answers
+- A filing answers in its own vocabulary, not the question's. A question about 「债权金额」 is
+  answered by a passage that never uses that phrase and instead names the instrument fixing the sum
+  (「经…裁定书确认的货款…元」). That IS the answer — set "answered" and produce the claim. A figure
+  a passage states plainly is never a gap.
+- Being stated conditionally or as a ceiling is still being stated: 「发行规模不超过X」 answers
   「募集资金总额上限是多少」. Not-yet-determined is different from not-disclosed — if the filing says
   a price will be set later, say what it does state (the pricing rule, the cap) and mark that part
   answered; the undetermined part stays "absent".
+- The question and the sources are routinely in different languages. A fact stated in the filing's
+  language answers a question asked in another one: a filing that reads 「公司于某日收到某法院送达的
+  某文书」 answers "what document did the company receive, from which institution, on what date".
+  Translate in your head and compare the facts. "Not disclosed" is never the right verdict merely
+  because the filing does not use the question's language.
+- A compound question ("what document, from which institution, on what date") that the filing
+  answers in part is answered in part: return claims for the parts it states. Keep saying what is
+  missing — a claim that names the disclosed half and states plainly that the other half is not
+  disclosed is the answer here, and dropping the second sentence loses the finding that matters.
 - Genuinely absent stays absent. If no passage contains the answer, set "absent" and give the
   reason. Do NOT manufacture a claim to close a gap — a false answer is worse than a true gap, and
   your quotes are checked against the documents either way.
@@ -419,7 +435,7 @@ Rules:
   id you pair it with. If you cannot point at it, you cannot use it.
 - "ratio" divides the first operand by the second and renders a percentage; both operands must share
   a unit. "quotient" renders a multiple, and an amount over a plain count renders a unit price
-  (30,050,162.75 元 ÷ 16,498,650 = 1.82 元/股).
+  (24,690,135.00 元 ÷ 13,500,000 = 1.83 元/股).
 - A calculation may build on an earlier one: give the operand as {"derived_id": "D1"} instead of a
   display/evidence pair. That is how a premium is computed — first the average buyback price, then
   the sale price divided by it. Chains must not be circular and may be at most 3 deep.
@@ -507,7 +523,7 @@ connectives. Note where the anchors are: the first three close the sentence that
 claims, and [C-D] closes its own sentence — NOT all four dumped at the end.
 
 Rejected outputs, and why:
-  公司于2026年8月13日收到……                      — a real date instead of ⟦A⟧
+  公司于2026年1月6日收到……                      — a real date instead of ⟦A⟧
   公司于⟦A⟧收到《通知书》。申请人为某公司。[C-A][C-B]  — the first sentence carries no anchor
   公司于⟦A⟧收到《通知书》。[C-A]                   — [C-B]/[C-C]/[C-D] dropped
   申请人为债权人某公司，债权金额为⟦A⟧。[C-B]        — ⟦A⟧ moved onto another claim's sentence

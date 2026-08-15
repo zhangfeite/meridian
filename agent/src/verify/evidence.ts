@@ -7,7 +7,7 @@
  *
  * Whitespace is the one tolerated difference. Exchange filings arrive from PDF
  * extraction riddled with inserted spaces and line breaks, and a model that
- * retypes `8,815.45 万元` as `8,815.45万元` has not misquoted anything. Word
+ * retypes `1,234.56 万元` as `1,234.56万元` has not misquoted anything. Word
  * order, characters, and digits must match exactly.
  *
  * @module @meridian/agent/verify/evidence

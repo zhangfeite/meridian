@@ -63,6 +63,14 @@ export interface RejectedClaim {
    * proposed this and the verifier stopped it" is the audit trail, not noise.
    */
   round?: 'initial' | 'repair'
+  /**
+   * Figures the claim stated that its own quotes did not contain.
+   *
+   * Kept structurally, not just in `reason`: the repair round searches the
+   * sources for these literally, which is the one lookup that works no matter
+   * what language the claim and the filing are written in.
+   */
+  unboundNumbers?: string[]
 }
 
 /** Step 4 output. */

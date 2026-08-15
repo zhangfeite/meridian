@@ -230,11 +230,11 @@ function locateOperand(
   // number anchored to the filing rather than to the model's memory.
   //
   // Which quote is the model's guess, and it guesses wrong often enough to
-  // matter — MB-012 lost two derivations because 30,050,162.75 and 3.62 were
+  // matter — MB-012 lost two derivations because the buyback total and the average price were
   // paired with the wrong evidence id while sitting verbatim in another quote of
   // the same filing. So: try the named quote, then the rest of that document's
   // quotes. Never other documents when the model named one — a figure that
-  // collides across filings (5,000,000 shares in two different companies'
+  // collides across filings (the same share count in two different companies'
   // announcements) must not be silently satisfied from the wrong issuer.
   const sameDocument = named
     ? evidence.filter((item) => item.documentId === named.documentId && item !== named)
@@ -243,8 +243,8 @@ function locateOperand(
     const tokens = extractNumbers(candidate.quote)
     const hit =
       tokens.find((token) => matchesToken(token, wanted, candidate.declaredUnits ?? [])) ??
-      // The model routinely writes an operand bare — `30,050,162.75` for the
-      // filing's 「成交总金额为 30,050,162.75 元」. That is the same figure with its
+      // The model routinely writes an operand bare — `24,690,135.00` for the
+      // filing's 「成交总金额为 24,690,135.00 元」. That is the same figure with its
       // unit left off, not a different quantity, and rejecting it loses a
       // calculation the sources fully support. Only a unit-less operand may do
       // this, and the source's unit is what the arithmetic then uses.
@@ -252,7 +252,7 @@ function locateOperand(
         ? tokens.find((token) => token.kind !== 'scalar' && token.numericRaw === wanted.value)
         : undefined)
     if (!hit) continue
-    // Whose unit wins: normally the operand's, because `7,199.78 万元` under a
+    // Whose unit wins: normally the operand's, because `987.65 万元` under a
     // 「单位：人民币万元」 header asserts a quantity the bare table cell does not.
     // But when the operand came in bare and the quote supplies the unit, the
     // quote is the authority — that is the whole point of accepting it.

@@ -46,7 +46,7 @@ import { locateQuote } from '../verify/evidence.ts'
 import type { Skill } from '../skills/types.ts'
 import { detectUnitHints } from '../verify/numbers.ts'
 import { foldScript } from '../verify/script.ts'
-import { candidatePassages } from '../verify/text.ts'
+import { candidatePassages, splitPassages } from '../verify/text.ts'
 import { asWindowView, boundDocuments, selectWindows, windowDocument } from '../verify/window.ts'
 
 interface RawClaim {
@@ -193,10 +193,21 @@ export async function extractAndVerify(
     // the wrong one is a citation error the memo would publish as fact.
     const withCandidates = rejected.map((item) => ({
       ...item,
-      candidates: candidatePassages(documents, item.text).map((candidate) => ({
-        documentId: candidate.documentId,
-        text: candidate.text,
-      })),
+      // A figure the claim states but its quote does not contain has one
+      // reliable lookup: search the sources for the figure itself. Word overlap
+      // cannot do it when the claim is in English and the filing is in Chinese —
+      // which is how MB-005 en kept re-proposing the claim amount, kept getting
+      // rejected, and ended up publishing the amount as undisclosed.
+      candidates: [
+        ...passagesContaining(documents, item.unboundNumbers ?? []),
+        ...candidatePassages(documents, item.text).map((candidate) => ({
+          documentId: candidate.documentId,
+          text: candidate.text,
+        })),
+      ].filter(
+        (candidate, index, all) =>
+          all.findIndex((other) => other.text === candidate.text && other.documentId === candidate.documentId) === index,
+      ),
     }))
     const repair = repairPrompt(
       withCandidates,
@@ -377,6 +388,7 @@ function verifyBatch(
           .map((token) => token.raw)
           .join(', ')}`,
         questionId,
+        unboundNumbers: bound.unbound.map((token) => token.raw),
       })
       continue
     }
@@ -444,6 +456,35 @@ function verifyBatch(
   }
 
   return { accepted, rejected }
+}
+
+/**
+ * Passages that contain a figure verbatim.
+ *
+ * Deterministic and language-blind: `1,234,567` is `1,234,567` in an English
+ * claim and in a Chinese filing, so this finds the sentence a lexical ranker
+ * built on word overlap cannot.
+ *
+ * @param documents - retrieved documents.
+ * @param figures - the figures a rejected claim failed to bind.
+ * @param limit - how many passages to return.
+ * @returns passages carrying those figures, nearest match first.
+ */
+function passagesContaining(
+  documents: SourceDocument[],
+  figures: string[],
+  limit = 3,
+): { documentId: string; text: string }[] {
+  if (figures.length === 0) return []
+  const found: { documentId: string; text: string }[] = []
+  for (const document of documents) {
+    for (const passage of splitPassages(document.text)) {
+      if (!figures.some((figure) => passage.text.includes(figure))) continue
+      found.push({ documentId: document.id, text: passage.text })
+      if (found.length >= limit) return found
+    }
+  }
+  return found
 }
 
 /**

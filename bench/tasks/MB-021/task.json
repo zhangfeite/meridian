@@ -1,0 +1,8 @@
+{
+  "id": "MB-021",
+  "lang": "zh-CN",
+  "type": "multi_doc",
+  "prompt": "这是两家不同公司在相近时间就可转债转股价格修正条款作出的公告。回答:1)两家公司的决策方向各是什么?各自的关键价格与生效安排?2)中科曙光的修正条款触发条件是什么?阈值 92.56 元/股如何由初始转股价与条款比例推得?3)中科曙光「不修正」承诺覆盖的期间是什么?下一触发期间从何时重新起算?4)贵州燃气本次修正的停复牌安排如何?本次修正幅度约为多少?5)贵州燃气的转股价从初始到本次修正前经历了哪两类调整?每个结论注明出处文件并引用原文。",
+  "context_files": ["context/shuguang_no_revision.txt", "context/guiran_downward_revision.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}

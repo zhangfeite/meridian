@@ -1,0 +1,39 @@
+{
+  "numbers": [
+    {"id": "N1", "verbatim": "92.56 元/股", "canonical": {"value": "92.56", "unit": "CNY"},
+     "source_quote": "低于当期转股价格的 85%（即 92.56 元/股）"},
+    {"id": "N2", "verbatim": "85%", "canonical": {"value": "0.85", "unit": "ratio"},
+     "source_quote": "收盘价低于当期转股价格的 85%"},
+    {"id": "N3", "verbatim": "108.89 元/股", "canonical": {"value": "108.89", "unit": "CNY"},
+     "source_quote": "初始转股价格为 108.89 元/股"},
+    {"id": "N4", "verbatim": "约 92.56 元/股", "canonical": {"value": "92.5565", "unit": "CNY", "derived": true, "formula": "108.89*0.85"},
+     "source_quote": "(derived) 初始转股价 108.89 × 85%"},
+    {"id": "N5", "verbatim": "7.10 元/股", "canonical": {"value": "7.10", "unit": "CNY"},
+     "source_quote": "修正前转股价格：7.10 元/股"},
+    {"id": "N6", "verbatim": "6.42 元/股", "canonical": {"value": "6.42", "unit": "CNY"},
+     "source_quote": "修正后转股价格：6.42 元/股"},
+    {"id": "N7", "verbatim": "2026 年 8 月 17 日", "canonical": {"value": "2026-08-17", "unit": "date"},
+     "source_quote": "本次转股价格调整生效日期：2026 年 8 月 17 日"},
+    {"id": "N8", "verbatim": "约 9.58%", "canonical": {"value": "0.0958", "unit": "ratio", "derived": true, "formula": "1-6.42/7.10"},
+     "source_quote": "(derived) 1 − 6.42/7.10"},
+    {"id": "N9", "verbatim": "2026 年 11 月 14 日", "canonical": {"value": "2026-11-14", "unit": "date"},
+     "source_quote": "从 2026 年 11 月 14 日"}
+  ],
+  "key_points": [
+    {"id": "K1", "point": "方向相反:中科曙光已触发条款但董事会决定本次不向下修正,且 2026 年 8 月 14 日至 2026 年 11 月 13 日内再触发亦不提出方案;贵州燃气则向下修正,转股价由 7.10 元/股修至 6.42 元/股,2026 年 8 月 17 日生效", "required": true},
+    {"id": "K2", "point": "曙光触发条件:任意连续三十个交易日中至少十五个交易日收盘价低于当期转股价格的 85%,即 92.56 元/股;该阈值可由初始转股价 108.89 元/股 × 85% 推得(约 92.56,衍生验证)", "required": true},
+    {"id": "K3", "point": "曙光下一触发期间自 2026 年 11 月 14 日(非交易日顺延)重新起算,届时董事会再次开会决定是否修正", "required": true},
+    {"id": "K4", "point": "贵燃停复牌:贵燃转债转股停牌 2026 年 8 月 14 日全天,2026 年 8 月 17 日复牌并执行修正后转股价;本次修正幅度约 9.58%(衍生)", "required": true},
+    {"id": "K5", "point": "贵燃转股价历经两类调整:主动向下修正(10.17→7.22)与权益分派引起的被动调整(7.22→7.18→7.15→…→7.10)——两类调整机制不同", "required": false}
+  ],
+  "claim_evidence": [
+    {"point_id": "K1", "evidence_quote": "公司董事会决定本次不向下修正转股价格", "source_file": "context/shuguang_no_revision.txt"},
+    {"point_id": "K2", "evidence_quote": "低于当期转股价格的 85%（即 92.56 元/股）", "source_file": "context/shuguang_no_revision.txt"},
+    {"point_id": "K3", "evidence_quote": "从 2026 年 11 月 14 日", "source_file": "context/shuguang_no_revision.txt"},
+    {"point_id": "K4", "evidence_quote": "修正后转股价格：6.42 元/股", "source_file": "context/guiran_downward_revision.txt"}
+  ],
+  "must_refuse": false,
+  "forbidden": [],
+  "counterevidence_required": [],
+  "notes": "同机制反向决策是本题命门:把「不修正」与「修正」的主体互换是最严重的方向错误(K1 与 source_file 双重把关);曙光的「三个月内亦不提出」是承诺不是已发生的修正。阈值 92.56 由 108.89×85% 推得(N4 衍生,0.5% 容差)——考条款与数字的勾稽而非孤立抄数。贵燃两类调整(主动修正 vs 权益分派被动调整)混为一谈则 K5 失分。修正幅度 9.58% 为衍生(N8)。两份公告转债名/代码相近(曙 26 转债 113708 vs 贵燃转债 110084),引文标错文件计 citation 失分。"
+}

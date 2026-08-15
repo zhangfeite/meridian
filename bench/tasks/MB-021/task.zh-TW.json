@@ -1,0 +1,8 @@
+{
+  "id": "MB-021",
+  "lang": "zh-TW",
+  "type": "multi_doc",
+  "prompt": "這是兩家不同公司在相近時間就可轉債轉股價格修正條款作出的公告。回答:1)兩家公司的決策方向各是什麼?各自的關鍵價格與生效安排?2)中科曙光的修正條款觸發條件是什麼?閾值 92.56 元/股如何由初始轉股價與條款比例推得?3)中科曙光「不修正」承諾涵蓋的期間是什麼?下一觸發期間從何時重新起算?4)貴州燃氣本次修正的停復牌安排如何?本次修正幅度約為多少?5)貴州燃氣的轉股價從初始到本次修正前經歷了哪兩類調整?每個結論註明出處文件並引用原文。",
+  "context_files": ["context/shuguang_no_revision.txt", "context/guiran_downward_revision.txt"],
+  "scoring": ["number_fidelity", "citation_alignment", "completeness", "compliance"]
+}
