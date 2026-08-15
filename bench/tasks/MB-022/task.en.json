@@ -1,0 +1,15 @@
+{
+ "id": "MB-022",
+ "lang": "en",
+ "type": "metric_calc",
+ "prompt": "Read this Chinese interim-report summary and answer: 1) What is the unit of the main financial-data table? What are revenue, attributable net profit, and ex-non-recurring net profit for the period - and roughly what is revenue in 亿元? 2) What are the year-on-year growth rates of attributable net profit, ex-non-recurring net profit, and basic EPS - are they interchangeable, and how should the displayed EPS of 0.02/0.01 be reconciled with the disclosed 135.56% growth? 3) What are operating cash flows for this period and the prior period, and why is the change column marked 'N/A'? 4) What are the controlling shareholder's direct stake and the combined stake with its subsidiaries (ratio and shares)? 5) Which bonds are outstanding, at what balances and rates - and is 'entering the first redemption window in 2028' a maturity date? 6) Is this summary audited, and is there a profit-distribution plan? Keep original units; cite the Chinese source for every number.",
+ "context_files": [
+  "context/interim_summary.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

@@ -176,8 +176,19 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     catalog,
     model,
     lang,
-    choice?.skill.sub_questions ?? [],
+    // The recipe's questions in the run's own language. Injecting 简体 into an
+    // English run made the model write its own English versions, which the
+    // lexical coverage check could not recognize as the same questions — so
+    // both sets survived and every one of them was asked twice.
+    choice?.skill.sub_questions_by_lang[lang] ?? choice?.skill.sub_questions ?? [],
   )
+  for (const merge of intent.mergedQuestions ?? []) {
+    audit.push({
+      step: 'intent',
+      action: 'sub_question_merged',
+      detail: `${merge.dropped} duplicated ${merge.kept}, so it was merged: ${merge.text}`,
+    })
+  }
   report('intent', { subQuestions: intent.subQuestions.length, type: intent.questionType })
 
   // Step 2.

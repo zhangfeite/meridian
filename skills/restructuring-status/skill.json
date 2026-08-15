@@ -24,6 +24,22 @@
     "公告对后续程序与时间安排是如何表述的?",
     "公告提示了哪些对股票交易与上市地位的影响?"
   ],
+  "sub_questions_zh_TW": [
+    "公司在何時收到了哪一份法律文書?由哪個機構送達?",
+    "提出申請的是誰?與公司是什麼關係?",
+    "申請所主張的債權金額與對應法律文書分別是什麼?",
+    "該事項目前處於司法程序的哪個階段?",
+    "公告對後續程序與時間安排是如何表述的?",
+    "公告提示了哪些對股票交易與上市地位的影響?"
+  ],
+  "sub_questions_en": [
+    "When did the company receive which legal document, and which institution served it?",
+    "Who filed the application, and what is that party's relationship to the company?",
+    "What claim amount does the application assert, and which legal document corresponds to it?",
+    "What stage of the judicial process is the matter at now?",
+    "How does the announcement describe the subsequent procedures and their timing?",
+    "Which effects on share trading and listing status does the announcement flag?"
+  ],
   "required_derivations": [],
   "risk_checklist": [
     "提出申请与裁定受理是否区分",

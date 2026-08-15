@@ -24,6 +24,20 @@
     "发行对象的范围与最终确定方式是什么?",
     "目前已经完成哪些程序?尚需哪些审议或核准才能实施?"
   ],
+  "sub_questions_zh_TW": [
+    "本次發行的定價規則是什麼?最終發行價格在哪個環節確定?",
+    "發行數量的上限是如何約定的?涉及哪些計算口徑?",
+    "募集資金總額的上限與用途是如何安排的?",
+    "發行對象的範圍與最終確定方式是什麼?",
+    "目前已經完成哪些程序?尚需哪些審議或核准才能實施?"
+  ],
+  "sub_questions_en": [
+    "What is the pricing rule for this issuance, and at which step is the final issue price fixed?",
+    "How is the ceiling on the number of shares defined, and which measurement bases does it involve?",
+    "How are the ceiling on total proceeds and the use of those proceeds arranged?",
+    "Which investors may take part, and how is the final list determined?",
+    "Which procedures have been completed so far, and which approvals are still required before it can proceed?"
+  ],
   "required_derivations": [],
   "risk_checklist": [
     "定价规则与最终价格是否区分",

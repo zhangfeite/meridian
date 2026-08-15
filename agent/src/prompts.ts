@@ -353,6 +353,10 @@ How to decide:
   pricing basis instead of a price, a ceiling instead of the actual number, a range of eligible
   investors instead of the final list, "to be determined after approval" instead of a date. Being
   bounded is not being stated: 「不超过X」 answers 「上限是多少」 and does not answer 「实际是多少」.
+- Judge against what *this* question asks. A question that asks for the ceiling, the rule or the
+  procedure is settled by a stated ceiling, rule or procedure — the residual verdict is for
+  questions that ask for the specific figure and got the rule instead. Read the question before
+  deciding the answer is only half of one.
 - Judge only against the claims shown. Do not consult the filings, and do not invent an answer.
 - "missing" names, in a few words, the specific thing still undetermined. It is used for the audit
   trail only; nothing you write is published.

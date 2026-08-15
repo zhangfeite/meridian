@@ -63,11 +63,13 @@ test('every glyph difference the benchmark itself uses is folded', () => {
   }
   assert.ok(pairs.size > 100, 'the fixture itself should carry a hundred-odd differences')
 
-  // Word choice is not glyph shape: 資訊/信息, 揭露/披露, 加快/加緊 and
-  // 涵蓋/覆盖 are different words. No character table reaches those, and
-  // pretending otherwise by mapping 訊→信 would corrupt every other use of the
-  // character. This list is the honest boundary of what folding buys.
-  const lexical = new Set(['訊', '資', '揭', '快', '涵'])
+  // Word choice is not glyph shape. Every entry below is a *different word* in
+  // the two locales, not a different shape of one: 資訊/信息, 揭露/披露,
+  // 加快/加緊, 涵蓋/覆盖, 資料/数据, 盈餘/收益. No character table reaches
+  // those, and pretending otherwise by mapping 訊→信 would corrupt every other
+  // use of the character. This list is the honest boundary of what folding buys,
+  // and it grows as the benchmark grows — which is the intended signal.
+  const lexical = new Set(['訊', '資', '揭', '快', '涵', '料', '盈', '餘'])
   for (const [from, to] of pairs) {
     if (lexical.has(from)) continue
     assert.equal(foldScript(from), foldScript(to), `unfolded glyph pair: ${from} / ${to}`)

@@ -1,0 +1,194 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "9,047,900 千元",
+   "canonical": {
+    "value": "9047900000",
+    "unit": "CNY"
+   },
+   "source_quote": "营业收入 9,047,900 9,698,350 -6.71"
+  },
+  {
+   "id": "N2",
+   "verbatim": "-6.71%",
+   "canonical": {
+    "value": "-0.0671",
+    "unit": "ratio"
+   },
+   "source_quote": "9,698,350 -6.71"
+  },
+  {
+   "id": "N3",
+   "verbatim": "107,086 千元",
+   "canonical": {
+    "value": "107086000",
+    "unit": "CNY"
+   },
+   "source_quote": "归属于上市公司股东的净利润 107,086 102,589 4.38"
+  },
+  {
+   "id": "N4",
+   "verbatim": "4.38%",
+   "canonical": {
+    "value": "0.0438",
+    "unit": "ratio"
+   },
+   "source_quote": "107,086 102,589 4.38"
+  },
+  {
+   "id": "N5",
+   "verbatim": "79,378 千元",
+   "canonical": {
+    "value": "79378000",
+    "unit": "CNY"
+   },
+   "source_quote": "79,378 55,926 41.93"
+  },
+  {
+   "id": "N6",
+   "verbatim": "41.93%",
+   "canonical": {
+    "value": "0.4193",
+    "unit": "ratio"
+   },
+   "source_quote": "55,926 41.93"
+  },
+  {
+   "id": "N7",
+   "verbatim": "135.56%",
+   "canonical": {
+    "value": "1.3556",
+    "unit": "ratio"
+   },
+   "source_quote": "0.02 0.01 135.56"
+  },
+  {
+   "id": "N8",
+   "verbatim": "288,446 千元",
+   "canonical": {
+    "value": "288446000",
+    "unit": "CNY"
+   },
+   "source_quote": "经营活动产生的现金流量净额 288,446 -199,300 不适用"
+  },
+  {
+   "id": "N9",
+   "verbatim": "-199,300 千元",
+   "canonical": {
+    "value": "-199300000",
+    "unit": "CNY"
+   },
+   "source_quote": "288,446 -199,300 不适用"
+  },
+  {
+   "id": "N10",
+   "verbatim": "72.85%",
+   "canonical": {
+    "value": "0.7285",
+    "unit": "ratio"
+   },
+   "source_quote": "中国铝业集团有限公司 国有法人 72.85 2,176,758,534"
+  },
+  {
+   "id": "N11",
+   "verbatim": "76.42%",
+   "canonical": {
+    "value": "0.7642",
+    "unit": "ratio"
+   },
+   "source_quote": "占公司总股本的76.42%"
+  },
+  {
+   "id": "N12",
+   "verbatim": "2,283,179,000 股",
+   "canonical": {
+    "value": "2283179000",
+    "unit": "shares"
+   },
+   "source_quote": "共持有本公司 2,283,179,000 股"
+  },
+  {
+   "id": "N13",
+   "verbatim": "2,000,000,000 元",
+   "canonical": {
+    "value": "2000000000",
+    "unit": "CNY"
+   },
+   "source_quote": "2,000,000,000 2.25"
+  },
+  {
+   "id": "N14",
+   "verbatim": "约 90.48 亿元",
+   "canonical": {
+    "value": "9047900000",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "9047900*1000"
+   },
+   "source_quote": "(derived) 9,047,900 千元 × 1000"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "The main table's unit is RMB THOUSANDS (千元): revenue 9,047,900 千元 (~9.048 billion yuan, derived) down 6.71%; attributable net profit 107,086 千元; ex-non-recurring net profit 79,378 千元",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "Three distinct growth rates, not interchangeable: attributable net profit +4.38%, ex-non-recurring +41.93%, basic EPS +135.56%; the displayed EPS 0.02/0.01 are ROUNDED figures and the 135.56% is computed on unrounded values - the coexistence is not a disclosure contradiction",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "Operating cash flow turned positive: 288,446 千元 this period vs -199,300 千元 a year earlier; the change column says N/A because a percentage change from a negative base is meaningless",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "Two ownership bases: Chinalco holds 72.85% directly (2,176,758,534 shares, excluding indirect holdings); together with subsidiaries it holds 2,283,179,000 shares = 76.42% (A+H; the nominee's 399,476,000 H shares include Yunlv International's 19,495,000)",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "Two perpetual MTNs outstanding: 2,000,000,000 yuan at 2.25% and 1,800,000,000 yuan at 2.42%, each ENTERING its first redemption window in 2028 - an issuer call point, not a maturity date (perpetual instruments)",
+   "required": true
+  },
+  {
+   "id": "K6",
+   "point": "The interim report is unaudited; no profit distribution or capitalization plan for the period; debt-to-asset ratio 77.25% (vs 77.46% at prior year-end)",
+   "required": false
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "单位：千元 币种：人民币"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "0.02 0.01 135.56"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "经营活动产生的现金流量净额 288,446 -199,300 不适用"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "共持有本公司 2,283,179,000 股"
+  },
+  {
+   "point_id": "K5",
+   "evidence_quote": "2,000,000,000 2.25"
+  },
+  {
+   "point_id": "K6",
+   "evidence_quote": "本半年度报告未经审计"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "The unit trio is the crux: the main table is in RMB thousands (9,047,900 千元 = ~9.05 billion yuan - reading it as yuan is off by three orders, as 万元 by one), the bond table is in yuan (2,000,000,000 = 2 billion), and the 亿元 conversion is derived (N14, 0.5% tolerance). Swapping the three growth rates (4.38/41.93/135.56) is a basis error; back-computing 100% from the rounded EPS display and declaring a disclosure contradiction is a comprehension error. The cash-flow N/A encodes a sign flip. Direct 72.85% vs combined 76.42% are nested bases. Calling the 2028 redemption window a maturity is a perpetual-bond nature error. Evidence quotes remain in the original Chinese."
+}

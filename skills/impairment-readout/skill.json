@@ -22,6 +22,20 @@
     "本次计提对当期净利润与所有者权益的影响分别是多少?",
     "相关财务数据是否经过审计?公告如何表述其确定性?"
   ],
+  "sub_questions_zh_TW": [
+    "本期計提了哪些類別的減值準備?各類金額分別是多少?",
+    "各項減值準備合計多少?表格標註的金額單位是什麼?",
+    "哪一項金額最大?它佔合計的比例是多少?",
+    "本次計提對當期淨利潤與所有者權益的影響分別是多少?",
+    "相關財務數據是否經過查核?公告如何表述其確定性?"
+  ],
+  "sub_questions_en": [
+    "Which categories of impairment provision were recognized this period, and how much was each?",
+    "What do the provisions add up to, and what unit does the table state for its amounts?",
+    "Which single item is the largest, and what share of the total is it?",
+    "How does this provision affect profit attributable to shareholders and owners' equity for the period?",
+    "Have the related financial figures been audited, and how does the announcement describe their certainty?"
+  ],
   "required_derivations": [
     {
       "name": "最大单项占合计比例",

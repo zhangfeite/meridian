@@ -32,6 +32,12 @@ export interface Intent {
    * never with an action.
    */
   seeksAdvice: boolean
+  /**
+   * Sub-questions that asked the same thing twice and were merged into one.
+   * Recorded because a merge changes what the memo's sections are, and a reader
+   * comparing the recipe with the memo should be able to see why.
+   */
+  mergedQuestions?: { kept: string; dropped: string; text: string }[]
 }
 
 /** Step 2 output. */

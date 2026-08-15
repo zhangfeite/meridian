@@ -315,6 +315,12 @@ export interface AuditRecord {
      */
     | 'residual_gap_recorded'
     /**
+     * Two sub-questions asking the same thing, merged into one. Left unmerged
+     * they produce two sections, two answers and — since WP-M9-RGAP — two
+     * copies of every residual sentence.
+     */
+    | 'sub_question_merged'
+    /**
      * A source that was read only in part: a reply truncated, a call that
      * failed, or a document longer than the reading budget. Distinguishes
      * "the filing does not say" from "this run did not read all of it".

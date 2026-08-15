@@ -420,6 +420,11 @@ test('a caution line that would fail the gate is withheld, recorded, and not pub
     fallback: true,
     match: {},
     sub_questions: ['本期计提了多少减值准备?', '计提依据是什么?', '是否经过审议?'],
+    sub_questions_by_lang: {
+      'zh-CN': ['本期计提了多少减值准备?', '计提依据是什么?', '是否经过审议?'],
+      'zh-TW': ['本期計提了多少減值準備?', '計提依據是什麼?', '是否經過審議?'],
+      en: ['How much impairment was provided?', 'On what basis?', 'Was it reviewed?'],
+    },
     required_derivations: [],
     risk_checklist: ['建议买入该公司股票'],
     counterevidence_slots: [],

@@ -23,6 +23,20 @@
     "按已披露数字计算,回购均价与本次处置均价分别是多少?两者是什么关系?",
     "处置后剩余可处置的股份还有多少?处置窗口是如何约定的?"
   ],
+  "sub_questions_zh_TW": [
+    "本次處置的股份來源是什麼?處置主體是公司自身還是股東?依據是哪一句原文?",
+    "本次處置的數量、佔總股本比例、成交金額與均價分別是多少?發生在哪一天?",
+    "此前回購這批股份的總數量、總金額與成交價區間分別是多少?",
+    "按已揭露數字計算,回購均價與本次處置均價分別是多少?兩者是什麼關係?",
+    "處置後剩餘可處置的股份還有多少?處置窗口是如何約定的?"
+  ],
+  "sub_questions_en": [
+    "Where did the shares being disposed of come from, and is the disposing party the company itself or a shareholder? Which sentence says so?",
+    "How many shares were disposed of, what share of total capital is that, and what were the proceeds, the average price and the date?",
+    "How many shares were repurchased earlier, for how much in total, and within what price range?",
+    "From the disclosed figures, what were the repurchase average price and the disposal average price, and how do the two relate?",
+    "How many shares remain available for disposal afterwards, and how is the disposal window defined?"
+  ],
   "required_derivations": [
     {
       "name": "回购均价",

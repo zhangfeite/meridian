@@ -20,6 +20,8 @@
  * @module @meridian/agent/skills/types
  */
 
+import type { MeridianLang } from '../contract.ts'
+
 import { writtenNumerals } from '../verify/numbers.ts'
 
 /** How a skill decides a question and a set of filings are its business. */
@@ -53,6 +55,21 @@ export interface Skill {
    * presumed state reads as an assertion.
    */
   sub_questions: string[]
+  /**
+   * The same sub-questions in every output language.
+   *
+   * A recipe is data, and a recipe that exists in one language only is data the
+   * pipeline has to guess at. When the questions arrived in 简体 and the run was
+   * English, the model produced its own English versions and the pipeline —
+   * comparing lexically — could not see that they were the same questions, so it
+   * added the Chinese ones back: one memo, every question asked twice, and after
+   * WP-M9-RGAP every residual sentence printed twice too.
+   *
+   * Translating at runtime would work as well, but it puts a model call between
+   * the recipe file and what the memo asks, and a recipe you cannot read off the
+   * page is no longer auditable. Three lists in the file, checked at load.
+   */
+  sub_questions_by_lang: Record<MeridianLang, string[]>
   required_derivations: RequiredDerivation[]
   /** Each item must land somewhere in the memo, or be recorded as unmet. */
   risk_checklist: string[]
@@ -154,9 +171,34 @@ export function validateSkill(
 
   const subQuestions = stringArray('sub_questions')
   if (subQuestions.length === 0) fail('sub_questions', 'a skill must contribute at least one sub-question')
-  for (const question of subQuestions) {
-    if (PRESUMPTIVE.test(question)) {
-      fail('sub_questions', `presumes an outcome, which biases extraction and reads as an assertion in the heading: ${question}`)
+
+  // Every locale, same questions, same count. A missing translation is not a
+  // cosmetic gap: the run falls back to asking in the wrong language, which is
+  // exactly the duplication this field exists to remove.
+  const byLang: Record<MeridianLang, string[]> = {
+    'zh-CN': subQuestions,
+    'zh-TW': stringArray('sub_questions_zh_TW'),
+    en: stringArray('sub_questions_en'),
+  }
+  for (const lang of ['zh-TW', 'en'] as const) {
+    const field = lang === 'zh-TW' ? 'sub_questions_zh_TW' : 'sub_questions_en'
+    if (byLang[lang].length === 0) {
+      fail(field, `a skill must carry its sub-questions in every output language; ${lang} is missing`)
+    } else if (byLang[lang].length !== subQuestions.length) {
+      fail(
+        field,
+        `has ${byLang[lang].length} entries where sub_questions has ${subQuestions.length}; the lists must be the same questions`,
+      )
+    }
+  }
+  for (const [lang, questions] of Object.entries(byLang)) {
+    for (const question of questions) {
+      if (PRESUMPTIVE.test(question)) {
+        fail(
+          'sub_questions',
+          `[${lang}] presumes an outcome, which biases extraction and reads as an assertion in the heading: ${question}`,
+        )
+      }
     }
   }
 
@@ -231,6 +273,7 @@ export function validateSkill(
           : {}),
       },
       sub_questions: subQuestions,
+      sub_questions_by_lang: byLang,
       required_derivations: derivations,
       risk_checklist: stringArray('risk_checklist'),
       counterevidence_slots: stringArray('counterevidence_slots'),

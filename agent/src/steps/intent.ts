@@ -53,6 +53,28 @@ function coversItem(item: string, asked: { text: string }[]): boolean {
   return parts.every((clause) => asked.some((question) => coverage(clause, question.text) >= 0.6))
 }
 
+/**
+ * Do two sub-questions ask the same thing?
+ *
+ * Symmetric on purpose: 「发行价格是多少」 covers most of 「本次发行价格是每股
+ * 多少元」 in one direction and rather less in the other, and only the pair that
+ * covers *both* ways is the same question. The comparison runs through
+ * `coverage`, which folds script, so a 简体 recipe question and a 繁體 rephrasing
+ * of it still meet.
+ *
+ * The threshold is high because the cost of the two mistakes is not symmetric:
+ * a missed duplicate prints a section twice, a false merge silently deletes a
+ * question the reader asked for.
+ *
+ * @param left - a question already kept.
+ * @param right - the candidate.
+ * @returns true when the two ask the same thing.
+ */
+function sameQuestion(left: string, right: string): boolean {
+  if (left === right) return true
+  return coverage(left, right) >= 0.75 && coverage(right, left) >= 0.75
+}
+
 /** Render a document catalog for a prompt. */
 export function renderCatalog(documents: DocumentSummary[]): string {
   if (documents.length === 0) return '(none)'
@@ -110,6 +132,21 @@ export async function parseIntent(
     if (!coversItem(item, enforced)) enforced.push({ id: freeId(), text: item })
   }
 
+  // Two questions asking the same thing produce two sections, two answers and
+  // two of every residual sentence. The recipe's own questions now arrive in the
+  // run's language, which removes the common cause; this catches what is left —
+  // the model asking its own near-duplicate, or a recipe whose wording drifted.
+  const deduped: { id: string; text: string }[] = []
+  const mergedQuestions: { kept: string; dropped: string; text: string }[] = []
+  for (const question of enforced) {
+    const twin = deduped.find((kept) => sameQuestion(kept.text, question.text))
+    if (twin) {
+      mergedQuestions.push({ kept: twin.id, dropped: question.id, text: question.text })
+      continue
+    }
+    deduped.push(question)
+  }
+
   return {
     entity: {
       name: parsed.entity?.name?.trim() || question.slice(0, 40),
@@ -118,7 +155,8 @@ export async function parseIntent(
     },
     lang,
     questionType,
-    subQuestions: enforced.length > 0 ? enforced : [{ id: 'Q1', text: question }],
+    subQuestions: deduped.length > 0 ? deduped : [{ id: 'Q1', text: question }],
+    ...(mergedQuestions.length > 0 ? { mergedQuestions } : {}),
     seeksAdvice: parsed.seeks_advice === true,
   }
 }

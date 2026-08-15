@@ -22,6 +22,20 @@
     "该事项目前处于哪个阶段?后续还需要哪些程序?",
     "公告本身提示了哪些风险或不确定性?"
   ],
+  "sub_questions_zh_TW": [
+    "本公告揭露的核心事項是什麼?發生於何時?",
+    "涉及哪些主體?各自的角色是什麼?",
+    "公告給出了哪些關鍵數字?各自的口徑與單位是什麼?",
+    "該事項目前處於哪個階段?後續還需要哪些程序?",
+    "公告本身提示了哪些風險或不確定性?"
+  ],
+  "sub_questions_en": [
+    "What is the central matter this announcement discloses, and when did it occur?",
+    "Which parties are involved, and what is each party's role?",
+    "Which key figures does the announcement give, and on what basis and in what unit is each stated?",
+    "What stage is the matter at now, and which procedures are still required?",
+    "Which risks or uncertainties does the announcement itself flag?"
+  ],
   "required_derivations": [],
   "risk_checklist": [
     "数据是否经过审计",
