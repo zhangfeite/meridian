@@ -319,6 +319,57 @@ ${documents.map((document) => `--- document_id: ${document.id} | ${document.titl
 }
 
 /**
+ * Step 4e: one narrow second attempt at a figure the memo did not state.
+ *
+ * Step 4d reports that a sub-question came back with the rule and not the value.
+ * The four-round post-mortem behind WP-M11-EXTRACT showed what that costs: the
+ * rounds where a key figure went unstated were exactly the rounds that scored
+ * zero on citations, not because the citation was badly chosen but because there
+ * was no claim to cite. So the question gets one more attempt, against the
+ * sentences that carry a figure of the kind it asks for — chosen mechanically,
+ * not by the model, and the same for every run.
+ *
+ * Bounded on purpose: one call, one attempt per sub-question, no recursion. The
+ * output goes through the same verification as any other claim; a second attempt
+ * relaxes what the model is *shown*, never what it must prove.
+ */
+export function targetedExtractionPrompt(
+  questions: { questionId: string; question: string; candidates: { documentId: string; text: string }[] }[],
+  lang: MeridianLang,
+): Prompt {
+  return {
+    system: `${HOUSE_RULES}
+
+You are STEP 4e of 7: TARGETED EXTRACTION. Each question below was answered in general terms only —
+the memo has the rule, the range or the procedure, and not the figure the question asks for. Below
+each question are the sentences from the filings that carry a figure of the kind it asks for.
+
+Output schema:
+{"claims": [{"question_id": "Q4", "type": "fact", "text": string,
+             "quotes": [{"document_id": string, "quote": string}]}]}
+
+Rules:
+- Return a claim only when one of these sentences states the figure the question asks for. If none
+  of them does, return no claim for that question — the memo will keep saying the figure is not yet
+  determined, which is the truth and costs nothing.
+- Quotes are copied character-for-character from the sentences shown, and every number in a claim's
+  text must appear in that claim's own quote. Units stay in the source's characters.
+- A ceiling is not the figure. 「不超过X」 answers "what is the maximum" and does not answer "what is
+  the actual amount" — do not dress one as the other. If all you have is the bound, return nothing.
+- Do not restate the rule you were already given. This step exists for the value alone.
+${LANGUAGE_CLAUSE[lang]}`,
+    user: questions
+      .map(
+        (item) =>
+          `question_id: ${item.questionId}\nquestion: ${item.question}\nsentences carrying a figure of that kind:\n${item.candidates
+            .map((candidate) => `  - [document_id: ${candidate.documentId}] ${candidate.text}`)
+            .join('\n')}`,
+      )
+      .join('\n\n'),
+  }
+}
+
+/**
  * Step 4d: does the answer answer the question, or only describe the rule?
  *
  * The most common shape in a filing is 「规则已定,数值未定」: the pricing basis

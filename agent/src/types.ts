@@ -98,6 +98,11 @@ export interface ExtractionResult {
    */
   residuals?: { questionId: string; missing: string }[]
   /**
+   * Citations whose span the selector moved off the model's proposal, with the
+   * decision path. Replayable: same document, same claim, same choice.
+   */
+  spans?: { text: string; documentId: string; from: string; to: string; path: string }[]
+  /**
    * Disclosures about how completely the sources were read: a truncated reply,
    * a call that failed, a document longer than the reading budget. Every one of
    * them means the memo may be missing something the filing does say.

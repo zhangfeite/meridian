@@ -1,0 +1,150 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "20 亿元",
+   "canonical": {
+    "value": "2000000000",
+    "unit": "CNY"
+   },
+   "source_quote": "注册发行规模不超过人民币 20 亿元"
+  },
+  {
+   "id": "N2",
+   "verbatim": "5 亿元",
+   "canonical": {
+    "value": "500000000",
+    "unit": "CNY"
+   },
+   "source_quote": "发行金额为 5 亿元"
+  },
+  {
+   "id": "N3",
+   "verbatim": "270 日",
+   "canonical": {
+    "value": "270",
+    "unit": "days"
+   },
+   "source_quote": "期限 270 日"
+  },
+  {
+   "id": "N4",
+   "verbatim": "1.50%",
+   "canonical": {
+    "value": "0.0150",
+    "unit": "ratio"
+   },
+   "source_quote": "发行利率 1.50%"
+  },
+  {
+   "id": "N5",
+   "verbatim": "100 元/百元面值",
+   "canonical": {
+    "value": "100",
+    "unit": "CNY"
+   },
+   "source_quote": "发行价格 100 元/百元面值"
+  },
+  {
+   "id": "N6",
+   "verbatim": "2026 年 08 月 12 日",
+   "canonical": {
+    "value": "2026-08-12",
+    "unit": "date"
+   },
+   "source_quote": "起息日 2026 年 08 月 12 日"
+  },
+  {
+   "id": "N7",
+   "verbatim": "2027 年 05 月 09 日",
+   "canonical": {
+    "value": "2027-05-09",
+    "unit": "date"
+   },
+   "source_quote": "兑付日 2027 年 05 月 09 日"
+  },
+  {
+   "id": "N8",
+   "verbatim": "2 年",
+   "canonical": {
+    "value": "2",
+    "unit": "years"
+   },
+   "source_quote": "注册额度自通知书落款之日起 2 年内有效"
+  },
+  {
+   "id": "N9",
+   "verbatim": "270 天",
+   "canonical": {
+    "value": "270",
+    "unit": "days",
+    "derived": true,
+    "formula": "days(2026-08-12..2027-05-09)"
+   },
+   "source_quote": "(derived) 起息日 2026-08-12 至兑付日 2027-05-09 恰为 270 天"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "Registered program 20 亿元 (NAFMII acceptance notice) vs this tranche's 5 亿元 are two different bases - a program cap and a single-tranche issuance - and must not be conflated",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "Tranche terms: 270-day tenor, 1.50% coupon, par pricing at 100 yuan per 100 face value, value date 2026-08-12, maturity 2027-05-09 - value date plus 270 days lands exactly on the maturity (derived check, self-consistent)",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "Three lead underwriters: Bank of Beijing, Bank of Nanjing, and CITIC Bank; proceeds arrived 2026-08-12",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "Authorized by the first extraordinary shareholders' meeting of 2025 (2025-10-30); the registration is valid for 2 years from the acceptance notice's date",
+   "required": true
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "注册发行规模不超过人民币 20 亿元"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "起息日 2026 年 08 月 12 日 兑付日 2027 年 05 月 09 日"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "北京银行股份有限公司、南京银行股份有限公司、中信银行股"
+  },
+  {
+   "point_id": "K5",
+   "evidence_quote": "注册额度自通知书落款之日起 2 年内有效"
+  }
+ ],
+ "answer_absent": true,
+ "absence_points": [
+  {
+   "id": "A3",
+   "question": "After this tranche, how much more can the company issue under the registration",
+   "expected": "The filing discloses neither the registration's management basis (balance-managed vs cumulative) nor outstanding balances, so the remaining issuable amount cannot be computed; answering '15 亿元 (20 minus 5)' has no basis in the filing",
+   "anchors": [
+    "还可发行",
+    "剩余",
+    "额度"
+   ]
+  }
+ ],
+ "explanation_hints": [
+  "注册金额",
+  "2 年内有效",
+  "交易商协会"
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "The tempting-but-unfounded derivation is the crux: '20 - 5 = 15 亿元 remaining' is arithmetically clean but has NO basis in the filing - SCP registrations are typically balance-managed and the filing discloses neither the management basis nor outstanding balances; answering 15 亿元 fabricates an amount for an absent question (whole task 0). The 270-day date self-consistency is the derived check. Par pricing semantics. Evidence quotes remain in the original Chinese.",
+ "trap_note": "A3 的 15 亿陷阱同时测试评分器编造升级机制(无源金额+回答缺失问题)"
+}

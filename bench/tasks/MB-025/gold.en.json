@@ -1,0 +1,180 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "3,800,000 张",
+   "canonical": {
+    "value": "3800000",
+    "unit": "scalar"
+   },
+   "source_quote": "发行可转换公司债券 3,800,000 张"
+  },
+  {
+   "id": "N2",
+   "verbatim": "380,000,000 元",
+   "canonical": {
+    "value": "380000000",
+    "unit": "CNY"
+   },
+   "source_quote": "募集资金总额为人民币 380,000,000 元"
+  },
+  {
+   "id": "N3",
+   "verbatim": "5,550,000.00 元",
+   "canonical": {
+    "value": "5550000.00",
+    "unit": "CNY"
+   },
+   "source_quote": "扣除承销及保荐费 5,550,000.00 元"
+  },
+  {
+   "id": "N4",
+   "verbatim": "374,450,000 元",
+   "canonical": {
+    "value": "374450000",
+    "unit": "CNY"
+   },
+   "source_quote": "实际收到的金额为 374,450,000 元"
+  },
+  {
+   "id": "N5",
+   "verbatim": "1,970,406.65 元",
+   "canonical": {
+    "value": "1970406.65",
+    "unit": "CNY"
+   },
+   "source_quote": "1,970,406.65 元后"
+  },
+  {
+   "id": "N6",
+   "verbatim": "372,479,593.35 元",
+   "canonical": {
+    "value": "372479593.35",
+    "unit": "CNY"
+   },
+   "source_quote": "实际募集资金净额为 372,479,593.35 元"
+  },
+  {
+   "id": "N7",
+   "verbatim": "752.04 万元",
+   "canonical": {
+    "value": "7520400",
+    "unit": "CNY"
+   },
+   "source_quote": "本次募集资金各项发行费用合计752.04万元"
+  },
+  {
+   "id": "N8",
+   "verbatim": "120.15 万元",
+   "canonical": {
+    "value": "1201500",
+    "unit": "CNY"
+   },
+   "source_quote": "公司已用自筹资金支付的发行费用金额为120.15万元"
+  },
+  {
+   "id": "N9",
+   "verbatim": "20,049.10 万元",
+   "canonical": {
+    "value": "200491000",
+    "unit": "CNY"
+   },
+   "source_quote": "实际投资额为20,049.10万"
+  },
+  {
+   "id": "N10",
+   "verbatim": "10,647.96 万元",
+   "canonical": {
+    "value": "106479600",
+    "unit": "CNY"
+   },
+   "source_quote": "11,400.00 10,647.96"
+  },
+  {
+   "id": "N11",
+   "verbatim": "约 752.04 万元",
+   "canonical": {
+    "value": "7520406.65",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "5550000+1970406.65"
+   },
+   "source_quote": "(derived) 承销保荐费 5,550,000 + 其他发行费用 1,970,406.65"
+  },
+  {
+   "id": "N12",
+   "verbatim": "752.04 万元",
+   "canonical": {
+    "value": "7520400",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "(11400.00-10647.96)*10000"
+   },
+   "source_quote": "(derived) 补流调整差额 11,400.00 − 10,647.96 万元"
+  },
+  {
+   "id": "N13",
+   "verbatim": "120.15 万元",
+   "canonical": {
+    "value": "1201500",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "(47.17+29.25+33.02+10.72)*10000"
+   },
+   "source_quote": "(derived) 发行费用置换明细 47.17+29.25+33.02+10.72"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "Total raised 380,000,000 yuan = 3,800,000 bonds × 100 yuan face; less underwriting/sponsorship fees 5,550,000.00 → 374,450,000 actually received; less other direct issuance costs 1,970,406.65 → net proceeds 372,479,593.35 - the three-tier chain reconciles",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "Total issuance costs 752.04 万元 (ex-VAT) match the sum of the two deductions: 5,550,000 + 1,970,406.65 = 7,520,406.65 yuan ≈ 752.04 万元 - a cross-unit (yuan/万元) reconciliation (derived)",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "The working-capital/loan-repayment line was cut from 11,400.00 to 10,647.96 万元 (the Guinea project untouched); the 752.04 万元 gap exactly equals total issuance costs - the shortfall of net proceeds versus the original 38,000 万元 plan is entirely the fees, absorbed by the working-capital line (derived)",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "Replacement covers: 20,049.10 万元 of self-raised funds pre-invested in the project (fully replaced) plus 120.15 万元 of pre-paid issuance fees; the four fee lines sum to 120.16 万元 vs the disclosed 120.15 - a 0.01 万元 rounding artifact of the source, within tolerance",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "Approved by the 11th meeting of the 4th board; within board authority, NO shareholder vote required; sponsor Guolian Minsheng issued an explicit consent opinion and Pan-China (天健) issued the capital-verification report",
+   "required": true
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "实际募集资金净额为 372,479,593.35 元"
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "本次募集资金各项发行费用合计752.04万元"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "11,400.00 10,647.96"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "公司已用自筹资金支付的发行费用金额为120.15万元"
+  },
+  {
+   "point_id": "K5",
+   "evidence_quote": "无需提交股东会审议"
+  }
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "The five-step reconciliation chain is the crux: count×face; three-tier deductions; cross-unit fee reconciliation (N11 derived); the hidden identity - the working-capital cut of 752.04 万元 exactly equals total issuance costs (N12 derived, the deep-understanding marker); and the fee-detail sum where 120.16 vs 120.15 is a source rounding artifact - declaring a disclosure contradiction is an over-reaction (same lesson as MB-022's rounded EPS). Yuan and 万元 are mixed within one filing; unit slips lose points. Anti-template procedure: no shareholder vote needed. Evidence quotes remain in the original Chinese."
+}

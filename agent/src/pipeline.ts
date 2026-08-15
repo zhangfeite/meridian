@@ -222,8 +222,19 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   // read is still publishable — a hundred-page prospectus read in eight windows
   // is a real answer — but the reader is told which part of the reading fell
   // short, because "not disclosed" and "not read" are different sentences.
+  for (const span of extraction.spans ?? []) {
+    audit.push({
+      step: 'extract',
+      action: 'quote_span_selected',
+      detail: `${span.documentId} [${span.path}] 「${span.from.slice(0, 40)}」 → 「${span.to.slice(0, 60)}」`,
+    })
+  }
   for (const note of extraction.notes ?? []) {
-    audit.push({ step: 'extract', action: 'source_read_partial', detail: note })
+    audit.push({
+      step: 'extract',
+      action: /定向补抽未找到/.test(note) ? 'targeted_extraction_failed' : 'source_read_partial',
+      detail: note,
+    })
   }
   // The residual records themselves are written by compose, where each one is
   // tied to the claim it produced. Recording them here as well would double

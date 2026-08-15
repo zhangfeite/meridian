@@ -1,0 +1,15 @@
+{
+ "id": "MB-023",
+ "lang": "en",
+ "type": "metric_calc",
+ "prompt": "Read this Chinese convertible-bond redemption-and-delisting filing and answer: 1) What are the TWO trigger conditions in the redemption clause, and how was it actually triggered this time? 2) How is the redemption price of 100.0940 yuan per bond computed - verify it fully using the filing's own formula and parameters. 3) What are the key dates and how do their meanings differ - are the last trading day and the last conversion day the same? 4) What happens to holders who neither convert nor sell - and roughly what conversion value per bond does the trigger-line price imply, versus the redemption price? 5) What is the nature of the filing's reminder to 'convert or sell within the window', and what must you be careful about when restating it? Keep original precision; cite the Chinese source for every number.",
+ "context_files": [
+  "context/redemption.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}

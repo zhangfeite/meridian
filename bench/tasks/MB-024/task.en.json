@@ -1,0 +1,14 @@
+{
+ "id": "MB-024",
+ "lang": "en",
+ "type": "no_answer",
+ "prompt": "Read this Chinese super-short-term commercial paper (SCP) issuance-result filing and answer: 1) What are the registered program size and this tranche's issuance amount, and how do the two relate? 2) What are the tranche's tenor, coupon, issue price, value date and maturity date - and is the maturity consistent with value date plus tenor? 3) After this tranche, how much more can the company issue under the registration? 4) How many lead underwriters are there and who are they? When did proceeds arrive? 5) What authorization underlies the registration, and how long is the registration valid? Cite the Chinese source for every answer.",
+ "context_files": [
+  "context/scp_result.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "compliance"
+ ]
+}

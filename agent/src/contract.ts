@@ -315,6 +315,18 @@ export interface AuditRecord {
      */
     | 'residual_gap_recorded'
     /**
+     * A targeted second attempt that found nothing: the sub-question keeps its
+     * "not yet determined" sentence. Recorded because the attempt happened and
+     * cost a call, and because a run of these points at a retrieval problem.
+     */
+    | 'targeted_extraction_failed'
+    /**
+     * A citation the span selector moved off the model's proposal — widened to
+     * whole sentences, or extended to reach a figure the claim states. Recorded
+     * with the decision path so the choice can be replayed.
+     */
+    | 'quote_span_selected'
+    /**
      * Two sub-questions asking the same thing, merged into one. Left unmerged
      * they produce two sections, two answers and — since WP-M9-RGAP — two
      * copies of every residual sentence.

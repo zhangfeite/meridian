@@ -37,7 +37,13 @@ import type {
 import { EvidencePool } from '../evidence-pool.ts'
 import { idAllocator } from '../ids.ts'
 import { readJsonReply, type ModelClient } from '../model.ts'
-import { extractionPrompt, gapChallengePrompt, repairPrompt, residualReviewPrompt } from '../prompts.ts'
+import {
+  extractionPrompt,
+  gapChallengePrompt,
+  repairPrompt,
+  residualReviewPrompt,
+  targetedExtractionPrompt,
+} from '../prompts.ts'
 import type { SourceDocument } from '../source/types.ts'
 import type { ExtractionResult, Intent, RejectedClaim } from '../types.ts'
 import { bindNumbers } from '../verify/bind.ts'
@@ -46,6 +52,8 @@ import { locateQuote } from '../verify/evidence.ts'
 import type { Skill } from '../skills/types.ts'
 import { detectUnitHints, extractNumbers } from '../verify/numbers.ts'
 import { foldScript } from '../verify/script.ts'
+import { askedKinds, figureCandidates, statesKind, type AskedKind } from '../verify/asked.ts'
+import { chooseQuoteSpan } from '../verify/span.ts'
 import { candidatePassages, splitPassages } from '../verify/text.ts'
 import { asWindowView, boundDocuments, selectWindows, windowDocument } from '../verify/window.ts'
 
@@ -80,6 +88,15 @@ interface ExtractionReply {
 }
 
 const CONFIDENCES: Confidence[] = ['low', 'medium', 'high']
+
+/** One citation the span selector moved, kept so the choice can be replayed. */
+interface SpanDecision {
+  text: string
+  documentId: string
+  from: string
+  to: string
+  path: string
+}
 
 /**
  * Output budget for one *windowed* extraction call.
@@ -152,6 +169,7 @@ export async function extractAndVerify(
   const claims: Claim[] = []
   const gaps: { questionId: string; reason: string }[] = []
   const notes: string[] = []
+  const spans: SpanDecision[] = []
   const forbidden = skill?.forbidden_reinforce ?? []
   const focus = intent.subQuestions.map((question) => question.text)
 
@@ -171,7 +189,7 @@ export async function extractAndVerify(
       passes.length > 1 ? EXTRACTION_OUTPUT_TOKENS : undefined,
     )
     if (!parsed) continue
-    const round = verifyBatch(parsed.claims ?? [], documents, pool, retrievedAt, lang, nextClaimId, forbidden)
+    const round = verifyBatch(parsed.claims ?? [], documents, pool, retrievedAt, lang, nextClaimId, forbidden, spans)
     for (const claim of round.accepted) {
       if (!claims.some((existing) => existing.text.trim() === claim.text.trim())) claims.push(claim)
     }
@@ -219,7 +237,7 @@ export async function extractAndVerify(
       lang,
     )
     const repaired = (await askForJson<ExtractionReply>(model, repair, '修复轮', notes)) ?? {}
-    const second = verifyBatch(repaired.claims ?? [], documents, pool, retrievedAt, lang, nextClaimId, forbidden)
+    const second = verifyBatch(repaired.claims ?? [], documents, pool, retrievedAt, lang, nextClaimId, forbidden, spans)
     // Only keep repairs that say something new: a repaired claim whose text
     // duplicates an accepted one adds noise, not coverage.
     for (const claim of second.accepted) {
@@ -244,18 +262,32 @@ export async function extractAndVerify(
         questionId: question.id,
         question: question.text,
         reason: gaps.find((gap) => gap.questionId === question.id)?.reason ?? '',
-        candidates: candidatePassages(documents, question.text, 5, {
-          // A question asking "how much" is answered by a passage with a figure
-          // in it; plain word overlap ranks the boilerplate that repeats the
-          // question's nouns above the sentence that actually answers it.
-          // Folded first: the traditional 「金額」「數量」「價格」 miss this
-          // pattern outright, and a zh-TW run then ranks the boilerplate that
-          // echoes the question above the sentence carrying the figure — which
-          // is how a stated fact ends up published as an unanswerable gap.
-          preferNumbers: /多少|金额|数量|比例|上限|规模|价格|股数|how much|how many|amount|price/.test(
-            foldScript(question.text),
-          ),
-        }).map((candidate) => ({ documentId: candidate.documentId, text: candidate.text })),
+        // Figure-keyed candidates first when the question asks for a quantity:
+        // the kind of figure a question asks for matches a sentence across
+        // languages, where word overlap does not. A gap and a residual are the
+        // same problem seen at two moments — nothing states the value — so they
+        // get the same candidates rather than two different searches.
+        candidates: [
+          ...figureCandidates(documents, question.text, 4).map((candidate) => ({
+            documentId: candidate.documentId,
+            text: candidate.text,
+          })),
+          ...candidatePassages(documents, question.text, 5, {
+            // A question asking "how much" is answered by a passage with a
+            // figure in it; plain word overlap ranks the boilerplate that
+            // repeats the question's nouns above the sentence that answers it.
+            // Folded first: the traditional 「金額」「數量」「價格」 miss this
+            // pattern outright, and a zh-TW run then ranks the boilerplate that
+            // echoes the question above the sentence carrying the figure.
+            preferNumbers: /多少|金额|数量|比例|上限|规模|价格|股数|how much|how many|amount|price/.test(
+              foldScript(question.text),
+            ),
+          }).map((candidate) => ({ documentId: candidate.documentId, text: candidate.text })),
+        ].filter(
+          (candidate, index, all) =>
+            all.findIndex((other) => other.text === candidate.text && other.documentId === candidate.documentId) ===
+            index,
+        ),
       })),
       boundDocuments(documents, unanswered.map((question) => question.text)),
       lang,
@@ -282,6 +314,7 @@ export async function extractAndVerify(
         lang,
         nextClaimId,
         forbidden,
+        spans,
       )
       for (const claim of rescued.accepted) {
         if (!claims.some((existing) => existing.text.trim() === claim.text.trim())) claims.push(claim)
@@ -322,6 +355,93 @@ export async function extractAndVerify(
     }
   }
 
+  // Step 4e. One narrow second attempt per residual sub-question, against the
+  // sentences that carry a figure of the kind it asks for. Bounded: one call,
+  // one attempt each, no recursion, and the output is verified like any other
+  // claim — this raises recall, never the standard of proof.
+  const recovered = new Set<string>()
+  if (residuals.length > 0 && documents.length > 0) {
+    const targets = residuals
+      .map((residual) => {
+        const question = intent.subQuestions.find((item) => item.id === residual.questionId)
+        if (!question) return undefined
+        const candidates = figureCandidates(documents, question.text).map((candidate) => ({
+          documentId: candidate.documentId,
+          text: candidate.text,
+        }))
+        if (candidates.length === 0) {
+          // Nothing in the sources carries a figure of the kind this question
+          // asks for. That is an answer of sorts, and cheaper than a call.
+          notes.push(
+            `${residual.questionId}: 定向补抽未找到候选句(原始文件中没有该问句所要口径的数字),保留「尚未确定」声明`,
+          )
+          return undefined
+        }
+        return { questionId: residual.questionId, question: question.text, candidates }
+      })
+      .filter((item): item is { questionId: string; question: string; candidates: { documentId: string; text: string }[] } =>
+        Boolean(item),
+      )
+
+    if (targets.length > 0) {
+      const attempted = await askForJson<ExtractionReply>(
+        model,
+        targetedExtractionPrompt(targets, lang),
+        '定向补抽',
+        notes,
+      )
+      const wanted = new Set(targets.map((item) => item.questionId))
+      const round = verifyBatch(
+        (attempted?.claims ?? []).filter((claim) => wanted.has((claim.question_id ?? '').trim())),
+        documents,
+        pool,
+        retrievedAt,
+        lang,
+        nextClaimId,
+        forbidden,
+        spans,
+      )
+      for (const claim of round.accepted) {
+        if (claims.some((existing) => existing.text.trim() === claim.text.trim())) continue
+        claims.push(claim)
+        recovered.add(claim.questionId)
+      }
+      rejected.push(...round.rejected.map((item) => ({ ...item, round: 'repair' as const })))
+      for (const questionId of wanted) {
+        if (!recovered.has(questionId)) {
+          notes.push(`${questionId}: 定向补抽未找到该问句所要的具体数值,保留「尚未确定」声明`)
+        }
+      }
+    }
+  }
+
+  // A recovered claim only settles the question when it states the *value*.
+  // Judged mechanically rather than by asking the reviewer again: a second
+  // opinion on its own first opinion flip-flops, and on a live MB-009 zh-TW run
+  // it withdrew three "not yet determined" sentences on the strength of claims
+  // that only restated the ceiling. A bound is not a value — that rule is in the
+  // prompt, and this is what makes it true.
+  for (let index = residuals.length - 1; index >= 0; index -= 1) {
+    const residual = residuals[index] as { questionId: string; missing: string }
+    if (!recovered.has(residual.questionId)) continue
+    const question = intent.subQuestions.find((item) => item.id === residual.questionId)
+    const kinds = question ? askedKinds(question.text) : new Set<AskedKind>()
+    const settles = claims.some((claim) => {
+      if (claim.questionId !== residual.questionId) return false
+      if (claim.type === 'fact' && claim.unverifiable) return false
+      if (BOUND_LANGUAGE.test(claim.text)) return false
+      if (kinds.size === 0) return /\d/.test(claim.text)
+      return statesKind(claim.text, kinds)
+    })
+    if (settles) {
+      residuals.splice(index, 1)
+    } else {
+      notes.push(
+        `${residual.questionId}: 定向补抽取回了内容,但仍未陈述该问句所要的具体数值(仅规则或上限),保留「尚未确定」声明`,
+      )
+    }
+  }
+
   return {
     claims,
     evidence: pool.items,
@@ -329,6 +449,7 @@ export async function extractAndVerify(
     gaps: survivingGaps,
     gapsClosed: closed,
     ...(residuals.length > 0 ? { residuals } : {}),
+    ...(spans.length > 0 ? { spans } : {}),
     ...(notes.length > 0 ? { notes } : {}),
   }
 }
@@ -359,6 +480,7 @@ function verifyBatch(
   lang: MeridianLang,
   nextClaimId: () => string,
   forbidden: string[] = [],
+  spans: SpanDecision[] = [],
 ): { accepted: Claim[]; rejected: RejectedClaim[] } {
   const accepted: Claim[] = []
   const rejected: RejectedClaim[] = []
@@ -390,14 +512,34 @@ function verifyBatch(
         failure = `quote is not present in any retrieved document: 「${quote.slice(0, 40)}」`
         break
       }
+      // The proposal located; now decide which span to publish. Two runs that
+      // point at different halves of the same sentence should cite the same
+      // thing, and a claim's figures should be inside the citation that carries
+      // them rather than in the sentence next door.
+      const chosen = chooseQuoteSpan(located.document, located.at.quote, text) ?? {
+        quote: located.at.quote,
+        charStart: located.at.charStart,
+        charEnd: located.at.charEnd,
+        path: 'locator-only',
+        adjusted: false,
+      }
+      if (chosen.adjusted) {
+        spans.push({
+          text,
+          documentId: located.document.id,
+          from: located.at.quote,
+          to: chosen.quote,
+          path: chosen.path,
+        })
+      }
       const declaredUnits = hintsById.get(located.document.id) ?? []
       evidence.push(
         pool.intern({
           documentId: located.document.id,
           sourceLabel: located.document.title,
-          quote: located.at.quote,
-          charStart: located.at.charStart,
-          charEnd: located.at.charEnd,
+          quote: chosen.quote,
+          charStart: chosen.charStart,
+          charEnd: chosen.charEnd,
           retrievedAt,
           ...(declaredUnits.length > 0 ? { declaredUnits } : {}),
         }),
@@ -508,6 +650,10 @@ function verifyBatch(
 
   return { accepted, rejected }
 }
+
+/** Wording that bounds a figure instead of stating it. */
+const BOUND_LANGUAGE =
+  /不超过|不超過|不低于|不低於|不高于|不高於|上限|至多|至少|以内|以內|no more than|not exceed|at most|no less than|up to|ceiling|maximum|minimum/i
 
 /** Currency spelled in Latin letters, as an English sentence tends to. */
 const LATIN_UNIT = /(?:cny|rmb|yuan|renminbi|hkd|usd|dollars?|hk\$|us\$|[$¥])/i

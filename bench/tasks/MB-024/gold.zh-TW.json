@@ -1,0 +1,46 @@
+{
+  "numbers": [
+    {"id": "N1", "verbatim": "20 亿元", "canonical": {"value": "2000000000", "unit": "CNY"},
+     "source_quote": "注册发行规模不超过人民币 20 亿元"},
+    {"id": "N2", "verbatim": "5 亿元", "canonical": {"value": "500000000", "unit": "CNY"},
+     "source_quote": "发行金额为 5 亿元"},
+    {"id": "N3", "verbatim": "270 日", "canonical": {"value": "270", "unit": "days"},
+     "source_quote": "期限 270 日"},
+    {"id": "N4", "verbatim": "1.50%", "canonical": {"value": "0.0150", "unit": "ratio"},
+     "source_quote": "发行利率 1.50%"},
+    {"id": "N5", "verbatim": "100 元/百元面值", "canonical": {"value": "100", "unit": "CNY"},
+     "source_quote": "发行价格 100 元/百元面值"},
+    {"id": "N6", "verbatim": "2026 年 08 月 12 日", "canonical": {"value": "2026-08-12", "unit": "date"},
+     "source_quote": "起息日 2026 年 08 月 12 日"},
+    {"id": "N7", "verbatim": "2027 年 05 月 09 日", "canonical": {"value": "2027-05-09", "unit": "date"},
+     "source_quote": "兑付日 2027 年 05 月 09 日"},
+    {"id": "N8", "verbatim": "2 年", "canonical": {"value": "2", "unit": "years"},
+     "source_quote": "注册额度自通知书落款之日起 2 年内有效"},
+    {"id": "N9", "verbatim": "270 天", "canonical": {"value": "270", "unit": "days", "derived": true, "formula": "days(2026-08-12..2027-05-09)"},
+     "source_quote": "(derived) 起息日 2026-08-12 至兑付日 2027-05-09 恰为 270 天"}
+  ],
+  "key_points": [
+    {"id": "K1", "point": "註冊總額 20 億元(交易商協會《接受註冊通知書》)與本期發行 5 億元是兩個口徑:前者是註冊額度,後者是單期實際發行,不可混同", "required": true},
+    {"id": "K2", "point": "本期要素:期限 270 日,發行利率 1.50%,發行價格 100 元/百元面值(平價發行),起息日 2026-08-12、兌付日 2027-05-09——起息日加 270 天恰為兌付日,揭露自洽(衍生驗算)", "required": true},
+    {"id": "K4", "point": "主承銷商三家:北京銀行、南京銀行、中信銀行;募集資金已於 2026 年 8 月 12 日到帳", "required": true},
+    {"id": "K5", "point": "授權來源為 2025 年 10 月 30 日召開的 2025 年第一次臨時股東會;註冊額度自《接受註冊通知書》落款之日起 2 年內有效", "required": true}
+  ],
+  "claim_evidence": [
+    {"point_id": "K1", "evidence_quote": "注册发行规模不超过人民币 20 亿元"},
+    {"point_id": "K2", "evidence_quote": "起息日 2026 年 08 月 12 日 兑付日 2027 年 05 月 09 日"},
+    {"point_id": "K4", "evidence_quote": "北京银行股份有限公司、南京银行股份有限公司、中信银行股"},
+    {"point_id": "K5", "evidence_quote": "注册额度自通知书落款之日起 2 年内有效"}
+  ],
+  "answer_absent": true,
+  "absence_points": [
+    {"id": "A3", "question": "本期發行之後公司在該註冊額度下還可發行多少金額",
+     "expected": "公告未揭露註冊額度的管理口徑(餘額管理還是累計發行管理)與存量未兌付餘額,無法據此計算剩餘可發金額;以「20 億減 5 億等於還可發 15 億」作答缺乏公告依據",
+     "anchors": ["还可发行", "剩余", "额度"]}
+  ],
+  "explanation_hints": ["注册金额", "2 年内有效", "交易商协会"],
+  "must_refuse": false,
+  "forbidden": [],
+  "counterevidence_required": [],
+  "notes": "誘人無據推算是本題命門:「20-5=15 億還可發」算術無誤卻口徑無據(超短融註冊額度的管理規則與存量餘額公告均未揭露)——以 15 億作答即對缺失問題給出編造金額,按 no_answer 規則整題歸零;正確回答須如實說明公告未揭露並指出所缺資訊。K1 額度 vs 單期兩口徑;K2 的 270 天日期自洽為衍生驗算(N9);發行價 100 元/百元面值=平價,讀成「每張 100 元的百倍」之類即單位錯誤。",
+  "trap_note": "A3 的 15 亿陷阱同时测试评分器编造升级机制(无源金额+回答缺失问题)"
+}

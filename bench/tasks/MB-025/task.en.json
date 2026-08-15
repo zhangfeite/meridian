@@ -1,0 +1,15 @@
+{
+ "id": "MB-025",
+ "lang": "en",
+ "type": "metric_calc",
+ "prompt": "Read this Chinese raised-funds replacement filing and answer: 1) How does total raised follow from the bond count and face value? What were the actually-received amount and the net proceeds, and what was deducted at each step? 2) What are total issuance costs, and do they reconcile with the two deductions (mind the unit conversion)? 3) What adjustment was made to the投向 plan, what is the adjustment gap, and which amount does it exactly equal - why? 4) What two components does the replacement cover, at what amounts, and does the fee-detail sum hold? 5) What approval path did this take - is a shareholder vote required, and what did the intermediaries opine? Keep original precision; cite the Chinese source for every number.",
+ "context_files": [
+  "context/fund_swap.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "completeness",
+  "compliance"
+ ]
+}
