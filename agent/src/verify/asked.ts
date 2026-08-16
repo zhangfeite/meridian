@@ -21,7 +21,7 @@ import { foldScript } from './script.ts'
 import { coverage, splitPassages } from './text.ts'
 
 /** Kinds of quantity a question can ask for. */
-export type AskedKind = 'amount' | 'count' | 'percent' | 'price' | 'date'
+export type AskedKind = 'amount' | 'count' | 'percent' | 'price' | 'date' | 'doc_no'
 
 /** Question vocabulary per kind, in all three output languages. */
 const ASK_PATTERNS: [AskedKind, RegExp][] = [
@@ -30,6 +30,7 @@ const ASK_PATTERNS: [AskedKind, RegExp][] = [
   ['count', /多少股|股数|股數|数量|數量|份额|份額|number of shares|how many shares|quantity|volume/i],
   ['percent', /比例|占比|佔比|百分|幅度|增速|percentage|share of|ratio|proportion/i],
   ['date', /何时|何時|哪一天|日期|时间安排|時間安排|when|which date|what date/i],
+  ['doc_no', /文号|案号|哪一份.*(?:文书|文書)|which legal document|case number|document number/i],
 ]
 
 /**
@@ -56,6 +57,7 @@ function carriesKind(sentence: string, kinds: Set<AskedKind>): boolean {
     if (kinds.has('price') && (token.unit ?? '').includes('/')) return true
     if (kinds.has('price') && token.kind === 'amount' && /每股|\/\s*股|per share/i.test(sentence)) return true
     if (kinds.has('count') && token.kind === 'scalar' && /股|份|shares?/i.test(sentence)) return true
+    if (kinds.has('doc_no') && token.kind === 'doc_no') return true
   }
   return false
 }

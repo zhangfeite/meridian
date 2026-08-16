@@ -374,6 +374,35 @@ class ScoringTests(unittest.TestCase):
         self.assertIn(("HKD 5,000", "amount", "HKD"), kinds)
         self.assertTrue(any(k[1] == "amount" and k[2] == "CNY" and "yuan" in k[0] for k in kinds), kinds)
 
+    def test_english_month_name_dates_match_cjk_gold_without_scalar_fragments(self):
+        from meridian_bench.scoring.numbers import extract_numbers
+
+        cases = [
+            ("August 13, 2026", "2026年8月13日", "2026-08-13"),
+            ("13 August 2026", "2026年8月13日", "2026-08-13"),
+            ("May 6, 2026", "2026年5月6日", "2026-05-06"),
+        ]
+        for output, verbatim, canonical in cases:
+            with self.subTest(output=output):
+                gold = [{"id": "D1", "verbatim": verbatim, "canonical": {"value": canonical, "unit": "date"}}]
+                result = score_number_fidelity(output, gold, source_text=verbatim)
+                self.assertEqual(result["score"], 1.0, msg=json.dumps(result, ensure_ascii=False, default=str))
+                tokens = extract_numbers(output)
+                self.assertEqual([(token.kind, token.value) for token in tokens], [("date", gold[0]["canonical"]["value"])])
+
+    def test_english_month_date_negative_cases_and_scalar_comma_cleanup(self):
+        from meridian_bench.scoring.numbers import extract_numbers
+
+        gold = [{"id": "D1", "verbatim": "2026年8月13日", "canonical": {"value": "2026-08-13", "unit": "date"}}]
+        wrong_date = score_number_fidelity("August 15, 2026", gold, source_text="2026年8月13日")
+        self.assertTrue(any(item["kind"] == "fabricated_or_not_derivable" for item in wrong_date["violations"]))
+        modal_tokens = extract_numbers("the company may issue up to 5")
+        self.assertEqual([(token.kind, token.value) for token in modal_tokens], [("scalar", "5")])
+        self.assertFalse(any(token.kind == "date" for token in extract_numbers("The board met in August.")))
+        self.assertFalse(any(token.kind == "date" for token in extract_numbers("The board met on August 13.")))
+        self.assertFalse(any(token.kind == "date" for token in extract_numbers("The board met in 2026.")))
+        self.assertEqual(extract_numbers("30,")[0].raw, "30")
+
     def test_source_backed_year_is_not_penalized_and_unlisted_years_dedup(self):
         gold = []
         result = score_number_fidelity(

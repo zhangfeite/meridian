@@ -323,9 +323,22 @@ export async function extractAndVerify(
       if (rescued.accepted.length > 0) closed.push(questionId)
     }
   }
-  // A question that got an answer is no longer a gap, whatever the first pass said.
-  const answered = new Set(claims.map((claim) => claim.questionId))
-  const survivingGaps = gaps.filter((gap) => !answered.has(gap.questionId))
+
+  // A gap review verdict is still a model verdict. When the question asks for
+  // a known kind of figure and the source mechanically contains that kind, a
+  // zero-claim answer gets one final, language-blind attempt in Step 4e. This
+  // reuses the same candidate selector as residual recovery: no second scanner,
+  // and no vocabulary overlap required between question and filing.
+  const forcedGaps = intent.subQuestions.flatMap((question) => {
+    if (claims.some((claim) => claim.questionId === question.id)) return []
+    const kinds = askedKinds(question.text)
+    if (kinds.size === 0) return []
+    const candidates = figureCandidates(documents, question.text).map((candidate) => ({
+      documentId: candidate.documentId,
+      text: candidate.text,
+    }))
+    return candidates.length > 0 ? [{ questionId: question.id, question: question.text, candidates }] : []
+  })
 
   // Step 4d. Answered is not the same as settled: a filing that fixes the
   // pricing basis and leaves the price open has answered the rule and nothing
@@ -360,8 +373,9 @@ export async function extractAndVerify(
   // one attempt each, no recursion, and the output is verified like any other
   // claim — this raises recall, never the standard of proof.
   const recovered = new Set<string>()
-  if (residuals.length > 0 && documents.length > 0) {
-    const targets = residuals
+  const forcedQuestionIds = new Set(forcedGaps.map((gap) => gap.questionId))
+  if ((residuals.length > 0 || forcedGaps.length > 0) && documents.length > 0) {
+    const residualTargets = residuals
       .map((residual) => {
         const question = intent.subQuestions.find((item) => item.id === residual.questionId)
         if (!question) return undefined
@@ -382,6 +396,9 @@ export async function extractAndVerify(
       .filter((item): item is { questionId: string; question: string; candidates: { documentId: string; text: string }[] } =>
         Boolean(item),
       )
+    const targets = [...residualTargets, ...forcedGaps].filter(
+      (target, index, all) => all.findIndex((item) => item.questionId === target.questionId) === index,
+    )
 
     if (targets.length > 0) {
       const attempted = await askForJson<ExtractionReply>(
@@ -402,14 +419,38 @@ export async function extractAndVerify(
         spans,
       )
       for (const claim of round.accepted) {
-        if (claims.some((existing) => existing.text.trim() === claim.text.trim())) continue
+        // Forced-gap recovery is atomic: a verified but non-settling claim must
+        // not enter `claims`, because compose treats any owned claim as a reason
+        // to suppress the honest absence statement. Residual recovery keeps its
+        // existing behaviour and may publish a useful bound while retaining the
+        // separate "value not yet determined" residual.
+        if (forcedQuestionIds.has(claim.questionId)) {
+          const question = intent.subQuestions.find((item) => item.id === claim.questionId)
+          if (!mechanicallySettles(claim, question?.text)) continue
+        }
+        if (
+          claims.some(
+            (existing) =>
+              existing.text.trim() === claim.text.trim() &&
+              (!forcedQuestionIds.has(claim.questionId) || existing.questionId === claim.questionId),
+          )
+        ) {
+          continue
+        }
         claims.push(claim)
         recovered.add(claim.questionId)
+        if (forcedQuestionIds.has(claim.questionId) && !closed.includes(claim.questionId)) {
+          closed.push(claim.questionId)
+        }
       }
       rejected.push(...round.rejected.map((item) => ({ ...item, round: 'repair' as const })))
       for (const questionId of wanted) {
         if (!recovered.has(questionId)) {
-          notes.push(`${questionId}: 定向补抽未找到该问句所要的具体数值,保留「尚未确定」声明`)
+          notes.push(
+            forcedQuestionIds.has(questionId)
+              ? `${questionId}: 定向补抽未找到该问句所要的可核实答案,保留缺口声明`
+              : `${questionId}: 定向补抽未找到该问句所要的具体数值,保留「尚未确定」声明`,
+          )
         }
       }
     }
@@ -425,14 +466,9 @@ export async function extractAndVerify(
     const residual = residuals[index] as { questionId: string; missing: string }
     if (!recovered.has(residual.questionId)) continue
     const question = intent.subQuestions.find((item) => item.id === residual.questionId)
-    const kinds = question ? askedKinds(question.text) : new Set<AskedKind>()
-    const settles = claims.some((claim) => {
-      if (claim.questionId !== residual.questionId) return false
-      if (claim.type === 'fact' && claim.unverifiable) return false
-      if (BOUND_LANGUAGE.test(claim.text)) return false
-      if (kinds.size === 0) return /\d/.test(claim.text)
-      return statesKind(claim.text, kinds)
-    })
+    const settles = claims.some(
+      (claim) => claim.questionId === residual.questionId && mechanicallySettles(claim, question?.text),
+    )
     if (settles) {
       residuals.splice(index, 1)
     } else {
@@ -441,6 +477,12 @@ export async function extractAndVerify(
       )
     }
   }
+
+  // A question that got an answer is no longer a gap, whatever the first pass
+  // said. This must run after Step 4e so a forced recovery is reflected in both
+  // the trace and the publication gate.
+  const answered = new Set(claims.map((claim) => claim.questionId))
+  const survivingGaps = gaps.filter((gap) => !answered.has(gap.questionId))
 
   return {
     claims,
@@ -654,6 +696,18 @@ function verifyBatch(
 /** Wording that bounds a figure instead of stating it. */
 const BOUND_LANGUAGE =
   /不超过|不超過|不低于|不低於|不高于|不高於|上限|至多|至少|以内|以內|no more than|not exceed|at most|no less than|up to|ceiling|maximum|minimum/i
+
+/** Wording in a question that asks for the bound itself. */
+const BOUND_ASKING = /上限|上限是多少|最高|最多|不超过多少|maximum|upper limit|cap\b|at most|ceiling/i
+
+/** Does one verified claim state the value its question asks for? */
+function mechanicallySettles(claim: Claim, question: string | undefined): boolean {
+  if (claim.type === 'fact' && claim.unverifiable) return false
+  if (BOUND_LANGUAGE.test(claim.text) && !(question && BOUND_ASKING.test(question))) return false
+  const kinds = question ? askedKinds(question) : new Set<AskedKind>()
+  if (kinds.size === 0) return /\d/.test(claim.text)
+  return statesKind(claim.text, kinds)
+}
 
 /** Currency spelled in Latin letters, as an English sentence tends to. */
 const LATIN_UNIT = /(?:cny|rmb|yuan|renminbi|hkd|usd|dollars?|hk\$|us\$|[$¥])/i

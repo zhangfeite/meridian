@@ -209,8 +209,11 @@ test('a question the filing does not answer is answered "无法核实", not inve
         { question_id: 'Q2', verdict: 'absent', claims: [], reason: '公告未对下半年计提作出预计' },
       ],
     }),
-    // Step 4d: every answered sub-question is settled, not merely answered.
-    JSON.stringify({ results: [] }),
+    // Forced Step 4e: Q2 asks for an amount and the filing carries amounts, so
+    // the zero-claim gap gets one last targeted attempt. The candidates are the
+    // filing's own provision figures, which do not answer a forecast — the
+    // scripted model says so by returning no claim, and the gap survives.
+    JSON.stringify({ claims: [] }),
     NO_POLISH,
   ])
 
@@ -225,8 +228,8 @@ test('a question the filing does not answer is answered "无法核实", not inve
 
   assert.equal(
     model.calls.length,
-    6,
-    'extract, repair, gap review, then writing; metrics and counter-evidence are skipped',
+    7,
+    'extract, repair, gap review, forced targeted extraction, then writing; metrics and counter-evidence are skipped',
   )
 
   // Nothing invented survived.

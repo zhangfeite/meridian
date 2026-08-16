@@ -243,7 +243,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     audit.push({
       step: 'extract',
       action: 'gap_reopened',
-      detail: `${questionId} was reported unanswerable, but gap review found the answer in the sources`,
+      detail: `${questionId} was reported unanswerable, but follow-up source review found the answer in the sources`,
     })
   }
   report('extract', {

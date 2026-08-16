@@ -103,6 +103,25 @@ const UNIT_ALTERNATION = UNITS.map(([label]) => label.replace(/ /g, '\\s+')).joi
 const DOC_RE = /[（(]\s*\d{4}\s*[）)]\s*[^，。；;\n]{0,24}?\d+\s*号/g
 const DATE_CN_RE = /(?<!\d)\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日/g
 const DATE_ISO_RE = /(?<!\d)\d{4}[-/]\d{1,2}[-/]\d{1,2}(?!\d)/g
+const EN_MONTHS: Record<string, number> = {
+  january: 1,
+  february: 2,
+  march: 3,
+  april: 4,
+  may: 5,
+  june: 6,
+  july: 7,
+  august: 8,
+  september: 9,
+  october: 10,
+  november: 11,
+  december: 12,
+}
+const EN_MONTH_ALTERNATION = Object.keys(EN_MONTHS).join('|')
+const EN_TEXT_DATE_RE = new RegExp(
+  String.raw`\b(?:(?<monthFirst>${EN_MONTH_ALTERNATION})\s+(?<dayFirst>\d{1,2}),?\s+(?<yearFirst>\d{4})|(?<daySecond>\d{1,2})\s+(?<monthSecond>${EN_MONTH_ALTERNATION})\s+(?<yearSecond>\d{4}))\b`,
+  'gi',
+)
 const PREFIX_AMOUNT_RE = /([$¥￥])\s*([-+]?\d[\d,]*(?:\.\d+)?)\s*(billion|million|thousand)?/gi
 const AMOUNT_RE = new RegExp(
   String.raw`(?<![\d.])([-+]?\d[\d,]*(?:\.\d+)?)\s*(${UNIT_ALTERNATION})(?![a-zA-Z])`,
@@ -225,6 +244,22 @@ export function extractNumbers(original: string): NumberToken[] {
         end: match.index + match[0].length,
       })
     }
+  }
+
+  for (const match of text.matchAll(EN_TEXT_DATE_RE)) {
+    const monthName = (match.groups?.monthFirst ?? match.groups?.monthSecond ?? '').toLowerCase()
+    const month = EN_MONTHS[monthName]
+    const day = Number(match.groups?.dayFirst ?? match.groups?.daySecond)
+    const year = Number(match.groups?.yearFirst ?? match.groups?.yearSecond)
+    if (!month || !Number.isInteger(day) || day < 1 || day > 31 || !Number.isInteger(year)) continue
+    claim({
+      raw: original.slice(match.index, match.index + match[0].length),
+      kind: 'date',
+      value: `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      unit: 'date',
+      start: match.index,
+      end: match.index + match[0].length,
+    })
   }
 
   for (const match of text.matchAll(EN_PREFIX_AMOUNT_RE)) {

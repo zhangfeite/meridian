@@ -25,6 +25,17 @@ class NumberToken:
 _DOC_RE = re.compile(r"[（(]\s*\d{4}\s*[）)]\s*[^，。；;\n]{0,24}?\d+\s*[号號]", re.IGNORECASE)
 _DATE_CN_RE = re.compile(r"(?<!\d)\d{4}\s*年\s*\d{1,2}\s*月\s*\d{1,2}\s*日")
 _DATE_ISO_RE = re.compile(r"(?<!\d)\d{4}[-/]\d{1,2}[-/]\d{1,2}(?!\d)")
+_MONTH_NAMES = (
+    "January|February|March|April|May|June|July|August|September|October|November|December"
+)
+_DATE_EN_RE = re.compile(
+    rf"\b(?:"
+    rf"(?P<month_first>{_MONTH_NAMES})\s+(?P<day_first>\d{{1,2}})(?:\s*,\s*|\s+)(?P<year_first>\d{{4}})"
+    rf"|"
+    rf"(?P<day_last>\d{{1,2}})\s+(?P<month_last>{_MONTH_NAMES})(?:\s*,\s*|\s+)(?P<year_last>\d{{4}})"
+    rf")\b",
+    re.IGNORECASE,
+)
 _PREFIX_AMOUNT_RE = re.compile(
     r"(?P<prefix>[$¥￥]|CNY|RMB|USD|HKD)\s*(?P<number>[-+]?\d[\d,]*(?:\.\d+)?)\s*"
     r"(?P<scale>billion|million|thousand)?",
@@ -38,7 +49,9 @@ _AMOUNT_RE = re.compile(
     re.IGNORECASE,
 )
 _PERCENT_RE = re.compile(r"(?<![\d.])[-+]?\d[\d,]*(?:\.\d+)?\s*(?:%|％|percent|百分[点點])", re.IGNORECASE)
-_SCALAR_RE = re.compile(r"(?<![\d.])[-+]?\d[\d,]*(?:\.\d+)?(?:\s*倍)?(?!\.?\d)")
+_SCALAR_RE = re.compile(
+    r"(?<![\d.,])[-+]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:\s*倍)?(?!\.?\d)"
+)
 
 
 _UNIT_MAP: Dict[str, Tuple[str, Decimal]] = {
@@ -89,6 +102,35 @@ def _normalize_doc(value: str) -> str:
 def _date_token(raw: str) -> NumberToken:
     digits = [int(item) for item in re.findall(r"\d+", raw)]
     return NumberToken(raw=raw, kind="date", value="%04d-%02d-%02d" % tuple(digits), unit="date")
+
+
+_MONTH_VALUES = {
+    name.casefold(): index
+    for index, name in enumerate(
+        (
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December",
+        ),
+        start=1,
+    )
+}
+
+
+def _english_date_token(match: re.Match[str]) -> NumberToken:
+    if match.group("month_first") is not None:
+        month = match.group("month_first")
+        day = match.group("day_first")
+        year = match.group("year_first")
+    else:
+        month = match.group("month_last")
+        day = match.group("day_last")
+        year = match.group("year_last")
+    return NumberToken(
+        raw=match.group(0),
+        kind="date",
+        value="%04d-%02d-%02d" % (int(year), _MONTH_VALUES[month.casefold()], int(day)),
+        unit="date",
+    )
 
 
 _TRADITIONAL_UNIT_CHARS = str.maketrans("萬億幣", "万亿币")
@@ -149,6 +191,7 @@ def extract_numbers(text: str) -> List[NumberToken]:
     add(_DOC_RE, lambda match: NumberToken(match.group(0), "doc_no", _normalize_doc(match.group(0)), "doc_no"))
     add(_DATE_CN_RE, lambda match: _date_token(match.group(0)))
     add(_DATE_ISO_RE, lambda match: _date_token(match.group(0)))
+    add(_DATE_EN_RE, _english_date_token)
     add(_PREFIX_AMOUNT_RE, _prefix_amount_token)
     add(_AMOUNT_RE, lambda match: _amount_token(match.group(0), match.group("number"), match.group("unit")))
     add(
@@ -160,7 +203,7 @@ def extract_numbers(text: str) -> List[NumberToken]:
     add(
         _SCALAR_RE,
         lambda match: NumberToken(
-            match.group(0),
+            match.group(0).rstrip(","),
             "scalar",
             _decimal_string(_decimal(re.findall(r"[-+]?\d[\d,]*(?:\.\d+)?", match.group(0))[0])),
             "multiple" if "倍" in match.group(0) else "scalar",

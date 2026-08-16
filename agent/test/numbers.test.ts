@@ -21,6 +21,20 @@ test('compound tokens claim their digits before scalars do', () => {
   assert.equal(tokens.filter((token) => token.value === '2026' && token.kind === 'scalar').length, 0)
 })
 
+test('English month-name dates normalize to the same value as CJK dates', () => {
+  const [monthFirst] = extractNumbers('The notice arrived on August 13, 2026.')
+  const [dayFirst] = extractNumbers('The notice arrived on 13 August 2026.')
+  const [may] = extractNumbers('The notice arrived on May 6, 2026.')
+
+  assert.equal(monthFirst?.kind, 'date')
+  assert.equal(monthFirst?.value, '2026-08-13')
+  assert.equal(dayFirst?.value, '2026-08-13')
+  assert.equal(may?.value, '2026-05-06')
+  assert.ok(verifyNumbers('The notice arrived on August 13, 2026.', ['公司于2026年8月13日收到通知。']).ok)
+  assert.ok(verifyNumbers('The notice arrived on May 6, 2026.', ['公司于2026年5月6日收到通知。']).ok)
+  assert.equal(extractNumbers('May the company complete the filing.').length, 0)
+})
+
 test('unit multipliers canonicalize to a base amount', () => {
   const [wan] = extractNumbers('7,199.78 万元')
   const [yi] = extractNumbers('1.5亿元')

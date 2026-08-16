@@ -43,7 +43,7 @@ function asData(text: string): string {
 }
 
 /** Version stamp recorded in memo provenance. Bump on any wording change. */
-export const PROMPT_SET_VERSION = 'meridian-prompts-v0.1'
+export const PROMPT_SET_VERSION = 'meridian-prompts-v0.3'
 
 /**
  * The output language contract.
@@ -340,9 +340,11 @@ export function targetedExtractionPrompt(
   return {
     system: `${HOUSE_RULES}
 
-You are STEP 4e of 7: TARGETED EXTRACTION. Each question below was answered in general terms only —
-the memo has the rule, the range or the procedure, and not the figure the question asks for. Below
-each question are the sentences from the filings that carry a figure of the kind it asks for.
+You are STEP 4e of 7: TARGETED EXTRACTION. Each question below is still missing the specific answer
+it asks for. It may currently have a verified rule, range or procedure but no value, or it may have
+no verified answer at all. Below each question are filing sentences that carry a figure of the kind
+it asks for. The sentences may be in a different language from the question: translate only in your
+reasoning, then quote the original source text character-for-character.
 
 Output schema:
 {"claims": [{"question_id": "Q4", "type": "fact", "text": string,
@@ -354,8 +356,9 @@ Rules:
   determined, which is the truth and costs nothing.
 - Quotes are copied character-for-character from the sentences shown, and every number in a claim's
   text must appear in that claim's own quote. Units stay in the source's characters.
-- A ceiling is not the figure. 「不超过X」 answers "what is the maximum" and does not answer "what is
-  the actual amount" — do not dress one as the other. If all you have is the bound, return nothing.
+- A ceiling is not the figure — unless the question itself asks for the ceiling/maximum. 「不超过X」
+  answers "what is the maximum" and does not answer "what is the actual amount". If an actual value
+  is requested and all you have is the bound, return nothing.
 - Do not restate the rule you were already given. This step exists for the value alone.
 ${LANGUAGE_CLAUSE[lang]}`,
     user: questions

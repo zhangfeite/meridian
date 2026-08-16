@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url'
 import { test } from 'node:test'
 import { ScriptedModel, type CompletionRequest, type CompletionResult, type ModelClient } from '../src/model.ts'
 import { extractAndVerify } from '../src/steps/extract.ts'
+import { PROMPT_SET_VERSION, targetedExtractionPrompt } from '../src/prompts.ts'
 import type { SourceDocument } from '../src/source/types.ts'
 import type { Intent } from '../src/types.ts'
 import { askedKinds, figureCandidates } from '../src/verify/asked.ts'
@@ -32,6 +33,15 @@ const FILING = [
 ].join('\n')
 
 const documents: SourceDocument[] = [{ id: 'D1', title: '发行预案', text: FILING, provider: 'test' }]
+
+const CROSS_LANGUAGE_DOCUMENTS: SourceDocument[] = [
+  {
+    id: 'DX',
+    title: '设备采购说明',
+    text: '本批生产设备的实际采购金额为 2,345,678 元。',
+    provider: 'test',
+  },
+]
 
 const intent = (questions: { id: string; text: string }[], lang: 'zh-CN' | 'en' = 'zh-CN'): Intent => ({
   entity: { name: '测试公司' },
@@ -75,6 +85,7 @@ test('a question asking for a price, a count or a ratio says so', () => {
   assert.deepEqual([...askedKinds('What is the issue price per share?')].sort(), ['price'])
   assert.deepEqual([...askedKinds('本次实际发行的股份数量是多少股?')], ['count'])
   assert.deepEqual([...askedKinds('募集资金总额的上限是多少?')], ['amount'])
+  assert.deepEqual([...askedKinds('Which legal document contains the ruling?')], ['doc_no'])
   assert.deepEqual([...askedKinds('该事项目前处于哪个阶段?')], [], 'a question about status asks for no quantity')
 })
 
@@ -88,6 +99,13 @@ test('candidates are the sentences carrying a figure of the kind asked for', () 
   const inEnglish = figureCandidates(documents, 'What is the ceiling on the total proceeds of this issuance?')
   assert.ok(inEnglish.some((item) => item.text.includes('360,000.00 万元')))
 
+  const legalDocuments: SourceDocument[] = [
+    { id: 'DL', title: '裁定摘要', text: '相关裁定载于（2026）云03执42号法律文书。', provider: 'test' },
+  ]
+  assert.ok(
+    figureCandidates(legalDocuments, 'What is the case number?').some((item) => item.text.includes('（2026）云03执42号')),
+  )
+
   // Sentences with no figure are never offered, whatever they say.
   assert.equal(
     figureCandidates(documents, '募集资金总额的上限是多少?').some((item) => item.text.includes('及时披露进展')),
@@ -100,6 +118,156 @@ test('candidate ranking is stable across calls', () => {
   for (let round = 0; round < 5; round += 1) {
     assert.deepEqual(figureCandidates(documents, '募集资金总额的上限是多少?'), once)
   }
+})
+
+test('the targeted prompt permits a ceiling only when the question asks for it', () => {
+  const prompt = targetedExtractionPrompt(
+    [{ questionId: 'Q1', question: 'What is the upper limit?', candidates: [{ documentId: 'D1', text: FILING }] }],
+    'en',
+  )
+  assert.equal(PROMPT_SET_VERSION, 'meridian-prompts-v0.3')
+  assert.match(prompt.system, /unless the question itself asks for the ceiling\/maximum/)
+  assert.match(prompt.system, /does not answer "what is the actual amount"/)
+})
+
+test('a forced-gap upper-limit question accepts a verified bound and closes', async () => {
+  const model = new Script({
+    extract: JSON.stringify({ claims: [], gaps: [{ question_id: 'Q1', reason: 'No answer located.' }] }),
+    gap: JSON.stringify({
+      answers: [{ question_id: 'Q1', verdict: 'absent', reason: 'No answer located.' }],
+    }),
+    targeted: JSON.stringify({
+      claims: [
+        {
+          question_id: 'Q1',
+          type: 'fact',
+          text: 'The upper limit of total proceeds does not exceed 人民币 360,000.00 万元.',
+          quotes: [{ document_id: 'D1', quote: '募集资金总额不超过人民币 360,000.00 万元' }],
+        },
+      ],
+    }),
+  })
+
+  const result = await extractAndVerify(
+    intent([{ id: 'Q1', text: 'What is the upper limit of total proceeds?' }], 'en'),
+    documents,
+    model,
+    'en',
+  )
+
+  assert.equal(result.claims.length, 1)
+  assert.deepEqual(result.gapsClosed, ['Q1'])
+  assert.equal(result.gaps.some((gap) => gap.questionId === 'Q1'), false)
+})
+
+test('an English zero-claim gap with a matching Chinese figure is forced through Step 4e and closed', async () => {
+  const model = new Script({
+    extract: JSON.stringify({ claims: [], gaps: [{ question_id: 'Q1', reason: 'No answer located.' }] }),
+    gap: JSON.stringify({
+      answers: [{ question_id: 'Q1', verdict: 'absent', reason: 'No answer located.' }],
+    }),
+    targeted: JSON.stringify({
+      claims: [
+        {
+          question_id: 'Q1',
+          type: 'fact',
+          text: 'The actual equipment purchase amount was 2,345,678 元.',
+          quotes: [{ document_id: 'DX', quote: '实际采购金额为 2,345,678 元' }],
+        },
+      ],
+    }),
+  })
+
+  const result = await extractAndVerify(
+    intent([{ id: 'Q1', text: 'What was the actual equipment purchase amount?' }], 'en'),
+    CROSS_LANGUAGE_DOCUMENTS,
+    model,
+    'en',
+  )
+
+  assert.equal(model.steps.filter((step) => step === 'targeted').length, 1)
+  assert.ok(result.claims.some((claim) => claim.text.includes('2,345,678 元')))
+  assert.deepEqual(result.gapsClosed, ['Q1'])
+  assert.equal(result.gaps.some((gap) => gap.questionId === 'Q1'), false)
+})
+
+test('a forced-gap bound-only claim is discarded atomically and the gap remains', async () => {
+  const boundedDocuments: SourceDocument[] = [
+    { id: 'DB', title: '采购预算', text: '设备采购预算不超过 2,345,678 元。', provider: 'test' },
+  ]
+  const model = new Script({
+    extract: JSON.stringify({ claims: [], gaps: [{ question_id: 'Q1', reason: 'No final amount located.' }] }),
+    gap: JSON.stringify({
+      answers: [{ question_id: 'Q1', verdict: 'absent', reason: 'No final amount located.' }],
+    }),
+    targeted: JSON.stringify({
+      claims: [
+        {
+          question_id: 'Q1',
+          type: 'fact',
+          text: 'The equipment purchase budget does not exceed 2,345,678 元.',
+          quotes: [{ document_id: 'DB', quote: '设备采购预算不超过 2,345,678 元' }],
+        },
+      ],
+    }),
+  })
+
+  const result = await extractAndVerify(
+    intent([{ id: 'Q1', text: 'What was the final equipment purchase amount?' }], 'en'),
+    boundedDocuments,
+    model,
+    'en',
+  )
+
+  assert.equal(result.claims.some((claim) => claim.text.includes('2,345,678')), false)
+  assert.ok(result.gaps.some((gap) => gap.questionId === 'Q1'))
+  assert.deepEqual(result.gapsClosed, [])
+  assert.ok((result.notes ?? []).some((note) => /定向补抽未找到/.test(note)))
+})
+
+test('a true gap with no matching figure kind is not forced through Step 4e', async () => {
+  const countOnlyDocuments: SourceDocument[] = [
+    { id: 'DN', title: '设备清单', text: '本批设备共计 80 台，已全部到货。', provider: 'test' },
+  ]
+  const model = new Script({
+    extract: JSON.stringify({ claims: [], gaps: [{ question_id: 'Q1', reason: 'No purchase amount disclosed.' }] }),
+    gap: JSON.stringify({
+      answers: [{ question_id: 'Q1', verdict: 'absent', reason: 'No purchase amount disclosed.' }],
+    }),
+  })
+
+  const result = await extractAndVerify(
+    intent([{ id: 'Q1', text: 'What was the equipment purchase amount?' }], 'en'),
+    countOnlyDocuments,
+    model,
+    'en',
+  )
+
+  assert.equal(model.steps.filter((step) => step === 'targeted').length, 0)
+  assert.ok(result.gaps.some((gap) => gap.questionId === 'Q1'))
+  assert.equal((result.notes ?? []).some((note) => /定向补抽/.test(note)), false)
+})
+
+test('an empty forced Step 4e reply keeps the gap and records targeted extraction failure', async () => {
+  const model = new Script({
+    extract: JSON.stringify({ claims: [], gaps: [{ question_id: 'Q1', reason: 'No answer located.' }] }),
+    gap: JSON.stringify({
+      answers: [{ question_id: 'Q1', verdict: 'absent', reason: 'No answer located.' }],
+    }),
+    targeted: JSON.stringify({ claims: [] }),
+  })
+
+  const result = await extractAndVerify(
+    intent([{ id: 'Q1', text: 'What was the actual equipment purchase amount?' }], 'en'),
+    CROSS_LANGUAGE_DOCUMENTS,
+    model,
+    'en',
+  )
+
+  assert.equal(model.steps.filter((step) => step === 'targeted').length, 1)
+  assert.ok(result.gaps.some((gap) => gap.questionId === 'Q1'))
+  assert.deepEqual(result.gapsClosed, [])
+  assert.ok((result.notes ?? []).some((note) => /定向补抽未找到/.test(note)))
 })
 
 test('a residual question whose figure is in the filing is recovered and settled', async () => {
