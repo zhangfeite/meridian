@@ -1,0 +1,14 @@
+{
+ "id": "MB-029",
+ "lang": "en",
+ "type": "no_answer",
+ "prompt": "Read this related-party asset sale announcement and answer, in English: 1) What is being sold to whom? What is the price and how was it set? What conditions must be met for the deal to take effect, and what were the board vote and recusals? 2) Against which accounting scope is the disclosed 40.02% premium measured? What are the parent-scope book net assets and appraised value? What are the valuation base date and the agreement signing date, and what are the target's latest (unaudited) equity attributable to parent and net profit? 3) How many payment instalments are there, with what formulas and deadlines? Can the second instalment's exact amount be determined now? 4) What is 中软系统's registered capital? What does '对应中软系统注册资本20,916.1764万元' refer to? 5) Who bears and enjoys transition-period profits and losses, and how is the closing date determined? Cite the source for every answer.",
+ "context_files": [
+  "context/related_sale2.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "compliance"
+ ]
+}

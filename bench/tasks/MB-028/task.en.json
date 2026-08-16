@@ -1,0 +1,14 @@
+{
+ "id": "MB-028",
+ "lang": "en",
+ "type": "no_answer",
+ "prompt": "Read this related-party asset sale announcement and answer, in English: 1) What is being sold to whom? What is the transaction's nature, and does it require a shareholders' meeting? What were the board and independent-director special meeting votes, and who recused? 2) The pricing chain: what are the valuation base date, the target's book net assets, the appraised value, and the appreciation rate? How is the 81% stake price derived, and which valuation method was ultimately adopted? 3) What is the pre-closing profit-distribution and price-adjustment mechanism? What is the adjusted price, and is the final transfer price locked as of the announcement date? 4) How is the transition period defined, and how are transition-period profits and losses shared? 5) How much investment income does the company expect to recognise from this transaction? Cite the source for every answer.",
+ "context_files": [
+  "context/related_sale.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "compliance"
+ ]
+}

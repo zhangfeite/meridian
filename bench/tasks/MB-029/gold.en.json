@@ -1,0 +1,229 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "46,330.49 万元",
+   "canonical": {
+    "value": "463304900",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "701977100*0.66",
+    "tolerance": 0.005
+   },
+   "source_quote": "本次交易价格 46,330.49 万元为公司持股比例对应的评估值"
+  },
+  {
+   "id": "N2",
+   "verbatim": "70,197.71 万元",
+   "canonical": {
+    "value": "701977100",
+    "unit": "CNY"
+   },
+   "source_quote": "净资产评估\n值为 70,197.71 万元"
+  },
+  {
+   "id": "N3",
+   "verbatim": "50,412.52 万元",
+   "canonical": {
+    "value": "504125200",
+    "unit": "CNY"
+   },
+   "source_quote": "净资产账\n面值 50,412.52 万元"
+  },
+  {
+   "id": "N4",
+   "verbatim": "33,088.34 万元",
+   "canonical": {
+    "value": "330883400",
+    "unit": "CNY"
+   },
+   "source_quote": "合并口径所有者权益账面值 33,088.34 万元"
+  },
+  {
+   "id": "N5",
+   "verbatim": "13,242.15 万元",
+   "canonical": {
+    "value": "132421500",
+    "unit": "CNY"
+   },
+   "source_quote": "溢价 13,242.15 万元"
+  },
+  {
+   "id": "N6",
+   "verbatim": "40.02%",
+   "canonical": {
+    "value": "0.4002",
+    "unit": "ratio"
+   },
+   "source_quote": "溢价\n率为 40.02%"
+  },
+  {
+   "id": "N7",
+   "verbatim": "11,175.46 万元",
+   "canonical": {
+    "value": "111754600",
+    "unit": "CNY"
+   },
+   "source_quote": "首付款【11,175.46】万元"
+  },
+  {
+   "id": "N8",
+   "verbatim": "20,916.1764 万元",
+   "canonical": {
+    "value": "209161764",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "316911764*0.66",
+    "tolerance": 0.005
+   },
+   "source_quote": "对应\n中软系统注册资本 20,916.1764 万元"
+  },
+  {
+   "id": "N9",
+   "verbatim": "31,691.1764 万元",
+   "canonical": {
+    "value": "316911764",
+    "unit": "CNY"
+   },
+   "source_quote": "注册资本：31,691.1764 万元"
+  },
+  {
+   "id": "N10",
+   "verbatim": "52,516.93 万元",
+   "canonical": {
+    "value": "525169300",
+    "unit": "CNY"
+   },
+   "source_quote": "金额合计为 52,516.93 万\n元"
+  },
+  {
+   "id": "N11",
+   "verbatim": "2023 年 12 月 31 日",
+   "canonical": {
+    "value": "2023-12-31",
+    "unit": "date"
+   },
+   "source_quote": "评估基准日：2023 年 12 月 31 日"
+  },
+  {
+   "id": "N12",
+   "verbatim": "2024 年 12 月 6 日",
+   "canonical": {
+    "value": "2024-12-06",
+    "unit": "date"
+   },
+   "source_quote": "协议签署日期：2024 年 12 月 6 日"
+  },
+  {
+   "id": "N13",
+   "verbatim": "27,392.42 万元",
+   "canonical": {
+    "value": "273924200",
+    "unit": "CNY"
+   },
+   "source_quote": "27,392.42"
+  },
+  {
+   "id": "N14",
+   "verbatim": "-22,980.73 万元",
+   "canonical": {
+    "value": "-229807300",
+    "unit": "CNY"
+   },
+   "source_quote": "-22,980.73"
+  },
+  {
+   "id": "N15",
+   "verbatim": "66%",
+   "canonical": {
+    "value": "0.66",
+    "unit": "ratio"
+   },
+   "source_quote": "中软系统全部 66%股权"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "The company transfers its entire 66% stake in 中软系统 to related party 信安院 (a wholly-owned subsidiary of actual controller 中国电子) for 46,330.49 万元 (4.63 亿元), priced on the state-filed net-asset appraisal and negotiated; the deal takes effect only upon the company's shareholders' meeting approval, and related directors 谌志华, 赵贵武 and 张尼 recused from the board vote",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "Two scopes coexist: the appraisal runs on the parent scope (book net assets 50,412.52 万元, appraised 70,197.71 万元; 46,330.49 = 70,197.71×66%), while the disclosed 40.02% premium is against the consolidated-scope book value 33,088.34 万元 (premium 13,242.15 万元) — the scopes must not be conflated; the base date 2023-12-31 is nearly a year before the signing date 2024-12-06, during which the target kept losing money: latest (2024-11-30, unaudited) attributable equity 27,392.42 万元 and 2024 Jan-Nov attributable net profit -22,980.73 万元",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "Three instalments: a first payment of 11,175.46 万元 within three days of effectiveness; by 2025-03-31 the second instalment = (46,330.49 万元 + transition-period P&L × 66%) × 51% − 11,175.46 万元; by 2025-06-15 the balance = (46,330.49 万元 + transition-period P&L × 66%) × 49% — both later instalments contain the undisclosed transition-period P&L variable",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "中软系统's registered capital is 31,691.1764 万元; '对应中软系统注册资本20,916.1764万元' is the registered-capital portion corresponding to the 66% stake (=31,691.1764×66%) — two different calibers not to be swapped",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "Transition-period P&L of the target stake (including declared but undistributed dividends) is borne and enjoyed by Party B (中国软件, the seller), and belongs to Party A (信安院) after the closing date; the agreement's effective date is the closing date, with effectiveness requiring both signatures, Party A's shareholder consent and Party B's shareholders' meeting approval",
+   "required": true
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "关联董事谌志华、赵贵武、\n张尼按照有关规定回避表决",
+   "alternate_quotes": [
+    "本次交易尚需公司股东大会批准"
+   ]
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "本次交易价格 46,330.49 万元为公司持股比例对应的评估值，较对应的中软\n系统合并口径所有者权益账面值 33,088.34 万元相比溢价 13,242.15 万元",
+   "alternate_quotes": [
+    "采用资产基础法评估后\n的总资产评估值 238,330.29 万元，总负债评估值 168,132.58 万元，净资产评估\n值为 70,197.71 万元"
+   ]
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "于2025年3月31日前，甲方\n向乙方支付二期交易价款【（交易价格46,330.49万元+目标公司过渡期损益*66%）\n*51%-首付款11,175.46万元】"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "注册资本：31,691.1764 万元",
+   "alternate_quotes": [
+    "对应\n中软系统注册资本 20,916.1764 万元"
+   ]
+  },
+  {
+   "point_id": "K5",
+   "evidence_quote": "已宣布但未分配的股息、红利）由乙方承担和享有，在交割日后归属于甲方",
+   "alternate_quotes": [
+    "协议生效之日为交割日"
+   ]
+  }
+ ],
+ "answer_absent": true,
+ "absence_points": [
+  {
+   "id": "A1",
+   "question": "Can the second instalment's exact amount be determined now",
+   "expected": "No: the second-instalment formula contains 'target transition-period P&L × 66%', and the transition-period P&L is undisclosed and determinable only at closing; computing a fixed value by dropping that term (46,330.49×51%−11,175.46=12,453.09 万元) has no basis in the announcement — with the target still loss-making, the real second instalment is likely below that figure",
+   "anchors": [
+    "二期",
+    "过渡期损益",
+    "12,453.09"
+   ]
+  }
+ ],
+ "explanation_hints": [
+  "过渡期损益",
+  "以",
+  "确定"
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "Dual scope is the crux: the appraisal chain is parent-scope (50,412.52→70,197.71) while the disclosed 40.02% premium is against the consolidated 33,088.34 — a parent-scope recomputation (≈39.25%) also 'looks right', so the announcement's scope must be identified. The registered-capital pair (20,916.1764 portion vs 31,691.1764 total) is the same disease. A1 crux: the second-instalment formula carries the undisclosed transition-period P&L; 12,453.09 万元 is the tempting variable-dropping arithmetic. The stale base date plus Jan-Nov losses of -22,980.73 万元 is the analytical tension, but asserting 'the final consideration will be below 4.63 亿' is equally unsupported. K5 direction: transition P&L goes to the seller until closing — unlike MB-028's 50:50 phase split.",
+ "trap_note": "Three traps: (1) fixing the second instalment at 12,453.09 万元 (fabricating a value for a missing quantity); (2) premium-scope mismatch (40.02% consolidated vs ≈39.25% parent — both 'look right'); (3) treating the 20,916.1764 registered-capital portion as the total (or vice versa)."
+}

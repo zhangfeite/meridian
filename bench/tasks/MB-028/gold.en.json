@@ -1,0 +1,220 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "93,322.60 万元",
+   "canonical": {
+    "value": "933226000",
+    "unit": "CNY"
+   },
+   "source_quote": "所有者权益账面价值 93,322.60 万元"
+  },
+  {
+   "id": "N2",
+   "verbatim": "177,776.11 万元",
+   "canonical": {
+    "value": "1777761100",
+    "unit": "CNY"
+   },
+   "source_quote": "评估价值 177,776.11 万元"
+  },
+  {
+   "id": "N3",
+   "verbatim": "84,453.51 万元",
+   "canonical": {
+    "value": "844535100",
+    "unit": "CNY"
+   },
+   "source_quote": "评估增值 84,453.51 万元"
+  },
+  {
+   "id": "N4",
+   "verbatim": "90.50%",
+   "canonical": {
+    "value": "0.9050",
+    "unit": "ratio"
+   },
+   "source_quote": "增值率 90.50%"
+  },
+  {
+   "id": "N5",
+   "verbatim": "143,998.65 万元",
+   "canonical": {
+    "value": "1439986500",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "1777761100*0.81",
+    "tolerance": 0.005
+   },
+   "source_quote": "81%股权的交易金额参考评估值为 143,998.65 万元"
+  },
+  {
+   "id": "N6",
+   "verbatim": "23,767.79 万元",
+   "canonical": {
+    "value": "237677900",
+    "unit": "CNY"
+   },
+   "source_quote": "分配利润 23,767.79 万元"
+  },
+  {
+   "id": "N7",
+   "verbatim": "120,230.86 万元",
+   "canonical": {
+    "value": "1202308600",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "1439986500-237677900",
+    "tolerance": 0.005
+   },
+   "source_quote": "支付股权转让\n价款 120,230.86 万元"
+  },
+  {
+   "id": "N8",
+   "verbatim": "92,944,305.58 元",
+   "canonical": {
+    "value": "92944305.58",
+    "unit": "CNY"
+   },
+   "source_quote": "尚欠公司 92,944,305.58 元的债务"
+  },
+  {
+   "id": "N9",
+   "verbatim": "5,382.76 万元",
+   "canonical": {
+    "value": "53827600",
+    "unit": "CNY"
+   },
+   "source_quote": "关联交\n易累计金额 5,382.76 万元"
+  },
+  {
+   "id": "N10",
+   "verbatim": "36.76%",
+   "canonical": {
+    "value": "0.3676",
+    "unit": "ratio"
+   },
+   "source_quote": "合计持有公司 36.76%股份"
+  },
+  {
+   "id": "N11",
+   "verbatim": "6.84 亿元",
+   "canonical": {
+    "value": "684000000",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "844535100*0.81",
+    "tolerance": 0.005
+   },
+   "source_quote": "81%股权评估增值 6.84 亿元"
+  },
+  {
+   "id": "N12",
+   "verbatim": "2024 年 9 月 30 日",
+   "canonical": {
+    "value": "2024-09-30",
+    "unit": "date"
+   },
+   "source_quote": "以 2024 年 9 月 30 日作为基准日"
+  },
+  {
+   "id": "N13",
+   "verbatim": "2024 年 10 月 1 日",
+   "canonical": {
+    "value": "2024-10-01",
+    "unit": "date"
+   },
+   "source_quote": "自评估基准日次日（2024 年 10 月 1 日）起至标的股权交割日当日止为过渡期"
+  },
+  {
+   "id": "N14",
+   "verbatim": "2024 年 12 月 31 日",
+   "canonical": {
+    "value": "2024-12-31",
+    "unit": "date"
+   },
+   "source_quote": "2024 年 10 月 1 日至 2024 年 12 月 31 日期间所产生的损益"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "The company sells its 81% stake in Guojin to its controlling shareholder Guomao Holdings (which with concert parties holds 36.76% of the company); the deal is a related-party transaction, not a major asset restructuring, and needs no shareholders' meeting; the independent directors' special meeting passed it 3-0-0 and the board 4 in favour, with 5 related directors recused",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "Pricing chain: with 2024-09-30 as the base date, Guojin's book owners' equity is 93,322.60 万元 and the appraised value 177,776.11 万元 (appreciation 84,453.51 万元, rate 90.50%); the 81% stake is priced at 143,998.65 万元 = appraised value × 81%; both the income and asset-based approaches were applicable, and the asset-based result was adopted as the final conclusion",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "Before closing Guojin may distribute 23,767.79 万元 of pre-base-date retained profits to the company, adjusting the price to 120,230.86 万元; but the actual distribution is subject to Guojin's shareholders' resolution and the final transfer price adjusts accordingly — the final price is not locked as of the announcement date",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "The transition period runs from 2024-10-01 (the day after the base date) to the closing date; profits and losses from 2024-10-01 to 2024-12-31 are shared 50%:50% between the company and Guomao Holdings, and those after 2024-12-31 belong to Guomao Holdings — not all to the transferee",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "As of the agreement date Guojin owes the company 92,944,305.58 元 (subject to final settlement), to be repaid in full before closing, with any unpaid balance transferred at par as the target debt; related-party transactions with Guomao Holdings and its subsidiaries over the past 12 months total 5,382.76 万元, below 5% of net assets",
+   "required": true
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "5 位关联董\n事高少镛先生、许晓曦先生、蔡莹彬先生、曾源先生、张文娜女士回避表决",
+   "alternate_quotes": [
+    "本次关联交易无需提交股东大会审议"
+   ]
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "国金公司\n所有者权益账面价值 93,322.60 万元，评估价值 177,776.11 万元，增值率 90.50%",
+   "alternate_quotes": [
+    "综合分析后采用资产基础法评估结果作为最终评估结论"
+   ]
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "实际分配利润金额以国金公司股东会决议为准"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "标的股权于 2024 年 10 月 1 日至 2024 年 12 月 31 日期间所产生的损益，由公司和\n国贸控股按照 50%：50%的比例享有或承担"
+  },
+  {
+   "point_id": "K5",
+   "evidence_quote": "尚欠公司 92,944,305.58 元的债务",
+   "alternate_quotes": [
+    "关联交\n易累计金额 5,382.76 万元"
+   ]
+  }
+ ],
+ "answer_absent": true,
+ "absence_points": [
+  {
+   "id": "A1",
+   "question": "How much investment income does the company expect to recognise from this transaction",
+   "expected": "The announcement does not disclose the expected investment income: '81%股权评估增值 6.84 亿元,将增加公司的投资收益' states direction only; accounting investment income depends on the disposal consideration versus carrying cost and transition-period P&L, a different caliber from appraisal appreciation; answering with 6.84 亿元 as the investment income has no basis in the announcement",
+   "anchors": [
+    "投资收益",
+    "6.84",
+    "确认"
+   ]
+  }
+ ],
+ "explanation_hints": [
+  "评估增值",
+  "将增加",
+  "账面"
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "Three-step pricing reconciliation: 177,776.11×81%=143,998.65 (N5 with formula); 143,998.65−23,767.79=120,230.86 (N7); 84,453.51×81%≈6.84 亿 (N11). K3 is a subject-to-resolution unlocked clause: 120,230.86 万元 is a conditional price. K4 direction point: transition P&L is split in phases, only post-2024-12-31 belongs entirely to the acquirer. Unit trap: the appraisal summary table is in 元 (net assets 933,226,032.35 元 = 93,322.60 万元 in prose) and the target debt 92,944,305.58 is in 元, coexisting with 万元 prose. A1 crux: appraisal appreciation ≠ accounting investment income; 6.84 亿 is 81% of the appreciation, and the investment-income amount is undisclosed.",
+ "trap_note": "Three traps: (1) treating the 6.84 亿 appraisal appreciation as the recognised investment income (caliber confusion + absence point); (2) assigning all transition-period P&L to the transferee (actually 50:50 through 2024-12-31); (3) the 元-denominated table beside 万元 prose (933,226,032.35 元 misread as 万元 is four orders off)."
+}
