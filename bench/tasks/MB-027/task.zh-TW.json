@@ -1,0 +1,14 @@
+{
+  "id": "MB-027",
+  "lang": "zh-TW",
+  "type": "no_answer",
+  "prompt": "閱讀該 A+B 股權益分派實施公告,回答:1)公司總股本及 A/B 股各自股本是多少?每10股派多少現金,派現總額多少?A、B 股各自的派現總額是多少?2)B 股現金股利按什麼匯率、折算成港幣每10股派多少?3)A 股與 B 股的股權登記日、除權除息日各是哪天?B 股的「最後交易日」是哪天,與登記日是什麼關係?4)各類股東的扣稅安排:QFII/RQFII 與首發前限售個人、無限售流通股個人(補繳各檔)、境外個人各如何處理?5)本次除權除息參考價是多少或如何計算?每個答案註明出處。",
+  "context_files": [
+    "context/dividend_ab.txt"
+  ],
+  "scoring": [
+    "number_fidelity",
+    "citation_alignment",
+    "compliance"
+  ]
+}

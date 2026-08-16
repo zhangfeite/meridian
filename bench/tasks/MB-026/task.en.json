@@ -1,0 +1,14 @@
+{
+ "id": "MB-026",
+ "lang": "en",
+ "type": "no_answer",
+ "prompt": "Read this dividend distribution implementation announcement and answer, in English: 1) What are the cash dividends per share and per 10 shares? What is the total cash payout, and how is the payout base determined (total share capital, the deduction, and the participating share count)? 2) How is the ex-dividend reference price computed? Which per-share dividend figure does that computation use, and why does it differ from the nominal per-share dividend? 3) What are the record date, the ex-dividend date, and the payment date? What does the 'last trading day' column show? 4) For individual holders of unrestricted tradable shares, how is dividend income tax handled at payment versus at share transfer? What are the effective tax rates per holding-period tier? 5) How much per 10 shares does an individual shareholder actually receive after tax? Cite the source for every answer.",
+ "context_files": [
+  "context/dividend_impl.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "compliance"
+ ]
+}

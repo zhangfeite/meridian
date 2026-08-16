@@ -1,0 +1,226 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "34.00元",
+   "canonical": {
+    "value": "34.00",
+    "unit": "CNY"
+   },
+   "source_quote": "派现金34.00元（含税）"
+  },
+  {
+   "id": "N2",
+   "verbatim": "528,600,000股",
+   "canonical": {
+    "value": "528600000",
+    "unit": "share"
+   },
+   "source_quote": "总股本528,600,000股"
+  },
+  {
+   "id": "N3",
+   "verbatim": "408,600,000股",
+   "canonical": {
+    "value": "408600000",
+    "unit": "share"
+   },
+   "source_quote": "A股总股本\n408,600,000股"
+  },
+  {
+   "id": "N4",
+   "verbatim": "120,000,000股",
+   "canonical": {
+    "value": "120000000",
+    "unit": "share"
+   },
+   "source_quote": "B股总股本120,000,000股"
+  },
+  {
+   "id": "N5",
+   "verbatim": "1,797,240,000.00元",
+   "canonical": {
+    "value": "1797240000.00",
+    "unit": "CNY"
+   },
+   "source_quote": "共计分配现金股利人民币1,797,240,000.00"
+  },
+  {
+   "id": "N6",
+   "verbatim": "30.600000元",
+   "canonical": {
+    "value": "30.60",
+    "unit": "CNY"
+   },
+   "source_quote": "每10股派30.600000元"
+  },
+  {
+   "id": "N7",
+   "verbatim": "6.800000元",
+   "canonical": {
+    "value": "6.80",
+    "unit": "CNY"
+   },
+   "source_quote": "每10股补缴税款6.800000元"
+  },
+  {
+   "id": "N8",
+   "verbatim": "3.400000元",
+   "canonical": {
+    "value": "3.40",
+    "unit": "CNY"
+   },
+   "source_quote": "每10股补缴税款3.400000元"
+  },
+  {
+   "id": "N9",
+   "verbatim": "1:0.8692",
+   "canonical": {
+    "value": "0.8692",
+    "unit": "ratio"
+   },
+   "source_quote": "港币：人民币=1:0.8692"
+  },
+  {
+   "id": "N10",
+   "verbatim": "2026年7月16日",
+   "canonical": {
+    "value": "2026-07-16",
+    "unit": "date"
+   },
+   "source_quote": "A股股权登记日为：2026年7月16日"
+  },
+  {
+   "id": "N11",
+   "verbatim": "2026年7月17日",
+   "canonical": {
+    "value": "2026-07-17",
+    "unit": "date"
+   },
+   "source_quote": "除权除息日\n为：2026年7月17日"
+  },
+  {
+   "id": "N12",
+   "verbatim": "2026年7月21日",
+   "canonical": {
+    "value": "2026-07-21",
+    "unit": "date"
+   },
+   "source_quote": "股权登记日为：2026年7月21日"
+  },
+  {
+   "id": "N13",
+   "verbatim": "约39.12港币",
+   "canonical": {
+    "value": "39.12",
+    "unit": "HKD",
+    "derived": true,
+    "formula": "34.00/0.8692",
+    "tolerance": 0.005
+   },
+   "source_quote": "即2026年6月29日中国人民银行公布\n的人民币兑港币的中间价（港币：人民币=1:0.8692）折合港币兑付"
+  },
+  {
+   "id": "N14",
+   "verbatim": "1,389,240,000元",
+   "canonical": {
+    "value": "1389240000",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "408600000*3.4",
+    "tolerance": 0.005
+   },
+   "source_quote": "A股总股本\n408,600,000股"
+  },
+  {
+   "id": "N15",
+   "verbatim": "408,000,000元",
+   "canonical": {
+    "value": "408000000",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "120000000*3.4",
+    "tolerance": 0.005
+   },
+   "source_quote": "B股总股本120,000,000股"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "Total share capital 528,600,000 shares = 408,600,000 A shares + 120,000,000 B shares; the dividend is 34.00 元 per 10 shares (tax inclusive) for a total payout of 1,797,240,000.00 元; the A-share payout is about 1,389,240,000 元 and the B-share payout about 408,000,000 元 (each share count × 3.4 元/share, reconciling to the disclosed total)",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "B-share dividends convert to HKD at the PBOC central parity of 2026-06-29 (HKD:CNY = 1:0.8692), giving about 39.12 HKD per 10 shares (=34.00÷0.8692) — divide by 0.8692, not multiply; future B-share individual tax top-ups convert at the same rate",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "A shares: record date 2026-07-16, ex-dividend 2026-07-17. B shares: last trading day 2026-07-16, ex-dividend 2026-07-17, record date 2026-07-21 — the B-share record date falls after the last trading day, so B shares bought after 2026-07-16 do not receive this dividend",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "Withholding tiers: QFII/RQFII, pre-IPO restricted individuals and securities funds receive 30.600000 元 per 10 shares after tax; individuals holding unrestricted tradable shares are first paid the full 34.000000 元 and top up on disposal by holding period (6.800000 元 within one month, 3.400000 元 over one month up to one year, none beyond one year); as a Sino-foreign joint venture, foreign individual shareholders are provisionally exempt from dividend tax",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "The only self-distribution recipient is Anhui Gujing Group Co., Ltd.; agent-distributed A-share dividends credit on 2026-07-17 and B-share dividends on 2026-07-21",
+   "required": true
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "共计分配现金股利人民币1,797,240,000.00",
+   "alternate_quotes": [
+    "以公司现有总股本528,600,000股"
+   ]
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "即2026年6月29日中国人民银行公布\n的人民币兑港币的中间价（港币：人民币=1:0.8692）折合港币兑付"
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "本次分红派息B股最后交易日为：2026年7月16日，除权除息日\n为：2026年7月17日，股权登记日为：2026年7月21日"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "持股1个月（含1个月）以内，每10股补缴税款6.800000元",
+   "alternate_quotes": [
+    "境外个人股东可暂免缴\n纳红利所得税"
+   ]
+  },
+  {
+   "point_id": "K5",
+   "evidence_quote": "安徽古井集团有限责任公司"
+  }
+ ],
+ "answer_absent": true,
+ "absence_points": [
+  {
+   "id": "A1",
+   "question": "What is the ex-dividend reference price, or how is it computed",
+   "expected": "The announcement discloses neither a computation method for the ex-dividend reference price nor any share-price data; no reference price value or formula can be given from this announcement, and importing a market-convention formula or external prices has no basis in it",
+   "anchors": [
+    "除权除息参考价",
+    "参考价格",
+    "计算方法"
+   ]
+  }
+ ],
+ "explanation_hints": [
+  "除权除息日",
+  "未披露",
+  "股价"
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "FX direction is the crux: 1 HKD = 0.8692 CNY, so 34 元 converts to about 39.12 HKD by dividing by 0.8692; multiplying gives 29.55 HKD with the direction inverted. A/B payout totals are not itemised but derive from each share count × 3.4 元 (N14/N15 with formulas), reconciling to 1,797,240,000.00 元. The B-share date triple is offset (last trading day 07-16 ≠ record date 07-21) — a direction point. Three withholding layers: 30.60 is the definite after-tax figure only for QFII/pre-IPO-restricted holders; treating it as every individual's after-tax amount is a caliber error. A1 contrasts with MB-026: this announcement contains no ex-price formula, and the honest absence statement is the only correct answer.",
+ "trap_note": "Two direction traps: (1) 34×0.8692≈29.55 HKD (inverted FX); (2) buying B shares on 2026-07-21 (record date) does not earn the dividend (last trading day is 07-16). One caliber trap: 30.60 as everyone's after-tax figure."
+}

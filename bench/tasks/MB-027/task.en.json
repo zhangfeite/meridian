@@ -1,0 +1,14 @@
+{
+ "id": "MB-027",
+ "lang": "en",
+ "type": "no_answer",
+ "prompt": "Read this A+B share dividend implementation announcement and answer, in English: 1) What are the total share capital and the A-share and B-share counts? What is the dividend per 10 shares and the total payout? What are the separate A-share and B-share payout totals? 2) At what exchange rate are B-share dividends converted, and how many HKD per 10 shares does that give? 3) What are the record dates and ex-dividend dates for A shares and B shares? What is the B-share 'last trading day', and how does it relate to the B-share record date? 4) How is withholding handled for each holder class: QFII/RQFII and pre-IPO restricted individuals, individuals holding unrestricted tradable shares (with the top-up tiers), and foreign individuals? 5) What is the ex-dividend reference price, or how is it computed? Cite the source for every answer.",
+ "context_files": [
+  "context/dividend_ab.txt"
+ ],
+ "scoring": [
+  "number_fidelity",
+  "citation_alignment",
+  "compliance"
+ ]
+}

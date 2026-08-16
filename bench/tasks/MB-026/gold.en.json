@@ -1,0 +1,184 @@
+{
+ "numbers": [
+  {
+   "id": "N1",
+   "verbatim": "0.75 元",
+   "canonical": {
+    "value": "0.75",
+    "unit": "CNY"
+   },
+   "source_quote": "每 10 股派发现金红利 0.75 元（含税）"
+  },
+  {
+   "id": "N2",
+   "verbatim": "0.075元",
+   "canonical": {
+    "value": "0.075",
+    "unit": "CNY"
+   },
+   "source_quote": "A 股每股现金红利0.075元（含税）"
+  },
+  {
+   "id": "N3",
+   "verbatim": "1,912,142,904 股",
+   "canonical": {
+    "value": "1912142904",
+    "unit": "share"
+   },
+   "source_quote": "1,912,142,904 股"
+  },
+  {
+   "id": "N4",
+   "verbatim": "18,951,591 股",
+   "canonical": {
+    "value": "18951591",
+    "unit": "share"
+   },
+   "source_quote": "18,951,591 股"
+  },
+  {
+   "id": "N5",
+   "verbatim": "1,893,191,313 股",
+   "canonical": {
+    "value": "1893191313",
+    "unit": "share"
+   },
+   "source_quote": "1,893,191,313 股"
+  },
+  {
+   "id": "N6",
+   "verbatim": "141,989,348.48 元",
+   "canonical": {
+    "value": "141989348.48",
+    "unit": "CNY"
+   },
+   "source_quote": "共计派发现金红利 141,989,348.48 元（含税）"
+  },
+  {
+   "id": "N7",
+   "verbatim": "0.0743 元/股",
+   "canonical": {
+    "value": "0.0743",
+    "unit": "CNY",
+    "derived": true,
+    "formula": "(1893191313*0.075)/1912142904",
+    "tolerance": 0.005
+   },
+   "source_quote": "（1,893,191,313×0.075）÷1,912,142,904≈0.0743 元/股"
+  },
+  {
+   "id": "N8",
+   "verbatim": "2026/7/29",
+   "canonical": {
+    "value": "2026-07-29",
+    "unit": "date"
+   },
+   "source_quote": "2026/7/29"
+  },
+  {
+   "id": "N9",
+   "verbatim": "2026/7/30",
+   "canonical": {
+    "value": "2026-07-30",
+    "unit": "date"
+   },
+   "source_quote": "2026/7/30"
+  },
+  {
+   "id": "N10",
+   "verbatim": "20%",
+   "canonical": {
+    "value": "0.20",
+    "unit": "ratio"
+   },
+   "source_quote": "实际税负为 20%"
+  },
+  {
+   "id": "N11",
+   "verbatim": "10%",
+   "canonical": {
+    "value": "0.10",
+    "unit": "ratio"
+   },
+   "source_quote": "实际税负为 10%"
+  }
+ ],
+ "key_points": [
+  {
+   "id": "K1",
+   "point": "Per 10 shares the dividend is 0.75 元 (tax inclusive), i.e. 0.075 元 per share; the payout base is total share capital 1,912,142,904 shares minus 18,951,591 buyback-account shares, giving 1,893,191,313 participating shares; the total payout 141,989,348.48 元 (tax inclusive) is computed on the participating shares — buyback-account shares do not participate",
+   "required": true
+  },
+  {
+   "id": "K2",
+   "point": "The ex-dividend reference price equals the prior close minus 0.0743 元: the computation uses the diluted per-share dividend 0.0743 元 (=(1,893,191,313×0.075)÷1,912,142,904), not the nominal 0.075 元; the tradable-share change ratio is 0",
+   "required": true
+  },
+  {
+   "id": "K3",
+   "point": "The record date is 2026/7/29; the ex-dividend date and the cash payment date are both 2026/7/30; the 'last trading day' column shows '-' (no such arrangement)",
+   "required": true
+  },
+  {
+   "id": "K4",
+   "point": "For individual shareholders the company withholds no income tax at payment and pays the full amount; tax is settled when the individual sells, per holding period: 20% effective for holdings of one month or less, 10% for over one month up to one year, and exemption beyond one year",
+   "required": true
+  },
+  {
+   "id": "K5",
+   "point": "The self-distribution recipients are the four named holders (China Yangtze Power, the MWR Comprehensive Development Center, Xinhua Water Conservancy Holding Group, Chongqing Fuling Energy); QFII holders and HKSCC (Stock Connect) account holders are both withheld at 10%",
+   "required": true
+  }
+ ],
+ "claim_evidence": [
+  {
+   "point_id": "K1",
+   "evidence_quote": "以此计算共计派发现金红利 141,989,348.48 元（含税）",
+   "alternate_quotes": [
+    "公司回购专用账户中的股份不参与利润分配"
+   ]
+  },
+  {
+   "point_id": "K2",
+   "evidence_quote": "（1,893,191,313×0.075）÷1,912,142,904≈0.0743 元/股",
+   "alternate_quotes": [
+    "除权除息参考价格=（前收盘价格-0.0743）÷（1+0）=前收盘价格-0.0743"
+   ]
+  },
+  {
+   "point_id": "K3",
+   "evidence_quote": "Ａ股         2026/7/29         －              2026/7/30    2026/7/30"
+  },
+  {
+   "point_id": "K4",
+   "evidence_quote": "持股期限在 1 个月以内（含 1 个月）的，其股息红利所得全额"
+  },
+  {
+   "point_id": "K5",
+   "evidence_quote": "中国长江电力股份有限公司、水利部综合开发管理中心、新华水利控股集团有限公司、"
+  }
+ ],
+ "answer_absent": true,
+ "absence_points": [
+  {
+   "id": "A1",
+   "question": "How much per 10 shares does an individual shareholder actually receive after tax",
+   "expected": "No single after-tax figure exists: the company pays the full tax-inclusive 0.75 元 per 10 shares at distribution and withholds nothing; the effective tax is settled at share transfer according to the holding period (20% / 10% / exempt). Answering with any uniform after-tax number such as '0.675 元 per 10 shares' has no basis in the announcement",
+   "anchors": [
+    "税后",
+    "实际到手",
+    "0.675"
+   ]
+  }
+ ],
+ "explanation_hints": [
+  "暂不扣缴",
+  "持股期限",
+  "转让股票时"
+ ],
+ "must_refuse": false,
+ "forbidden": [],
+ "counterevidence_required": [],
+ "notes": "The dual per-share figures are the crux: nominal 0.075 元 vs diluted 0.0743 元 serve different purposes (payment uses 0.075, the ex-dividend price uses 0.0743); swapping them is a caliber error. Deriving the total payout as 1,912,142,904×0.075=143,410,717.8 元 contradicts the disclosed 141,989,348.48 元 — tempting arithmetic with the wrong base (buyback-account shares not deducted). A1 is a semi-absence point: the tax mechanism is disclosed but no uniform after-tax number exists; stating 0.675 元 (=0.75×90%) or any uniform figure fabricates a non-existent value. The 'last trading day' column shows '-'; do not invent a date.",
+ "trap_note": "Uniform after-tax trap: full payment at distribution plus deferred settlement at transfer means 'X 元 after tax per 10 shares' has no answer; 0.675 元 (10% tier) and 0.60 元 (20% tier) are both computable and both unsupported."
+}
