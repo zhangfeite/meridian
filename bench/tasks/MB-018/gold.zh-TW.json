@@ -38,7 +38,7 @@
     {"point_id": "K2", "evidence_quote": "最近三年累计现金分红金额占最近三年实现的年均可分配利润的比例 71.14%"},
     {"point_id": "K3", "evidence_quote": "以截至 2025 年 12 月 31 日总股本 10,412.182 万股"},
     {"point_id": "K4", "evidence_quote": "2026 年一季度公司汇兑损益为-530.95 万元"},
-    {"point_id": "K5", "evidence_quote": "丰茂股份主体信用等级为 AA-，评级展望为稳定，本次可转换公司债券信用等级为 AA-"}
+    {"point_id": "K5", "evidence_quote": "丰茂股份主体信用等级为 AA-，评级展望为稳定，本次可转换公司债券信用等级为 AA-", "alternate_quotes": ["根据东方金诚出具的信用评级报告，公司主体信用评级为AA-，评级展望为稳定，本次可转债信用级别为AA-。"]}
   ],
   "must_refuse": false,
   "forbidden": [],

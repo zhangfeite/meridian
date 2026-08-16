@@ -224,14 +224,13 @@ def score_citation_alignment(
         applicable = bool(point.get("required")) or point_coverage >= 0.45
         if not applicable:
             continue
-        evidence = str(expected["evidence_quote"])
         point_text = str(point.get("point", ""))
         pairwise = [
             {
                 "claim_coverage": coverage(point_text, record["claim"]),
                 "claim_shared_units": len(semantic_units(point_text) & semantic_units(record["claim"])),
                 "citation_point_coverage": coverage(point_text, record["citation"]),
-                "evidence_overlap": overlap(evidence, record["citation"]),
+                "citation": record["citation"],
                 "source_file": record["source_file"],
             }
             for record in records
@@ -246,16 +245,41 @@ def score_citation_alignment(
             or item["claim_shared_units"] >= 3
             or item["citation_point_coverage"] >= 0.3
         ]
-        best = max((item["evidence_overlap"] for item in eligible), default=0.0)
         expected_source = _normalize_source_file(str(expected.get("source_file", "")))
-        if expected_source:
-            source_eligible = [item for item in eligible if _source_file_matches(item["source_file"], expected_source)]
-            best_with_source = max((item["evidence_overlap"] for item in source_eligible), default=0.0)
-            source_match = best_with_source >= 0.45
-        else:
-            best_with_source = best
-            source_match = True
-        conflict = _direction_conflict(str(point.get("point", "")), evidence, output)
+        quote_candidates = [("primary", str(expected["evidence_quote"]))]
+        quote_candidates.extend(
+            ("alternate:%d" % index, str(evidence))
+            for index, evidence in enumerate(expected.get("alternate_quotes", []), start=1)
+        )
+        quote_results = []
+        for label, evidence in quote_candidates:
+            overlaps = [overlap(evidence, item["citation"]) for item in eligible]
+            best_for_quote = max(overlaps, default=0.0)
+            if expected_source:
+                source_overlaps = [
+                    overlap(evidence, item["citation"])
+                    for item in eligible
+                    if _source_file_matches(item["source_file"], expected_source)
+                ]
+                best_with_source_for_quote = max(source_overlaps, default=0.0)
+            else:
+                best_with_source_for_quote = best_for_quote
+            quote_results.append(
+                {
+                    "label": label,
+                    "best_overlap": best_for_quote,
+                    "best_overlap_with_source": best_with_source_for_quote,
+                    "direction_conflict": _direction_conflict(point_text, evidence, output),
+                }
+            )
+
+        # Ties retain author order, so the primary is reported unless an
+        # alternate actually improves the source-qualified overlap.
+        matched = max(quote_results, key=lambda item: item["best_overlap_with_source"])
+        best = max(item["best_overlap"] for item in quote_results)
+        best_with_source = matched["best_overlap_with_source"]
+        source_match = not expected_source or best_with_source >= 0.45
+        conflict = matched["direction_conflict"]
         aligned = best_with_source >= 0.45 and not conflict
         checks.append(
             {
@@ -263,6 +287,7 @@ def score_citation_alignment(
                 "aligned": aligned,
                 "best_overlap": round(best, 6),
                 "best_overlap_with_source": round(best_with_source, 6),
+                "matched_quote": matched["label"],
                 "direction_conflict": conflict,
                 "candidate_pairs": len(records),
                 "expected_source_file": expected_source or None,

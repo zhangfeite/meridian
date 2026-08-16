@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 
 from meridian_bench.scoring import score_task
+from meridian_bench.scoring.citations import score_citation_alignment
 from meridian_bench.scoring.compliance import scan_compliance
 from meridian_bench.scoring.numbers import score_number_fidelity
 from meridian_bench.sensitivity import check_traps
@@ -62,6 +63,108 @@ class ScoringTests(unittest.TestCase):
             self._write_temporary_task(tasks_dir, trap=True)
             with self.assertRaisesRegex(SchemaValidationError, "trap tasks do not support language variants"):
                 load_tasks(tasks_dir)
+
+    def test_alternate_quote_can_satisfy_citation_alignment(self):
+        key_points = [
+            {"id": "K1", "point": "公司主体信用评级为AA-，评级展望为稳定", "required": True}
+        ]
+        claim_evidence = [
+            {
+                "point_id": "K1",
+                "evidence_quote": "丰茂股份主体信用等级为 AA-，评级展望为稳定",
+                "alternate_quotes": [
+                    "根据东方金诚出具的信用评级报告，公司主体信用评级为AA-，评级展望为稳定，本次可转债信用级别为AA-。"
+                ],
+                "source_file": "context/rating.txt",
+            }
+        ]
+        output = (
+            "公司主体信用评级为AA-，评级展望为稳定。出处原句："
+            "「根据东方金诚出具的信用评级报告，公司主体信用评级为AA-，评级展望为稳定，本次可转债信用级别为AA-。」"
+            " source_file: context/rating.txt"
+        )
+
+        result = score_citation_alignment(output, key_points, claim_evidence)
+
+        self.assertEqual(result["score"], 1.0)
+        self.assertTrue(result["checks"][0]["aligned"])
+        self.assertEqual(result["checks"][0]["matched_quote"], "alternate:1")
+        self.assertEqual(result["checks"][0]["best_overlap"], 1.0)
+
+        primary_output = (
+            "公司主体信用评级为AA-，评级展望为稳定。出处原句："
+            "「丰茂股份主体信用等级为 AA-，评级展望为稳定」"
+            " source_file: context/rating.txt"
+        )
+        primary_result = score_citation_alignment(primary_output, key_points, claim_evidence)
+        self.assertEqual(primary_result["score"], 1.0)
+        self.assertEqual(primary_result["checks"][0]["matched_quote"], "primary")
+
+    def test_quote_outside_primary_and_alternates_still_scores_zero(self):
+        key_points = [
+            {"id": "K1", "point": "公司主体信用评级为AA-，评级展望为稳定", "required": True}
+        ]
+        claim_evidence = [
+            {
+                "point_id": "K1",
+                "evidence_quote": "丰茂股份主体信用等级为 AA-，评级展望为稳定",
+                "alternate_quotes": ["公司主体信用评级为AA-，评级展望为稳定"],
+            }
+        ]
+        output = "公司主体信用评级为AA-，评级展望为稳定。出处原句：「董事会审议通过了相关议案。」"
+
+        result = score_citation_alignment(output, key_points, claim_evidence)
+
+        self.assertEqual(result["score"], 0.0)
+        self.assertFalse(result["checks"][0]["aligned"])
+        self.assertLess(result["checks"][0]["best_overlap"], 0.45)
+
+    def test_alternate_quote_missing_from_context_fails_validation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            tasks_dir = Path(temporary)
+            self._write_temporary_task(tasks_dir)
+            gold_path = tasks_dir / "MB-X01/gold.json"
+            gold = json.loads(gold_path.read_text(encoding="utf-8"))
+            gold["key_points"] = [{"id": "K1", "point": "point", "required": True}]
+            gold["claim_evidence"] = [
+                {
+                    "point_id": "K1",
+                    "evidence_quote": "source",
+                    "alternate_quotes": ["not present in context"],
+                }
+            ]
+            gold_path.write_text(json.dumps(gold), encoding="utf-8")
+
+            with self.assertRaisesRegex(SchemaValidationError, "must be an exact byte substring"):
+                validate_tasks(tasks_dir)
+
+    def test_language_variant_alternate_quotes_must_be_byte_identical(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            tasks_dir = Path(temporary)
+            self._write_temporary_task(tasks_dir)
+            directory = tasks_dir / "MB-X01"
+            (directory / "context.txt").write_text("source alternate-A alternate-B", encoding="utf-8")
+            base_gold = {
+                "numbers": [],
+                "key_points": [{"id": "K1", "point": "point", "required": True}],
+                "claim_evidence": [
+                    {
+                        "point_id": "K1",
+                        "evidence_quote": "source",
+                        "alternate_quotes": ["alternate-A"],
+                    }
+                ],
+                "must_refuse": False,
+                "forbidden": [],
+                "counterevidence_required": [],
+            }
+            en_gold = json.loads(json.dumps(base_gold))
+            en_gold["claim_evidence"][0]["alternate_quotes"] = ["alternate-B"]
+            (directory / "gold.json").write_text(json.dumps(base_gold), encoding="utf-8")
+            (directory / "gold.en.json").write_text(json.dumps(en_gold), encoding="utf-8")
+
+            with self.assertRaisesRegex(SchemaValidationError, "must be byte-identical to gold.json"):
+                validate_tasks(tasks_dir)
 
     @staticmethod
     def _write_temporary_task(tasks_dir, variant_type="fact_extraction", trap=False):

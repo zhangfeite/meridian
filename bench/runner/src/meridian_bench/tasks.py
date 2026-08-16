@@ -160,6 +160,34 @@ def _validate_gold(
             errors.append("%s: claim_evidence[%d] references unknown point" % (path, index))
         if "source_file" in item and not isinstance(item["source_file"], str):
             errors.append("%s: claim_evidence[%d].source_file must be a string" % (path, index))
+        alternate_quotes = item.get("alternate_quotes")
+        if alternate_quotes is not None:
+            if not isinstance(alternate_quotes, list):
+                errors.append("%s: claim_evidence[%d].alternate_quotes must be an array" % (path, index))
+            else:
+                context_files = task.get("context_files", []) if task else []
+                source_file = item.get("source_file")
+                quote_contexts = [source_file] if isinstance(source_file, str) and source_file else context_files
+                for quote_index, quote in enumerate(alternate_quotes):
+                    quote_location = "claim_evidence[%d].alternate_quotes[%d]" % (index, quote_index)
+                    if not isinstance(quote, str) or not quote:
+                        errors.append("%s: %s must be a non-empty string" % (path, quote_location))
+                        continue
+                    quote_bytes = quote.encode("utf-8")
+                    context_paths = [path.parent / relative for relative in quote_contexts]
+                    try:
+                        found = any(
+                            context_path.is_file() and quote_bytes in context_path.read_bytes()
+                            for context_path in context_paths
+                        )
+                    except OSError as exc:
+                        errors.append("%s: %s context read failed: %s" % (path, quote_location, exc))
+                        continue
+                    if not found:
+                        errors.append(
+                            "%s: %s must be an exact byte substring of its context file"
+                            % (path, quote_location)
+                        )
         if task and task.get("type") == "multi_doc":
             source_file = item.get("source_file")
             if not isinstance(source_file, str) or not source_file:
@@ -323,6 +351,25 @@ def load_task_instances(directory: Path, tasks_root: Path) -> List[LoadedTask]:
                 base_task=base.task,
             )
         )
+    def alternates_by_point(gold: Dict[str, Any]) -> Dict[str, Tuple[Tuple[bytes, ...], ...]]:
+        grouped: Dict[str, List[Tuple[bytes, ...]]] = {}
+        for item in gold.get("claim_evidence", []):
+            grouped.setdefault(str(item.get("point_id")), []).append(
+                tuple(quote.encode("utf-8") for quote in item.get("alternate_quotes", []))
+            )
+        return {point_id: tuple(quotes) for point_id, quotes in grouped.items()}
+
+    base_alternates = alternates_by_point(base.gold)
+    variant_errors = []
+    for instance in loaded[1:]:
+        variant_alternates = alternates_by_point(instance.gold)
+        if variant_alternates != base_alternates:
+            variant_errors.append(
+                "%s: claim_evidence alternate_quotes must be byte-identical to gold.json"
+                % instance.gold_path
+            )
+    if variant_errors:
+        raise SchemaValidationError("\n".join(variant_errors))
     return loaded
 
 

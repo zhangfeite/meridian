@@ -33,8 +33,8 @@ uv --directory bench/runner run bench run \
 
 | language | bare DeepSeek | Meridian pipeline | Δ |
 |---|---|---|---|
-| zh-CN | 0.8467 | **0.9839** | +0.137 |
-| zh-TW | 0.8408 | **0.9615** | +0.121 |
+| zh-CN | 0.8467 | **0.9859** | +0.139 |
+| zh-TW | 0.8408 | **0.9660** | +0.125 |
 | en | 0.5358 | **0.9630** | +0.427 |
 
 75 instances per column, zero failed runs. The pipeline recorded **zero fabrication hard-failures**; the bare model fabricated on 4 instances — including writing "20亿 − 5亿 = **15亿** remaining" in all three languages on a task whose filing never discloses the quota-management basis (the tempting-but-unfounded-arithmetic trap working exactly as designed). Run-to-run variance is ±0.02–0.03; treat smaller differences as noise. Thirteen scorer defects were found and fixed during dogfooding before these numbers were taken — several fixes raised the *bare model's* scores (see CONTRIBUTING's honest-benchmark rule; the latest acquitted natural-English dates like "August 13, 2026", which had been flagged as fabricated scalars). Integration guide for third-party agents: [`bench/RUNNING.md`](bench/RUNNING.md).
