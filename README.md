@@ -27,17 +27,17 @@ uv --directory bench/runner run bench run \
   --tasks MB-001 --lang zh-CN --output ./meridian-run
 ```
 
-25 hand-authored tasks from real Chinese filings × 3 languages (zh-CN / zh-TW / en) = 77 scored instances, plus scorer-validation traps. Task format and scoring contract: [`bench/tasks/SCHEMA.md`](bench/tasks/SCHEMA.md).
+29 hand-authored tasks from real Chinese filings × 3 languages (zh-CN / zh-TW / en) = 87 scored instances, plus scorer-validation traps. Task format and scoring contract: [`bench/tasks/SCHEMA.md`](bench/tasks/SCHEMA.md).
 
 ## Honest numbers (2026-08, deepseek-chat, temperature 0, full 25-task set, same scorer version)
 
 | language | bare DeepSeek | Meridian pipeline | Δ |
 |---|---|---|---|
-| zh-CN | 0.8616 | **0.9904** | +0.129 |
-| zh-TW | 0.8704 | **0.9770** | +0.107 |
-| en | 0.5437 | **0.9746** | +0.431 |
+| zh-CN | 0.8369 | **0.9806** | +0.144 |
+| zh-TW | 0.7830 | **0.9765** | +0.194 |
+| en | 0.5146 | **0.9477** | +0.433 |
 
-75 instances per column, zero failed runs. The pipeline recorded **zero fabrication hard-failures**; the bare model fabricated on 3 instances — including writing "20亿 − 5亿 = **15亿** remaining" in two languages on a task whose filing never discloses the quota-management basis (the tempting-but-unfounded-arithmetic trap working exactly as designed). Run-to-run variance is ±0.02–0.03; treat smaller differences as noise. Fourteen scorer defects were found and fixed during dogfooding before these numbers were taken — several fixes raised the *bare model's* scores (see CONTRIBUTING's honest-benchmark rule; the latest acquitted natural-English dates like "August 13, 2026", which had been flagged as fabricated scalars). Integration guide for third-party agents: [`bench/RUNNING.md`](bench/RUNNING.md).
+87 instances per column, zero failed runs. The pipeline recorded **zero fabrication hard-failures**; the bare model fabricated on 8 instances — including inventing a uniform "after-tax dividend per 10 shares" in all three languages on a filing whose deferred-settlement tax mechanism means no such number exists, and writing "20亿 − 5亿 = **15亿** remaining" where the quota-management basis is undisclosed (the tempting-but-unfounded-arithmetic traps working exactly as designed). Four of the 29 tasks were added after the previous baseline specifically to harden the benchmark — both columns dropped accordingly, which is the point. Run-to-run variance is ±0.02–0.03; treat smaller differences as noise. Fourteen scorer defects were found and fixed during dogfooding before these numbers were taken — several fixes raised the *bare model's* scores (see CONTRIBUTING's honest-benchmark rule; the latest acquitted natural-English dates like "August 13, 2026", which had been flagged as fabricated scalars). Integration guide for third-party agents: [`bench/RUNNING.md`](bench/RUNNING.md).
 
 Where the pipeline structurally differs from a bare model: it refuses to fabricate under absence (planted-fabrication traps score 0 by design), states residual non-disclosure even after answering the rule ("capped at X" answers the cap, not the value), attaches counter-evidence to inferences, placeholder-locks every number in prose (the writing model never sees a digit), carries interval uncertainty on derivation chains, and holds the memo language contract across scripts. The bare model remains genuinely strong at Simplified-Chinese extraction; we say so.
 
