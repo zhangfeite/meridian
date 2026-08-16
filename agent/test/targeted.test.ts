@@ -21,7 +21,7 @@ import { extractAndVerify } from '../src/steps/extract.ts'
 import { extractionPrompt, gapChallengePrompt, PROMPT_SET_VERSION, targetedExtractionPrompt } from '../src/prompts.ts'
 import type { SourceDocument } from '../src/source/types.ts'
 import type { Intent } from '../src/types.ts'
-import { askedKinds, figureCandidates } from '../src/verify/asked.ts'
+import { askedKinds, asksRemaining, figureCandidates, REMAINING_ASKING } from '../src/verify/asked.ts'
 
 const FILING = [
   '一、发行方案概要',
@@ -91,6 +91,15 @@ test('a question asking for a price, a count or a ratio says so', () => {
   assert.deepEqual([...askedKinds('票面利率是多少?')], ['percent'])
   assert.deepEqual([...askedKinds('Which legal document contains the ruling?')], ['doc_no'])
   assert.deepEqual([...askedKinds('该事项目前处于哪个阶段?')], [], 'a question about status asks for no quantity')
+})
+
+test('remaining-amount wording is recognized after script folding', () => {
+  assert.equal(asksRemaining('本期发行之后，还可发行多少金额?'), true)
+  assert.equal(asksRemaining('期末餘額還有多少?'), true)
+  assert.equal(asksRemaining('How much of the registered amount remains?'), true)
+  assert.equal(asksRemaining('What amount is still available?'), true)
+  assert.equal(asksRemaining('本期发行金额是多少?'), false)
+  assert.equal(REMAINING_ASKING.test('remaining amount'), true)
 })
 
 test('open table passages become one verbatim declared-unit candidate', () => {
@@ -240,6 +249,183 @@ test('a mechanically settling claim still suppresses forced Step 4e', async () =
 
   assert.equal(model.steps.filter((step) => step === 'targeted').length, 0)
   assert.equal(result.claims.length, 1)
+})
+
+test('other-question operands do not settle a remaining-amount question and force Step 4e', async () => {
+  const remainingDocuments: SourceDocument[] = [
+    {
+      id: 'DR',
+      title: '发行说明',
+      text: [
+        '注册发行总额为 20 亿元。',
+        '本期已发行金额为 5 亿元。',
+        '公告列示注册发行总额 20 亿元及本期发行金额 5 亿元，但未披露配额管理依据。',
+      ].join('\n'),
+      provider: 'test',
+    },
+  ]
+  const model = new Script({
+    extract: JSON.stringify({
+      claims: [
+        {
+          question_id: 'Q1',
+          type: 'fact',
+          text: '注册发行总额为 20 亿元。',
+          quotes: [{ document_id: 'DR', quote: '注册发行总额为 20 亿元' }],
+        },
+        {
+          question_id: 'Q2',
+          type: 'fact',
+          text: '本期已发行金额为 5 亿元。',
+          quotes: [{ document_id: 'DR', quote: '本期已发行金额为 5 亿元' }],
+        },
+        {
+          question_id: 'Q3',
+          type: 'fact',
+          text: '公告列示注册发行总额 20 亿元及本期发行金额 5 亿元。',
+          quotes: [{ document_id: 'DR', quote: '公告列示注册发行总额 20 亿元及本期发行金额 5 亿元' }],
+        },
+      ],
+      gaps: [],
+    }),
+    // Deliberately reports no residual: the mechanical floor must still keep it.
+    residual: JSON.stringify({ results: [] }),
+    targeted: JSON.stringify({ claims: [] }),
+  })
+
+  const result = await extractAndVerify(
+    intent([
+      { id: 'Q1', text: '注册发行总额是多少金额?' },
+      { id: 'Q2', text: '本期已发行金额是多少?' },
+      { id: 'Q3', text: '本期发行之后，还可发行多少金额?' },
+    ]),
+    remainingDocuments,
+    model,
+    'zh-CN',
+  )
+
+  assert.equal(model.steps.filter((step) => step === 'targeted').length, 1, 'operand recital must not block Step 4e')
+  assert.deepEqual(result.residuals, [{ questionId: 'Q3', missing: '' }])
+  assert.ok(result.claims.some((claim) => claim.questionId === 'Q3' && claim.text.includes('20 亿元')))
+})
+
+test('a new sourced amount settles the same remaining-amount question', async () => {
+  const remainingDocuments: SourceDocument[] = [
+    {
+      id: 'DR',
+      title: '发行说明',
+      text: [
+        '注册发行总额为 20 亿元。',
+        '本期已发行金额为 5 亿元。',
+        '公告明确本期发行后尚可发行金额为 15 亿元。',
+      ].join('\n'),
+      provider: 'test',
+    },
+  ]
+  const model = new Script({
+    extract: JSON.stringify({
+      claims: [
+        {
+          question_id: 'Q1',
+          type: 'fact',
+          text: '注册发行总额为 20 亿元。',
+          quotes: [{ document_id: 'DR', quote: '注册发行总额为 20 亿元' }],
+        },
+        {
+          question_id: 'Q2',
+          type: 'fact',
+          text: '本期已发行金额为 5 亿元。',
+          quotes: [{ document_id: 'DR', quote: '本期已发行金额为 5 亿元' }],
+        },
+        {
+          question_id: 'Q3',
+          type: 'fact',
+          text: '本期已发行 5 亿元，发行后尚可发行金额为 15 亿元。',
+          quotes: [{ document_id: 'DR', quote: '本期已发行金额为 5 亿元。\n公告明确本期发行后尚可发行金额为 15 亿元' }],
+        },
+      ],
+      gaps: [],
+    }),
+    residual: JSON.stringify({ results: [] }),
+  })
+
+  const result = await extractAndVerify(
+    intent([
+      { id: 'Q1', text: '注册发行总额是多少金额?' },
+      { id: 'Q2', text: '本期已发行金额是多少?' },
+      { id: 'Q3', text: '本期发行之后，还可发行多少金额?' },
+    ]),
+    remainingDocuments,
+    model,
+    'zh-CN',
+  )
+
+  assert.equal(model.steps.filter((step) => step === 'targeted').length, 0)
+  assert.deepEqual(result.residuals ?? [], [])
+  assert.ok(result.claims.some((claim) => claim.questionId === 'Q3' && claim.text.includes('15 亿元')))
+})
+
+test('non-remaining amount settlement stays byte-for-byte unchanged for the operand fixture', async () => {
+  const amountDocuments: SourceDocument[] = [
+    {
+      id: 'DR',
+      title: '发行说明',
+      text: [
+        '注册发行总额为 20 亿元。',
+        '本期已发行金额为 5 亿元。',
+        '公告列示注册发行总额 20 亿元及本期发行金额 5 亿元。',
+      ].join('\n'),
+      provider: 'test',
+    },
+  ]
+  const model = new Script({
+    extract: JSON.stringify({
+      claims: [
+        {
+          question_id: 'Q1',
+          type: 'fact',
+          text: '注册发行总额为 20 亿元。',
+          quotes: [{ document_id: 'DR', quote: '注册发行总额为 20 亿元' }],
+        },
+        {
+          question_id: 'Q2',
+          type: 'fact',
+          text: '本期已发行金额为 5 亿元。',
+          quotes: [{ document_id: 'DR', quote: '本期已发行金额为 5 亿元' }],
+        },
+        {
+          question_id: 'Q3',
+          type: 'fact',
+          text: '公告列示注册发行总额 20 亿元及本期发行金额 5 亿元。',
+          quotes: [{ document_id: 'DR', quote: '公告列示注册发行总额 20 亿元及本期发行金额 5 亿元' }],
+        },
+      ],
+      gaps: [],
+    }),
+    residual: JSON.stringify({ results: [] }),
+  })
+
+  const result = await extractAndVerify(
+    intent([
+      { id: 'Q1', text: '注册发行总额是多少金额?' },
+      { id: 'Q2', text: '本期已发行金额是多少?' },
+      { id: 'Q3', text: '本期发行金额是多少?' },
+    ]),
+    amountDocuments,
+    model,
+    'zh-CN',
+  )
+
+  const settlementBytes = JSON.stringify({
+    steps: model.steps,
+    claims: result.claims.map((claim) => [claim.questionId, claim.text]),
+    residuals: result.residuals ?? [],
+    gapsClosed: result.gapsClosed,
+  })
+  assert.equal(
+    settlementBytes,
+    '{"steps":["extract","residual"],"claims":[["Q1","注册发行总额为 20 亿元。"],["Q2","本期已发行金额为 5 亿元。"],["Q3","公告列示注册发行总额 20 亿元及本期发行金额 5 亿元。"]],"residuals":[],"gapsClosed":[]}',
+  )
 })
 
 test('a forced-gap upper-limit question accepts a verified bound and closes', async () => {

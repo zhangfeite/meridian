@@ -52,7 +52,7 @@ import { locateQuote } from '../verify/evidence.ts'
 import type { Skill } from '../skills/types.ts'
 import { detectUnitHints, extractNumbers } from '../verify/numbers.ts'
 import { foldScript } from '../verify/script.ts'
-import { askedKinds, figureCandidates, statesKind, type AskedKind } from '../verify/asked.ts'
+import { askedKinds, asksRemaining, figureCandidates, statesKind, type AskedKind } from '../verify/asked.ts'
 import { chooseQuoteSpan } from '../verify/span.ts'
 import { candidatePassages, splitPassages } from '../verify/text.ts'
 import { asWindowView, boundDocuments, selectWindows, windowDocument } from '../verify/window.ts'
@@ -330,10 +330,13 @@ export async function extractAndVerify(
   // attempt in Step 4e. This
   // reuses the same candidate selector as residual recovery: no second scanner,
   // and no vocabulary overlap required between question and filing.
+  const otherAmountsByQuestion = otherClaimAmounts(claims, intent.subQuestions.map((question) => question.id))
   const forcedGaps = intent.subQuestions.flatMap((question) => {
     if (
       claims.some(
-        (claim) => claim.questionId === question.id && mechanicallySettles(claim, question.text),
+        (claim) =>
+          claim.questionId === question.id &&
+          mechanicallySettles(claim, question.text, otherAmountsByQuestion.get(question.id)),
       )
     ) {
       return []
@@ -355,14 +358,34 @@ export async function extractAndVerify(
   // else. Without this the memo publishes the rule and drops the finding.
   const residuals: { questionId: string; missing: string }[] = []
   const settleable = intent.subQuestions
-    .map((question) => ({
-      questionId: question.id,
-      question: question.text,
-      answers: claims
-        .filter((claim) => claim.questionId === question.id && !(claim.type === 'fact' && claim.unverifiable))
-        .map((claim) => claim.text),
-    }))
+    .map((question) => {
+      const answers = claims.filter(
+        (claim) => claim.questionId === question.id && !(claim.type === 'fact' && claim.unverifiable),
+      )
+      return { questionId: question.id, question: question.text, answers }
+    })
     .filter((item) => item.answers.length > 0)
+    .filter((item) => {
+      // A remaining-amount answer made only from values already stated for
+      // other sub-questions is an operand recital, not a result. Keep that
+      // residual deterministically; the reviewer remains free to report more
+      // residuals among the questions that clear this mechanical floor.
+      if (!asksRemaining(item.question) || !askedKinds(item.question).has('amount')) return true
+      if (
+        item.answers.some((claim) =>
+          mechanicallySettles(claim, item.question, otherAmountsByQuestion.get(item.questionId)),
+        )
+      ) {
+        return true
+      }
+      residuals.push({ questionId: item.questionId, missing: '' })
+      return false
+    })
+    .map((item) => ({
+      questionId: item.questionId,
+      question: item.question,
+      answers: item.answers.map((claim) => claim.text),
+    }))
   if (settleable.length > 0) {
     const reviewed = await askForJson<ResidualReviewReply>(
       model,
@@ -446,7 +469,15 @@ export async function extractAndVerify(
           // same predicate; a retry never relaxes forced-gap closure.
           if (forcedQuestionIds.has(claim.questionId)) {
             const question = intent.subQuestions.find((item) => item.id === claim.questionId)
-            if (!mechanicallySettles(claim, question?.text)) continue
+            if (
+              !mechanicallySettles(
+                claim,
+                question?.text,
+                otherAmountsByQuestion.get(claim.questionId),
+              )
+            ) {
+              continue
+            }
           }
           if (
             claims.some(
@@ -524,7 +555,13 @@ export async function extractAndVerify(
     if (!recovered.has(residual.questionId)) continue
     const question = intent.subQuestions.find((item) => item.id === residual.questionId)
     const settles = claims.some(
-      (claim) => claim.questionId === residual.questionId && mechanicallySettles(claim, question?.text),
+      (claim) =>
+        claim.questionId === residual.questionId &&
+        mechanicallySettles(
+          claim,
+          question?.text,
+          otherAmountsByQuestion.get(residual.questionId),
+        ),
     )
     if (settles) {
       residuals.splice(index, 1)
@@ -763,12 +800,38 @@ const BOUND_LANGUAGE =
 const BOUND_ASKING = /上限|上限是多少|最高|最多|不超过多少|maximum|upper limit|cap\b|at most|ceiling/i
 
 /** Does one verified claim state the value its question asks for? */
-function mechanicallySettles(claim: Claim, question: string | undefined): boolean {
+function mechanicallySettles(
+  claim: Claim,
+  question: string | undefined,
+  otherAmounts?: Set<string>,
+): boolean {
   if (claim.type === 'fact' && claim.unverifiable) return false
   if (BOUND_LANGUAGE.test(claim.text) && !(question && BOUND_ASKING.test(question))) return false
   const kinds = question ? askedKinds(question) : new Set<AskedKind>()
   if (kinds.size === 0) return /\d/.test(claim.text)
-  return statesKind(claim.text, kinds)
+  if (!statesKind(claim.text, kinds)) return false
+  if (!question || !asksRemaining(question) || !kinds.has('amount') || otherAmounts === undefined) return true
+  return extractNumbers(claim.text).some(
+    (token) => token.kind === 'amount' && !otherAmounts.has(token.numericRaw ?? token.value),
+  )
+}
+
+/** Amount figures stated by verified claims owned by every other sub-question. */
+function otherClaimAmounts(claims: Claim[], questionIds: string[]): Map<string, Set<string>> {
+  return new Map(
+    questionIds.map((questionId) => [
+      questionId,
+      new Set(
+        claims
+          .filter((claim) => claim.questionId !== questionId)
+          .flatMap((claim) =>
+            extractNumbers(claim.text)
+              .filter((token) => token.kind === 'amount')
+              .map((token) => token.numericRaw ?? token.value),
+          ),
+      ),
+    ]),
+  )
 }
 
 /** Currency spelled in Latin letters, as an English sentence tends to. */

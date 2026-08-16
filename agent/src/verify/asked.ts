@@ -33,6 +33,15 @@ const ASK_PATTERNS: [AskedKind, RegExp][] = [
   ['doc_no', /文号|案号|哪一份.*(?:文书|文書)|which legal document|case number|document number/i],
 ]
 
+/** Wording that asks for an amount left after previously stated operands. */
+export const REMAINING_ASKING =
+  /还可|還可|剩余|剩餘|尚余|尚餘|尚可|余额还|remaining|(?:how much|amount).*(?:left|remains)|still available/i
+
+/** Does this question ask for what remains? */
+export function asksRemaining(question: string): boolean {
+  return REMAINING_ASKING.test(foldScript(question))
+}
+
 /**
  * Which quantities does this question ask for?
  *
