@@ -221,7 +221,7 @@ export function keyUnits(questionText: string): string[] {
  * @param documents - retrieved documents.
  * @param questionText - the sub-question that came up empty.
  * @param accept - optional pre-ranking filter, used to exclude non-compliant quotes.
- * @returns the closest passage, or `undefined` when no distinctive unit is shared.
+ * @returns the closest passage, or `undefined` unless two distinctive units are shared.
  */
 export function selectNearestPassage(
   documents: { id: string; text: string }[],
@@ -237,7 +237,10 @@ export function selectNearestPassage(
         if (trimmed.length < 10 || !accept(trimmed)) continue
         const units = semanticUnits(trimmed)
         const shared = wanted.filter((unit) => units.has(unit)).length
-        if (shared === 0) continue
+        // A single bigram frequently matches a boilerplate heading (for example,
+        // 「现将发行结果公告如下」). Two shared distinctive units provide a useful
+        // topical floor without changing the subsequent relevance ranking.
+        if (shared < 2) continue
         candidates.push({ documentId: document.id, text: trimmed, shared })
       }
     }

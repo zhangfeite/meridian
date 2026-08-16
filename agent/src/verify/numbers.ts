@@ -379,11 +379,35 @@ export interface UnitHint {
   multiplier: string
   /** The declaration as printed, e.g. `单位:人民币万元`. */
   source: string
+  /**
+   * Character window governed by a local declaration such as a table's `(%)`
+   * heading. Currency declarations predate scoped hints and may omit this.
+   */
+  scope?: {
+    start: number
+    end: number
+    /** Canonical bare figures actually printed inside this window. */
+    values: string[]
+  }
 }
 
 const UNIT_DECLARATION_RE =
   /(?:单位|單位)\s*[:：]\s*(?:人民币|人民幣|港币|港幣|美元)?\s*(万亿元|百万元|亿元|万元|千元|元|万港元|亿港元|港元|万美元|亿美元|美元)/g
 const EN_UNIT_DECLARATION_RE = /\bin\s+(thousands|millions|billions)\b(?:\s+of\s+(dollars|usd|rmb|yuan|cny))?/gi
+/** A percent column declaration, after width folding normalizes `（％）` to `(%)`. */
+const PERCENT_DECLARATION_RE = /\(\s*%\s*\)/g
+
+/**
+ * A percent heading governs its table, not the rest of the filing. Tables in
+ * extracted PDFs are often split across several newline passages, so the
+ * window is bounded by the next declaration/table transition plus a hard cap.
+ * The semantic transitions cover the common point where a rate table gives way
+ * to a ratio table (`反映发行人偿债能力的指标`) and where shareholder
+ * rows give way to explanatory notes (`上述股东…说明`).
+ */
+const PERCENT_SCOPE_CHARS = 1_600
+const TABLE_TRANSITION_RE =
+  /(?:第[一二三四五六七八九十\d]+节|(?<![\d.])[1-9]\d*\.\d[ \t]+[㐀-鿿a-z]|(?:反映|上述)[^。\n]{0,40}(?:指标|说明)|(?:单位|單位)\s*[:：])/gi
 
 const EN_SCALES: Record<string, bigint> = {
   thousands: 1_000n,
@@ -399,9 +423,19 @@ const EN_SCALES: Record<string, bigint> = {
  */
 export function detectUnitHints(text: string): UnitHint[] {
   const hints: UnitHint[] = []
-  const push = (unit: string, multiplier: bigint, source: string): void => {
-    if (hints.some((hint) => hint.unit === unit && hint.multiplier === multiplier.toString())) return
-    hints.push({ unit, multiplier: multiplier.toString(), source })
+  const push = (unit: string, multiplier: bigint, source: string, scope?: UnitHint['scope']): void => {
+    if (
+      hints.some(
+        (hint) =>
+          hint.unit === unit &&
+          hint.multiplier === multiplier.toString() &&
+          hint.scope?.start === scope?.start &&
+          hint.scope?.end === scope?.end,
+      )
+    ) {
+      return
+    }
+    hints.push({ unit, multiplier: multiplier.toString(), source, ...(scope ? { scope } : {}) })
   }
   for (const match of foldScript(text).matchAll(UNIT_DECLARATION_RE)) {
     const unit = lookupUnit(match[1] ?? '')
@@ -412,6 +446,34 @@ export function detectUnitHints(text: string): UnitHint[] {
     if (!multiplier) continue
     const currency = (match[2] ?? '').toLowerCase()
     push(currency === 'rmb' || currency === 'yuan' || currency === 'cny' ? 'CNY' : 'USD', multiplier, match[0])
+  }
+
+  const folded = foldWidth(text)
+  const declarations = [...folded.matchAll(PERCENT_DECLARATION_RE)]
+  for (let index = 0; index < declarations.length; index += 1) {
+    const match = declarations[index]
+    const start = match.index
+    const afterDeclaration = start + match[0].length
+    let end = Math.min(folded.length, start + PERCENT_SCOPE_CHARS)
+
+    const nextDeclaration = declarations[index + 1]
+    if (nextDeclaration) end = Math.min(end, nextDeclaration.index)
+
+    // A new currency table also closes the preceding percentage column.
+    const following = folded.slice(afterDeclaration, end)
+    const currencyBoundary = [...following.matchAll(UNIT_DECLARATION_RE)][0]
+    if (currencyBoundary) end = Math.min(end, afterDeclaration + currencyBoundary.index)
+    const tableBoundary = [...following.matchAll(TABLE_TRANSITION_RE)][0]
+    if (tableBoundary) end = Math.min(end, afterDeclaration + tableBoundary.index)
+
+    const values = [
+      ...new Set(
+        extractNumbers(text.slice(start, end))
+          .filter((token) => token.kind === 'scalar')
+          .map((token) => token.value),
+      ),
+    ]
+    push('percent', 1n, text.slice(start, afterDeclaration), { start, end, values })
   }
   return hints
 }
@@ -446,6 +508,26 @@ export function matchesToken(
     const left = printed === undefined ? undefined : parseDecimal(printed)
     const right = parseDecimal(wanted.value)
     if (left && right && equals(left, right)) return { basis: 'verbatim' }
+  }
+
+  // Percentage tables use the same declared-unit convention as financial
+  // amount tables: the column heading carries `(%)`, while its cells are bare
+  // scalars. Unlike the legacy document-wide currency hint, this declaration
+  // is licensed only for figures recorded in its bounded table window. Keeping
+  // the scoped values on the hint also lets a quote-local token be checked after
+  // evidence extraction has rebased its offsets to the start of the quote.
+  if (wanted.kind === 'percent' && candidate.kind === 'scalar') {
+    const left = parseDecimal(candidate.value)
+    const right = parseDecimal(wanted.value)
+    if (left && right && equals(left, right)) {
+      const hint = hints.find(
+        (item) =>
+          item.unit === 'percent' &&
+          item.multiplier === '1' &&
+          item.scope?.values.includes(candidate.value),
+      )
+      if (hint) return { basis: 'declared_unit', hint }
+    }
   }
 
   if (wanted.kind !== 'amount' || wanted.numericRaw === undefined) return undefined

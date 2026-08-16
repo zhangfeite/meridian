@@ -117,6 +117,8 @@ const STRINGS: Record<
      * not. Sits beside the answer it qualifies, not instead of it.
      */
     residualSuffix: (question: string) => string
+    /** A residual whose targeted candidate reached verification and was refused. */
+    rejectedResidualSuffix: (question: string) => string
     noSources: string
     advisoryRefusal: string
   }
@@ -128,6 +130,8 @@ const STRINGS: Record<
       `关于「${question}」:本备忘录未能在所提供的原始文件中找到相应内容${reason ? `(${reason})` : ''},无法核实。`,
     residualSuffix: (question) =>
       `关于「${question}」:原始文件只给出了规则、区间或程序,具体数值尚未确定,无法核实。`,
+    rejectedResidualSuffix: (question) =>
+      `关于「${question}」:本备忘录未能核实该数值,该数值仍无法核实。`,
     noSources: '本次运行未能取得任何原始文件,以下内容无法核实。',
     advisoryRefusal:
       '本备忘录只整理已公开披露的事实与其出处,不能替你做投资决定——那取决于你自己的风险承受能力、期限与目标,也取决于原始文件尚未披露的信息。',
@@ -139,6 +143,8 @@ const STRINGS: Record<
       `關於「${question}」:本備忘錄未能在所提供的原始文件中找到相應內容${reason ? `(${reason})` : ''},無法核實。`,
     residualSuffix: (question) =>
       `關於「${question}」:原始文件只給出了規則、區間或程序,具體數值尚未確定,無法核實。`,
+    rejectedResidualSuffix: (question) =>
+      `關於「${question}」:本備忘錄未能核實該數值,該數值仍無法核實。`,
     noSources: '本次執行未能取得任何原始文件,以下內容無法核實。',
     advisoryRefusal:
       '本備忘錄只整理已公開揭露的事實與其出處,不能替你做投資決定——那取決於你自己的風險承受能力、期限與目標,也取決於原始文件尚未揭露的資訊。',
@@ -150,6 +156,8 @@ const STRINGS: Record<
       `On "${question}": this memo could not locate an answer in the primary sources provided${reason ? ` (${reason})` : ''}, so it cannot be verified.`,
     residualSuffix: (question) =>
       `On "${question}": the primary sources state only the rule, range or procedure — the specific figure has not yet been determined, so it cannot be verified.`,
+    rejectedResidualSuffix: (question) =>
+      `On "${question}": this memo was unable to verify the figure, so it cannot be verified.`,
     noSources: 'This run retrieved no primary sources, so nothing below could be verified.',
     advisoryRefusal:
       'This memo organizes disclosed facts and their sources. It cannot make an investment decision for you — that depends on your own risk tolerance, horizon, and objectives, and on information the filings do not disclose.',
@@ -262,6 +270,7 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
       // the evidence a reader wants next to "not yet determined".
       const residualIds: string[] = []
       if (residualByQuestion.has(question.id)) {
+        const refused = (input.rejected ?? []).some((item) => item.questionId === question.id)
         const support = selectSupportingPassage(input.documents, question.text)
         const evidence = support ? locateSupport(support, input.documents, input.pool) : undefined
         const residualId = nextGapClaimId()
@@ -269,7 +278,9 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
         claims.push({
           id: residualId,
           type: 'fact',
-          text: strings.residualSuffix(quotable(question.text)),
+          text: (refused ? strings.rejectedResidualSuffix : strings.residualSuffix)(
+            quotable(question.text),
+          ),
           questionId: question.id,
           evidenceIds: evidence ? [evidence.id] : [],
           numbers: [],

@@ -53,7 +53,7 @@ test('ranking is markers, then topical overlap, then shortest', () => {
   assert.equal(tie?.text, oneShort)
 })
 
-test('nearest passage ranks shared key units, then shortest, and requires overlap', () => {
+test('nearest passage ranks shared key units, then shortest, and requires two-unit overlap', () => {
   const oneLong = '第 20 号文件的施行机制已在本段作出完整说明。'
   const oneShort = '第 20 号文件自发布时施行。'
   const two = '第 20 号文件的施行机制和调整程序均自发布时生效。'
@@ -71,12 +71,27 @@ test('nearest passage ranks shared key units, then shortest, and requires overla
   assert.equal(selectNearestPassage([{ id: 'D1', text: oneShort }], '主营业务毛利率?'), undefined)
 })
 
+test('nearest passage rejects one shared key unit but accepts two', () => {
+  const oneShared = 'Alpha content is announced.'
+  assert.equal(
+    selectNearestPassage([{ id: 'D1', text: oneShared }], 'Alpha beta gamma?'),
+    undefined,
+    'a single shared key unit is insufficient for a nearest-passage exhibit',
+  )
+
+  const twoShared = 'Alpha beta is announced.'
+  const chosen = selectNearestPassage([{ id: 'D1', text: twoShared }], 'Alpha beta gamma?')
+  assert.equal(chosen?.text, twoShared)
+  assert.equal(chosen?.shared, 2)
+})
+
 test('nearest passage treats numbers as exact semantic tokens', () => {
   const falseMatches = '文件编号为 2026-041。\n证券代码为 002920。'
   assert.equal(selectNearestPassage([{ id: 'D1', text: falseMatches }], 'No. 20'), undefined)
+  assert.equal(selectNearestPassage([{ id: 'D1', text: `${falseMatches}\n第 20 号文件已发布。` }], 'No. 20'), undefined)
   assert.match(
-    selectNearestPassage([{ id: 'D1', text: `${falseMatches}\n第 20 号文件已发布。` }], 'No. 20')?.text ?? '',
-    /第 20 号/,
+    selectNearestPassage([{ id: 'D1', text: `${falseMatches}\nNo. 20 文件已发布。` }], 'No. 20')?.text ?? '',
+    /No\. 20/,
   )
 })
 

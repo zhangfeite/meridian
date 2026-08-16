@@ -721,6 +721,54 @@ test('a residual question whose figure is in the filing is recovered and settled
   assert.equal(model.steps.filter((step) => step === 'targeted').length, 1, 'one attempt, not a loop')
 })
 
+test('a targeted claim binds a bare percent-table cell and withdraws the residual', async () => {
+  const rateFiling = [
+    '公司债券采用固定利率。',
+    '债券名称 利率（%）',
+    '第一期永续中票 2.25',
+  ].join('\n')
+  const rateDocuments: SourceDocument[] = [
+    { id: 'DR', title: '债券情况表', text: rateFiling, provider: 'test' },
+  ]
+  const model = new Script({
+    extract: JSON.stringify({
+      claims: [
+        {
+          question_id: 'Q1',
+          type: 'fact',
+          text: '公司债券采用固定利率。',
+          quotes: [{ document_id: 'DR', quote: '公司债券采用固定利率。' }],
+        },
+      ],
+      gaps: [],
+    }),
+    residual: JSON.stringify({ results: [{ question_id: 'Q1', verdict: 'residual', missing: '票面利率' }] }),
+    targeted: JSON.stringify({
+      claims: [
+        {
+          question_id: 'Q1',
+          type: 'fact',
+          text: '第一期永续中票的票面利率为 2.25%。',
+          quotes: [{ document_id: 'DR', quote: '债券名称 利率（%）\n第一期永续中票 2.25' }],
+        },
+      ],
+    }),
+  })
+
+  const result = await extractAndVerify(
+    intent([{ id: 'Q1', text: '第一期永续中票的票面利率是多少?' }]),
+    rateDocuments,
+    model,
+    'zh-CN',
+  )
+
+  const recovered = result.claims.find((claim) => claim.text.includes('2.25%'))
+  assert.ok(recovered, result.rejected.map((item) => item.reason).join(' | '))
+  assert.equal(recovered.numbers[0]?.unitFrom, '（%）')
+  assert.deepEqual(result.residuals ?? [], [], 'the verified rate settles the residual')
+  assert.equal(model.steps.filter((step) => step === 'targeted').length, 1)
+})
+
 test('a second attempt that finds nothing keeps the residual and says so', async () => {
   const model = new Script({
     extract: JSON.stringify({

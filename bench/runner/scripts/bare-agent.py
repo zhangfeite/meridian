@@ -1,0 +1,1 @@
+../../../../scripts/bare-agent.py

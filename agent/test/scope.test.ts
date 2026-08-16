@@ -275,6 +275,31 @@ test('a rule without its figure keeps the residual sentence beside the answer', 
   assert.ok(memo.audit.some((record) => record.action === 'residual_gap_recorded'))
 })
 
+test('a rejected candidate makes residual wording neutral in all three locales', async () => {
+  const quote = '公司债权人上海某贸易有限公司以公司不能清偿到期债务为由，向法院申请对公司进行重整。'
+  for (const lang of ['zh-CN', 'zh-TW', 'en'] as MeridianLang[]) {
+    const { memo } = await composeMemo(
+      [{ id: 'Q1', text: '本次发行价格是每股多少元?' }],
+      [fact('C-A', 'Q1', '发行价格不低于定价基准日前二十个交易日均价的百分之八十。', ['E1'])],
+      [evidence('E1', quote)],
+      lang,
+      [{ questionId: 'Q1', text: '发行价格为 9.99 元。', reason: '数字验证拒绝', round: 'repair' }],
+      [{ questionId: 'Q1', missing: '每股发行价格' }],
+    )
+    const residual = memo.claims.find(
+      (claim): claim is FactClaim => claim.type === 'fact' && Boolean(claim.residual),
+    )
+    assert.ok(residual, `${lang}: residual missing`)
+    assert.equal(/only the rule|has not yet been determined|只给出了|只給出了|尚未确定|尚未確定/.test(residual.text), false)
+    assert.match(residual.text, lang === 'en' ? /unable to verify the figure/ : /未能核实|未能核實/)
+    assert.deepEqual(
+      memo.gate.contractViolations.filter((item) => item.claimId === residual.id),
+      [],
+      `${lang}: ${residual.text}`,
+    )
+  }
+})
+
 test('the disjointness rule does not eat a residual', async () => {
   // M8 withdraws a blanket "not disclosed" that shares a sub-question with a
   // verified claim. A residual shares one *by design* — the two rules have to

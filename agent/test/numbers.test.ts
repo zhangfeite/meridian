@@ -75,6 +75,68 @@ test('English "in millions" is a unit declaration too', () => {
   )
 })
 
+test('a percent table heading justifies its bare cells', () => {
+  const document = '本报告期上年同期 本报告期比上年同期增減（%）\n归属于上市公司股东的净利润 107,086 102,589 4.38'
+  const hints = detectUnitHints(document)
+  const percent = hints.find((hint) => hint.unit === 'percent')
+  assert.ok(percent)
+  assert.deepEqual(percent.scope?.values, ['107086', '102589', '4.38'])
+
+  const candidate = extractNumbers('归属于上市公司股东的净利润 107,086 102,589 4.38').at(-1)
+  const wanted = extractNumbers('归母净利润同比增长 4.38%').at(-1)
+  assert.ok(candidate)
+  assert.ok(wanted)
+  assert.equal(matchesToken(candidate, wanted, hints)?.basis, 'declared_unit')
+  assert.ok(verifyNumbers('归母净利润同比增长 4.38%', [document]).ok)
+})
+
+test('percent declarations recognize generic full-width and half-width headings', () => {
+  const cases = [
+    '本期比上年同期增減(%)\n净利润 4.38',
+    '本期比上年同期增減（%）\n净利润 4.38',
+    '利率（%）\n第一期 2.25',
+    '持股比例(%)\n控股股东 72.85',
+  ]
+  for (const source of cases) {
+    assert.ok(detectUnitHints(source).some((hint) => hint.unit === 'percent'), source)
+  }
+})
+
+test('a percent hint is confined to its nearby table window', () => {
+  const source = [
+    '债券名称 利率（%）',
+    '第一期永续中票 2.25',
+    '反映发行人偿债能力的指标：',
+    'EBITDA 利息保障倍数 3.85',
+  ].join('\n')
+
+  assert.ok(verifyNumbers('第一期票面利率为 2.25%', [source]).ok)
+  const ebitda = verifyNumbers('EBITDA 利息保障倍数为 3.85%', [source])
+  assert.equal(ebitda.ok, false, 'a later bare multiple is outside the rate table')
+  assert.equal(ebitda.violations[0]?.kind, 'not_in_source')
+})
+
+test('decimal cells do not masquerade as section boundaries inside a percent table', () => {
+  const source = [
+    '加权平均净资产收益率（%） 2.10 0.96 增加1.14个百分点',
+    '基本每股收益（元／股） 0.02 0.01 135.56',
+    '稀释每股收益（元／股） 0.02 0.01 135.56',
+    '2.3 前 10 名股东持股情况表单位: 股',
+  ].join('')
+  assert.ok(verifyNumbers('基本每股收益同比增长 135.56%', [source]).ok)
+})
+
+test('percent declared-unit matching rejects multiples and documents without a percent heading', () => {
+  const hints = detectUnitHints('指标 比例（%）\n资产负债率 77.25')
+  const [multiple] = extractNumbers('EBITDA 利息保障倍数 3.85 倍')
+  const [wantedMultipleAsPercent] = extractNumbers('3.85%')
+  assert.equal(matchesToken(multiple, wantedMultipleAsPercent, hints), undefined)
+
+  const withoutHeading = verifyNumbers('资产负债率为 77.25%', ['资产负债率 77.25'])
+  assert.equal(withoutHeading.ok, false)
+  assert.ok(verifyNumbers('资产负债率为 77.25%', ['指标 （%）\n资产负债率 77.25']).ok)
+})
+
 test('full-width digits are digits', () => {
   // R2-P2a: `３６１` and `１，５００ 万元` read as prose to an ASCII-only scanner —
   // they would reach a memo unverified. Spans still index the original string,
