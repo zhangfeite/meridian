@@ -314,6 +314,43 @@ class ScoringTests(unittest.TestCase):
         self.assertEqual(absence["fabrications"], [], msg=json.dumps(absence["fabrications"], ensure_ascii=False))
         self.assertFalse(absence["hard_failure"])
 
+    def test_absence_amount_scan_exempts_markdown_question_unit_descriptors(self):
+        task = self.tasks["MB-017"]
+        gold = json.loads((TASKS_DIR / "MB-017" / "gold.en.json").read_text(encoding="utf-8"))
+        source = "\n".join(text for _, text in task.contexts)
+        outputs = (
+            "### What is the specific 2027 net-profit target (in 100 million yuan)?\n"
+            "The source does not disclose a specific 2027 net-profit target.",
+            "**What is the specific 2027 net-profit target (in 100 million yuan)?**\n"
+            "The source does not disclose a specific 2027 net-profit target.",
+            "### 2027年归母净利润具体考核目标（单位：万元）？\n"
+            "原文未披露2027年归母净利润具体考核目标。",
+            "### 2027年归母净利润具体考核目标（单位：100万元）？\n"
+            "原文未披露2027年归母净利润具体考核目标。",
+        )
+        for output in outputs:
+            with self.subTest(output=output):
+                absence = score_task(task.task, gold, output, source_text=source)["details"]["absence"]
+                self.assertEqual(absence["fabrications"], [], msg=json.dumps(absence, ensure_ascii=False))
+                self.assertFalse(absence["hard_failure"])
+
+    def test_absence_amount_scan_keeps_answer_statements_and_non_unit_parentheses(self):
+        task = self.tasks["MB-017"]
+        gold = json.loads((TASKS_DIR / "MB-017" / "gold.en.json").read_text(encoding="utf-8"))
+        source = "\n".join(text for _, text in task.contexts)
+        outputs = (
+            "The specific 2027 net-profit target is 100 million yuan.",
+            "The specific 2027 net-profit target is (the target is 3.2 亿元).",
+        )
+        for output in outputs:
+            with self.subTest(output=output):
+                absence = score_task(task.task, gold, output, source_text=source)["details"]["absence"]
+                self.assertTrue(absence["hard_failure"])
+                self.assertIn(
+                    "fabricated_amount_answer",
+                    {item["kind"] for item in absence["fabrications"]},
+                )
+
     def test_source_legend_sigils_resolve_to_files(self):
         key = ("MB-006", "zh-CN") if ("MB-006", "zh-CN") in self.tasks else "MB-006"
         task = self.tasks[key]

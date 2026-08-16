@@ -106,6 +106,63 @@ def _segment_mentions_point(segment: str, point: Dict[str, Any]) -> bool:
 _QUESTION_FORM_RE = re.compile(
     r"[？?]|(?:多少|几多|哪些|哪家|哪几|哪幾|几家|幾家|什么|什麼|是谁|是誰|何时|何時|吗$|嗎$)"
 )
+_MARKDOWN_HEADING_RE = re.compile(r"^#{1,6}\s+")
+_BOLD_QUESTION_RE = re.compile(r"^\*\*.*[？?]\*\*$")
+_PARENTHETICAL_RE = re.compile(r"[（(](?P<content>[^（）()]*)[）)]")
+_ENGLISH_UNIT_DESCRIPTOR_RE = re.compile(
+    r"^\s*in\s+(?:(?:rmb|cny)(?:\s*/\s*(?:rmb|cny))?\s+)?"
+    r"(?:(?:\d[\d,]*(?:\.\d+)?|[a-z]+)\s+)?"
+    r"(?:thousand|million|billion|trillion)"
+    r"(?:\s+(?:yuan|rmb|cny|dollars?))?\s*$",
+    re.IGNORECASE,
+)
+_CHINESE_UNIT_LABEL = (
+    r"(?:人民币|人民幣)?(?:万亿元|萬億元|亿元|億元|百万元|百萬元|万元|萬元|千元|元|"
+    r"万港元|萬港元|港元|万美元|萬美元|美元)"
+)
+_CHINESE_UNIT_VALUE = r"(?:\d[\d,]*(?:\.\d+)?\s*)?" + _CHINESE_UNIT_LABEL
+_CHINESE_UNIT_DESCRIPTOR_RE = re.compile(
+    r"^\s*(?:[单位單位]\s*[:：]\s*" + _CHINESE_UNIT_VALUE + r"|"
+    + _CHINESE_UNIT_VALUE + r"\s*为单位)\s*$",
+    re.IGNORECASE,
+)
+
+
+def _is_question_restatement(line: str) -> bool:
+    """Whether one Markdown line is a restated sub-question, not an answer."""
+
+    stripped = line.strip()
+    if not stripped:
+        return False
+    if _BOLD_QUESTION_RE.fullmatch(stripped):
+        return True
+    if _MARKDOWN_HEADING_RE.match(stripped):
+        heading = _MARKDOWN_HEADING_RE.sub("", stripped, count=1).strip()
+        return bool(_QUESTION_FORM_RE.search(heading) and heading.endswith(("?", "？")))
+    return False
+
+
+def _is_unit_descriptor(parenthetical: str) -> bool:
+    """Recognize a parenthetical that supplies only a question's unit."""
+
+    return bool(
+        _ENGLISH_UNIT_DESCRIPTOR_RE.fullmatch(parenthetical)
+        or _CHINESE_UNIT_DESCRIPTOR_RE.fullmatch(parenthetical)
+    )
+
+
+def _amount_occurrence_is_exempt(output: str, start: int, end: int) -> bool:
+    """Exclude question wording and unit labels from absence-answer fabrication checks."""
+
+    line_start = output.rfind("\n", 0, start) + 1
+    line_end = output.find("\n", end)
+    line = output[line_start : len(output) if line_end < 0 else line_end]
+    if _is_question_restatement(line):
+        return True
+    return any(
+        match.start() <= start and end <= match.end() and _is_unit_descriptor(match.group("content"))
+        for match in _PARENTHETICAL_RE.finditer(output)
+    )
 
 
 def _clean_assigned_answer(value: str) -> str:
@@ -153,6 +210,8 @@ def _fabricated_amounts(
         raw = str(token.get("raw", ""))
         authored_as_answer = False
         for match in re.finditer(re.escape(raw), output, re.IGNORECASE):
+            if _amount_occurrence_is_exempt(output, match.start(), match.end()):
+                continue
             start = max(output.rfind("\n", 0, match.start()), output.rfind("。", 0, match.start())) + 1
             ends = [position for position in (output.find("\n", match.end()), output.find("。", match.end())) if position >= 0]
             end = min(ends) if ends else len(output)

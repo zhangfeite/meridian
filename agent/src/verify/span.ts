@@ -73,13 +73,19 @@ const passageCache = new WeakMap<{ text: string }, { text: string; start: number
 function passagesOf(document: { text: string }): { text: string; start: number; end: number }[] {
   const cached = passageCache.get(document)
   if (cached) return cached
-  const passages = splitPassages(document.text).map((passage) => ({
-    text: passage.text,
-    start: passage.start,
-    end: passage.start + passage.text.length,
-  }))
+  const passages = splitPassages(document.text).map((passage) => {
+    const located = document.text.indexOf(passage.text, passage.start)
+    const start = located < 0 ? passage.start : located
+    return { text: passage.text, start, end: start + passage.text.length }
+  })
   passageCache.set(document, passages)
   return passages
+}
+
+/** A passage without terminal punctuation was split only by document layout. */
+function hasOpenBoundary(text: string): boolean {
+  const trimmed = text.trimEnd()
+  return trimmed.length > 0 && !/[。！？!?;；]$/.test(trimmed)
 }
 
 /** Figures the claim states, as they would have to appear in a quote. */
@@ -132,25 +138,36 @@ export function chooseQuoteSpan(
     // neighbouring sentence carries it. Forward first, then backward — a fixed
     // order, so two runs that start from different fragments of the same
     // paragraph converge on the same span.
-    let extended = false
+    let figureExtended = false
     for (let guard = 0; guard < 4 && covered(textOf(), figures) < figures.length; guard += 1) {
       const next = passages[to + 1]
       const previous = passages[from - 1]
       const missing = figures.filter((figure) => !foldScript(textOf()).includes(foldScript(figure)))
       const helps = (passage: { text: string } | undefined): boolean =>
         Boolean(passage) && missing.some((figure) => foldScript(passage!.text).includes(foldScript(figure)))
-      if (helps(next) && (span().end - span().start) + (next as { text: string }).text.length <= MAX_SPAN) {
+      if (helps(next) && (next as { end: number }).end - span().start <= MAX_SPAN) {
         to += 1
-        extended = true
+        figureExtended = true
       } else if (
         helps(previous) &&
-        (span().end - span().start) + (previous as { text: string }).text.length <= MAX_SPAN
+        span().end - (previous as { start: number }).start <= MAX_SPAN
       ) {
         from -= 1
-        extended = true
+        figureExtended = true
       } else {
         break
       }
+    }
+
+    // A newline after non-terminal punctuation is layout, not a semantic end.
+    // Merge forward independently of figure coverage, repeating only while the
+    // result remains a bounded, contiguous slice of the original document.
+    let boundaryExtended = false
+    while (hasOpenBoundary(passages[to]?.text ?? '')) {
+      const next = passages[to + 1]
+      if (!next || next.end - span().start > MAX_SPAN) break
+      to += 1
+      boundaryExtended = true
     }
 
     // Trim by moving the offsets, never by trimming the string: the published
@@ -167,7 +184,8 @@ export function chooseQuoteSpan(
       charEnd: end,
       figures: covered(text, figures),
       overlap: coverage(claimText, text),
-      extended,
+      figureExtended,
+      boundaryExtended,
     }
   })
 
@@ -194,8 +212,9 @@ export function chooseQuoteSpan(
     `figures=${best.figures}/${figures.length}`,
     `overlap=${best.overlap.toFixed(2)}`,
     `chars=${best.quote.length}`,
-    best.extended ? 'extended-to-figure' : 'sentence-aligned',
-  ].join(' ')
+    best.figureExtended ? 'extended-to-figure' : 'sentence-aligned',
+    best.boundaryExtended ? 'extended-open-boundary' : '',
+  ].filter(Boolean).join(' ')
 
   return { quote: best.quote, charStart: best.charStart, charEnd: best.charEnd, path, adjusted }
 }

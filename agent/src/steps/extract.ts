@@ -326,13 +326,23 @@ export async function extractAndVerify(
 
   // A gap review verdict is still a model verdict. When the question asks for
   // a known kind of figure and the source mechanically contains that kind, a
-  // zero-claim answer gets one final, language-blind attempt in Step 4e. This
+  // answer with no mechanically settling claim gets one final, language-blind
+  // attempt in Step 4e. This
   // reuses the same candidate selector as residual recovery: no second scanner,
   // and no vocabulary overlap required between question and filing.
   const forcedGaps = intent.subQuestions.flatMap((question) => {
-    if (claims.some((claim) => claim.questionId === question.id)) return []
+    if (
+      claims.some(
+        (claim) => claim.questionId === question.id && mechanicallySettles(claim, question.text),
+      )
+    ) {
+      return []
+    }
     const kinds = askedKinds(question.text)
-    if (kinds.size === 0) return []
+    if (kinds.size === 0) {
+      notes.push(`${question.id}: 无量纲键,未强制补抽`)
+      return []
+    }
     const candidates = figureCandidates(documents, question.text).map((candidate) => ({
       documentId: candidate.documentId,
       text: candidate.text,
@@ -369,11 +379,18 @@ export async function extractAndVerify(
   }
 
   // Step 4e. One narrow second attempt per residual sub-question, against the
-  // sentences that carry a figure of the kind it asks for. Bounded: one call,
-  // one attempt each, no recursion, and the output is verified like any other
-  // claim — this raises recall, never the standard of proof.
+  // sentences that carry a figure of the kind it asks for. A verifier rejection
+  // gets one repair call, then stops: bounded, non-recursive, and verified like
+  // any other claim — this raises recall, never the standard of proof.
   const recovered = new Set<string>()
-  const forcedQuestionIds = new Set(forcedGaps.map((gap) => gap.questionId))
+  // Step 4d already routes residual questions into this same attempt and allows
+  // a useful bound to publish while the missing actual value stays explicit.
+  // Do not reclassify those as atomic gaps merely because forcedGaps also saw a
+  // non-settling claim; residual semantics take precedence for the same id.
+  const residualQuestionIds = new Set(residuals.map((residual) => residual.questionId))
+  const forcedQuestionIds = new Set(
+    forcedGaps.filter((gap) => !residualQuestionIds.has(gap.questionId)).map((gap) => gap.questionId),
+  )
   if ((residuals.length > 0 || forcedGaps.length > 0) && documents.length > 0) {
     const residualTargets = residuals
       .map((residual) => {
@@ -418,32 +435,72 @@ export async function extractAndVerify(
         forbidden,
         spans,
       )
-      for (const claim of round.accepted) {
-        // Forced-gap recovery is atomic: a verified but non-settling claim must
-        // not enter `claims`, because compose treats any owned claim as a reason
-        // to suppress the honest absence statement. Residual recovery keeps its
-        // existing behaviour and may publish a useful bound while retaining the
-        // separate "value not yet determined" residual.
-        if (forcedQuestionIds.has(claim.questionId)) {
-          const question = intent.subQuestions.find((item) => item.id === claim.questionId)
-          if (!mechanicallySettles(claim, question?.text)) continue
-        }
-        if (
-          claims.some(
-            (existing) =>
-              existing.text.trim() === claim.text.trim() &&
-              (!forcedQuestionIds.has(claim.questionId) || existing.questionId === claim.questionId),
-          )
-        ) {
-          continue
-        }
-        claims.push(claim)
-        recovered.add(claim.questionId)
-        if (forcedQuestionIds.has(claim.questionId) && !closed.includes(claim.questionId)) {
-          closed.push(claim.questionId)
+
+      const acceptTargeted = (accepted: Claim[]): void => {
+        for (const claim of accepted) {
+          // Forced-gap recovery is atomic: a verified but non-settling claim must
+          // not enter `claims`, because compose treats any owned claim as a reason
+          // to suppress the honest absence statement. Residual recovery keeps its
+          // existing behaviour and may publish a useful bound while retaining the
+          // separate "value not yet determined" residual. Repairs use this exact
+          // same predicate; a retry never relaxes forced-gap closure.
+          if (forcedQuestionIds.has(claim.questionId)) {
+            const question = intent.subQuestions.find((item) => item.id === claim.questionId)
+            if (!mechanicallySettles(claim, question?.text)) continue
+          }
+          if (
+            claims.some(
+              (existing) =>
+                existing.text.trim() === claim.text.trim() &&
+                (!forcedQuestionIds.has(claim.questionId) || existing.questionId === claim.questionId),
+            )
+          ) {
+            continue
+          }
+          claims.push(claim)
+          recovered.add(claim.questionId)
+          if (forcedQuestionIds.has(claim.questionId) && !closed.includes(claim.questionId)) {
+            closed.push(claim.questionId)
+          }
         }
       }
+
+      acceptTargeted(round.accepted)
       rejected.push(...round.rejected.map((item) => ({ ...item, round: 'repair' as const })))
+
+      if (round.rejected.length > 0) {
+        // Step 4e used to stop at a repairable verifier rejection. Give those
+        // claims the same single bounded repair facility as the main extraction
+        // round. Literal unbound-number passages work across languages; the
+        // rejection reason itself carries identifier and source-unit guidance.
+        const withCandidates = round.rejected.map((item) => ({
+          ...item,
+          candidates: passagesContaining(documents, item.unboundNumbers ?? []),
+        }))
+        const repair = repairPrompt(
+          withCandidates,
+          boundDocuments(documents, [
+            ...targets.map((target) => target.question),
+            ...round.rejected.map((item) => item.text),
+          ]),
+          lang,
+        )
+        const repaired =
+          (await askForJson<ExtractionReply>(model, repair, '定向补抽修复轮', notes)) ?? {}
+        const repairedRound = verifyBatch(
+          (repaired.claims ?? []).filter((claim) => wanted.has((claim.question_id ?? '').trim())),
+          documents,
+          pool,
+          retrievedAt,
+          lang,
+          nextClaimId,
+          forbidden,
+          spans,
+        )
+        acceptTargeted(repairedRound.accepted)
+        rejected.push(...repairedRound.rejected.map((item) => ({ ...item, round: 'repair' as const })))
+      }
+
       for (const questionId of wanted) {
         if (!recovered.has(questionId)) {
           notes.push(

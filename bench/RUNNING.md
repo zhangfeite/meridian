@@ -44,4 +44,4 @@ uv --directory bench/runner run bench run \
 
 ## 4. Honest-numbers policy
 
-Published baselines report the range across runs (temperature-0 DeepSeek is not bit-exact; ±0.02–0.03 run-to-run is noise), on the full task set, with the same scorer version for every column. Thirteen scorer defects were found and fixed by dogfooding before current numbers were taken — several of the fixes *raised the bare model's* scores (the latest: natural-English month-name dates such as "August 13, 2026" were being flagged as fabricated scalars). If your change improves a score, say why the old score was wrong. See CONTRIBUTING.
+Published baselines report the range across runs (temperature-0 DeepSeek is not bit-exact; ±0.02–0.03 run-to-run is noise), on the full task set, with the same scorer version for every column. Fourteen scorer defects were found and fixed by dogfooding before current numbers were taken — several of the fixes *raised the bare model's* scores (the latest: natural-English month-name dates such as "August 13, 2026" were being flagged as fabricated scalars). If your change improves a score, say why the old score was wrong. See CONTRIBUTING.

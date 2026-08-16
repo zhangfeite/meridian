@@ -49,6 +49,25 @@ test('the span extends to the sentence carrying the claim`s figure', () => {
   assert.match(chosen.path, /extended-to-figure/)
 })
 
+test('an open-boundary label extends through the following value line', () => {
+  const text = ['项目名称', '期末余额', '', '1,234.56'].join('\n')
+  const chosen = chooseQuoteSpan({ text }, '项目名称', '项目名称及期末余额已披露。')
+
+  assert.ok(chosen)
+  assert.equal(chosen.quote, text)
+  assert.equal(text.slice(chosen.charStart, chosen.charEnd), chosen.quote)
+  assert.match(chosen.path, /extended-open-boundary/)
+})
+
+test('a terminally punctuated passage does not extend across a newline', () => {
+  const text = ['期末余额。', '1,234.56'].join('\n')
+  const chosen = chooseQuoteSpan({ text }, '期末余额。', '期末余额已披露。')
+
+  assert.ok(chosen)
+  assert.equal(chosen.quote, '期末余额。')
+  assert.doesNotMatch(chosen.path, /extended-open-boundary/)
+})
+
 test('a sentence that already carries every figure is not extended', () => {
   const chosen = chooseQuoteSpan(
     document,

@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url'
 import { test } from 'node:test'
 import { ScriptedModel, type CompletionRequest, type CompletionResult, type ModelClient } from '../src/model.ts'
 import { extractAndVerify } from '../src/steps/extract.ts'
-import { PROMPT_SET_VERSION, targetedExtractionPrompt } from '../src/prompts.ts'
+import { extractionPrompt, gapChallengePrompt, PROMPT_SET_VERSION, targetedExtractionPrompt } from '../src/prompts.ts'
 import type { SourceDocument } from '../src/source/types.ts'
 import type { Intent } from '../src/types.ts'
 import { askedKinds, figureCandidates } from '../src/verify/asked.ts'
@@ -51,10 +51,11 @@ const intent = (questions: { id: string; text: string }[], lang: 'zh-CN' | 'en' 
   subQuestions: questions,
 })
 
-/** Replies for: extraction, residual review, targeted extraction, re-review. */
+/** Replies for extraction, review, targeted extraction, and its bounded repair. */
 class Script implements ModelClient {
   readonly id = 'scripted'
   readonly steps: string[] = []
+  readonly requests: { step: string; system: string; user: string }[] = []
   readonly #byStep: Record<string, string>
   constructor(byStep: Record<string, string>) {
     this.#byStep = byStep
@@ -71,6 +72,7 @@ class Script implements ModelClient {
             ? 'repair'
             : 'extract'
     this.steps.push(step)
+    this.requests.push({ step, system, user: request.user })
     // The residual review is asked twice: once before the second attempt and
     // once after. The second reply, when given, answers the re-judgement.
     if (step === 'residual' && this.steps.filter((item) => item === 'residual').length === 2) {
@@ -85,8 +87,32 @@ test('a question asking for a price, a count or a ratio says so', () => {
   assert.deepEqual([...askedKinds('What is the issue price per share?')].sort(), ['price'])
   assert.deepEqual([...askedKinds('本次实际发行的股份数量是多少股?')], ['count'])
   assert.deepEqual([...askedKinds('募集资金总额的上限是多少?')], ['amount'])
+  assert.deepEqual([...askedKinds('期末餘額是多少?')], ['amount'])
+  assert.deepEqual([...askedKinds('票面利率是多少?')], ['percent'])
   assert.deepEqual([...askedKinds('Which legal document contains the ruling?')], ['doc_no'])
   assert.deepEqual([...askedKinds('该事项目前处于哪个阶段?')], [], 'a question about status asks for no quantity')
+})
+
+test('open table passages become one verbatim declared-unit candidate', () => {
+  const text = ['单位：人民币万元', '项目名称', '期末余额', '', '1,234.56 1,000.00'].join('\n')
+  const table: SourceDocument[] = [{ id: 'DT', title: '表格', text, provider: 'test' }]
+  const candidates = figureCandidates(table, '期末余额是多少?')
+
+  const joined = candidates.find((candidate) => candidate.text.includes('期末余额\n\n1,234.56 1,000.00'))
+  assert.ok(joined, candidates.map((candidate) => candidate.text).join(' | '))
+  assert.equal(joined.kindMatch, true, 'a declared currency unit makes the bare scalars amounts')
+  assert.equal(text.includes(joined.text), true, 'the candidate is one contiguous source slice')
+  assert.ok(joined.text.length <= 240)
+})
+
+test('new table-label vocabulary preserves broad candidates without a declared unit', () => {
+  const text = ['期末余额', '1,234.56', '期初余额', '1,000.00'].join('\n')
+  const table: SourceDocument[] = [{ id: 'DT', title: '表格', text, provider: 'test' }]
+  const before = figureCandidates(table, '表中列示了什么?')
+  const after = figureCandidates(table, '期末余额是多少?')
+
+  assert.ok(before.length > 0)
+  assert.ok(after.length >= before.length, `${after.length} candidates regressed from ${before.length}`)
 })
 
 test('candidates are the sentences carrying a figure of the kind asked for', () => {
@@ -125,9 +151,95 @@ test('the targeted prompt permits a ceiling only when the question asks for it',
     [{ questionId: 'Q1', question: 'What is the upper limit?', candidates: [{ documentId: 'D1', text: FILING }] }],
     'en',
   )
-  assert.equal(PROMPT_SET_VERSION, 'meridian-prompts-v0.3')
+  assert.equal(PROMPT_SET_VERSION, 'meridian-prompts-v0.4')
   assert.match(prompt.system, /unless the question itself asks for the ceiling\/maximum/)
   assert.match(prompt.system, /does not answer "what is the actual amount"/)
+  assert.match(prompt.system, /Write "1,234\.56 元", not "1,234\.56 yuan" or "CNY 1,234\.56"/)
+  assert.match(prompt.system, /Never transliterate or rewrite/)
+})
+
+test('the extraction prompt explains how to read flattened bare-number rows', () => {
+  const prompt = extractionPrompt(intent([{ id: 'Q1', text: 'What value is shown?' }], 'en'), documents, 'en')
+
+  assert.equal(PROMPT_SET_VERSION, 'meridian-prompts-v0.4')
+  assert.match(prompt.system, /visual row's trailing figures to the start of the next text line/)
+  assert.match(prompt.system, /nearest preceding row identity and header column names/)
+  assert.match(prompt.system, /quote it verbatim and take its unit only from the header/)
+})
+
+test('gap review repeats the source-unit and identifier rules', () => {
+  const prompt = gapChallengePrompt(
+    [{ questionId: 'Q1', question: 'What is the case number?', reason: '', candidates: [] }],
+    documents,
+    'en',
+  )
+
+  assert.match(prompt.system, /Write "1,234\.56 元", not "1,234\.56 yuan" or "CNY 1,234\.56"/)
+  assert.match(prompt.system, /case numbers, document numbers and document titles/)
+  assert.match(prompt.system, /Never transliterate or rewrite/)
+})
+
+test('a surrounding claim that does not mechanically settle the question no longer blocks forced Step 4e', async () => {
+  const model = new Script({
+    extract: JSON.stringify({
+      claims: [
+        {
+          question_id: 'Q1',
+          type: 'fact',
+          text: 'The company will disclose further progress in accordance with applicable rules.',
+          quotes: [{ document_id: 'D1', quote: '公司将依据相关规定及时披露进展情况' }],
+        },
+      ],
+      gaps: [],
+    }),
+    targeted: JSON.stringify({
+      claims: [
+        {
+          question_id: 'Q1',
+          type: 'fact',
+          text: 'The upper limit of total proceeds does not exceed 人民币 360,000.00 万元.',
+          quotes: [{ document_id: 'D1', quote: '募集资金总额不超过人民币 360,000.00 万元' }],
+        },
+      ],
+    }),
+  })
+
+  const result = await extractAndVerify(
+    intent([{ id: 'Q1', text: 'What is the upper limit of total proceeds?' }], 'en'),
+    documents,
+    model,
+    'en',
+  )
+
+  assert.equal(model.steps.filter((step) => step === 'targeted').length, 1)
+  assert.ok(result.claims.some((claim) => claim.text.includes('360,000.00 万元')))
+  assert.deepEqual(result.gapsClosed, ['Q1'])
+})
+
+test('a mechanically settling claim still suppresses forced Step 4e', async () => {
+  const model = new Script({
+    extract: JSON.stringify({
+      claims: [
+        {
+          question_id: 'Q1',
+          type: 'fact',
+          text: 'The upper limit of total proceeds does not exceed 人民币 360,000.00 万元.',
+          quotes: [{ document_id: 'D1', quote: '募集资金总额不超过人民币 360,000.00 万元' }],
+        },
+      ],
+      gaps: [],
+    }),
+  })
+
+  const result = await extractAndVerify(
+    intent([{ id: 'Q1', text: 'What is the upper limit of total proceeds?' }], 'en'),
+    documents,
+    model,
+    'en',
+  )
+
+  assert.equal(model.steps.filter((step) => step === 'targeted').length, 0)
+  assert.equal(result.claims.length, 1)
 })
 
 test('a forced-gap upper-limit question accepts a verified bound and closes', async () => {
@@ -191,6 +303,98 @@ test('an English zero-claim gap with a matching Chinese figure is forced through
   assert.equal(result.gaps.some((gap) => gap.questionId === 'Q1'), false)
 })
 
+test('a forced Step 4e identifier rejection gets one repair and closes with the original characters', async () => {
+  const identifierDocuments: SourceDocument[] = [
+    {
+      id: 'DL',
+      title: '民事裁定公告',
+      text: '公司收到（2026）沪0113民特（调）65号《民事裁定书》。',
+      provider: 'test',
+    },
+  ]
+  const model = new Script({
+    extract: JSON.stringify({ claims: [], gaps: [{ question_id: 'Q1', reason: 'No case number located.' }] }),
+    gap: JSON.stringify({
+      answers: [{ question_id: 'Q1', verdict: 'absent', reason: 'No case number located.' }],
+    }),
+    targeted: JSON.stringify({
+      claims: [
+        {
+          question_id: 'Q1',
+          type: 'fact',
+          text: 'The case number is (2026) Hu 0113 Min Te (Tiao) No. 65.',
+          quotes: [{ document_id: 'DL', quote: '（2026）沪0113民特（调）65号《民事裁定书》' }],
+        },
+      ],
+    }),
+    repair: JSON.stringify({
+      claims: [
+        {
+          question_id: 'Q1',
+          type: 'fact',
+          text: 'The case number is （2026）沪0113民特（调）65号《民事裁定书》.',
+          quotes: [{ document_id: 'DL', quote: '（2026）沪0113民特（调）65号《民事裁定书》' }],
+        },
+      ],
+    }),
+  })
+
+  const result = await extractAndVerify(
+    intent([{ id: 'Q1', text: 'Which case number identifies the civil ruling?' }], 'en'),
+    identifierDocuments,
+    model,
+    'en',
+  )
+
+  assert.equal(model.steps.filter((step) => step === 'targeted').length, 1)
+  assert.equal(model.steps.filter((step) => step === 'repair').length, 1)
+  assert.ok(result.claims.some((claim) => claim.text.includes('（2026）沪0113民特（调）65号')))
+  assert.deepEqual(result.gapsClosed, ['Q1'])
+  assert.equal(result.gaps.some((gap) => gap.questionId === 'Q1'), false)
+  const repairRequest = model.requests.find((request) => request.step === 'repair')
+  assert.match(repairRequest?.user ?? '', /案号、文号、文书名是标识符/)
+  assert.match(repairRequest?.user ?? '', /（2026）沪0113民特（调）65号/)
+})
+
+test('a rejected Step 4e repair keeps the gap and never starts a third round', async () => {
+  const identifierDocuments: SourceDocument[] = [
+    {
+      id: 'DL',
+      title: '民事裁定公告',
+      text: '公司收到（2026）沪0113民特（调）65号《民事裁定书》。',
+      provider: 'test',
+    },
+  ]
+  const transliterated = {
+    question_id: 'Q1',
+    type: 'fact',
+    text: 'The case number is (2026) Hu 0113 Min Te (Tiao) No. 65.',
+    quotes: [{ document_id: 'DL', quote: '（2026）沪0113民特（调）65号《民事裁定书》' }],
+  }
+  const model = new Script({
+    extract: JSON.stringify({ claims: [], gaps: [{ question_id: 'Q1', reason: 'No case number located.' }] }),
+    gap: JSON.stringify({
+      answers: [{ question_id: 'Q1', verdict: 'absent', reason: 'No case number located.' }],
+    }),
+    targeted: JSON.stringify({ claims: [transliterated] }),
+    repair: JSON.stringify({ claims: [transliterated] }),
+  })
+
+  const result = await extractAndVerify(
+    intent([{ id: 'Q1', text: 'Which case number identifies the civil ruling?' }], 'en'),
+    identifierDocuments,
+    model,
+    'en',
+  )
+
+  assert.equal(model.steps.filter((step) => step === 'targeted').length, 1)
+  assert.equal(model.steps.filter((step) => step === 'repair').length, 1, 'the repair rejection cannot recurse')
+  assert.equal(result.claims.length, 0)
+  assert.equal(result.rejected.filter((item) => item.text.includes('Hu 0113')).length, 2)
+  assert.ok(result.gaps.some((gap) => gap.questionId === 'Q1'))
+  assert.ok((result.notes ?? []).some((note) => /Q1: 定向补抽未找到/.test(note)))
+})
+
 test('a forced-gap bound-only claim is discarded atomically and the gap remains', async () => {
   const boundedDocuments: SourceDocument[] = [
     { id: 'DB', title: '采购预算', text: '设备采购预算不超过 2,345,678 元。', provider: 'test' },
@@ -246,6 +450,26 @@ test('a true gap with no matching figure kind is not forced through Step 4e', as
   assert.equal(model.steps.filter((step) => step === 'targeted').length, 0)
   assert.ok(result.gaps.some((gap) => gap.questionId === 'Q1'))
   assert.equal((result.notes ?? []).some((note) => /定向补抽/.test(note)), false)
+})
+
+test('a question with no dimensional key records why forced Step 4e was skipped', async () => {
+  const model = new Script({
+    extract: JSON.stringify({ claims: [], gaps: [{ question_id: 'Q1', reason: '未找到审议进度' }] }),
+    gap: JSON.stringify({
+      answers: [{ question_id: 'Q1', verdict: 'absent', reason: '未找到审议进度' }],
+    }),
+  })
+
+  const result = await extractAndVerify(
+    intent([{ id: 'Q1', text: 'What approval procedure has been completed?' }], 'en'),
+    documents,
+    model,
+    'en',
+  )
+
+  assert.equal(model.steps.filter((step) => step === 'targeted').length, 0)
+  assert.ok((result.notes ?? []).some((note) => note === 'Q1: 无量纲键,未强制补抽'))
+  assert.ok(result.gaps.some((gap) => gap.questionId === 'Q1'))
 })
 
 test('an empty forced Step 4e reply keeps the gap and records targeted extraction failure', async () => {

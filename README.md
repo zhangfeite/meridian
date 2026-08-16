@@ -33,11 +33,11 @@ uv --directory bench/runner run bench run \
 
 | language | bare DeepSeek | Meridian pipeline | Δ |
 |---|---|---|---|
-| zh-CN | 0.8467 | **0.9859** | +0.139 |
-| zh-TW | 0.8408 | **0.9660** | +0.125 |
-| en | 0.5358 | **0.9630** | +0.427 |
+| zh-CN | 0.8467 | **0.9837** | +0.137 |
+| zh-TW | 0.8408 | **0.9812** | +0.140 |
+| en | 0.5358 | **0.9600** | +0.424 |
 
-75 instances per column, zero failed runs. The pipeline recorded **zero fabrication hard-failures**; the bare model fabricated on 4 instances — including writing "20亿 − 5亿 = **15亿** remaining" in all three languages on a task whose filing never discloses the quota-management basis (the tempting-but-unfounded-arithmetic trap working exactly as designed). Run-to-run variance is ±0.02–0.03; treat smaller differences as noise. Thirteen scorer defects were found and fixed during dogfooding before these numbers were taken — several fixes raised the *bare model's* scores (see CONTRIBUTING's honest-benchmark rule; the latest acquitted natural-English dates like "August 13, 2026", which had been flagged as fabricated scalars). Integration guide for third-party agents: [`bench/RUNNING.md`](bench/RUNNING.md).
+75 instances per column, zero failed runs. The pipeline recorded **zero fabrication hard-failures**; the bare model fabricated on 4 instances — including writing "20亿 − 5亿 = **15亿** remaining" in all three languages on a task whose filing never discloses the quota-management basis (the tempting-but-unfounded-arithmetic trap working exactly as designed). Run-to-run variance is ±0.02–0.03; treat smaller differences as noise. Fourteen scorer defects were found and fixed during dogfooding before these numbers were taken — several fixes raised the *bare model's* scores (see CONTRIBUTING's honest-benchmark rule; the latest acquitted natural-English dates like "August 13, 2026", which had been flagged as fabricated scalars). Integration guide for third-party agents: [`bench/RUNNING.md`](bench/RUNNING.md).
 
 Where the pipeline structurally differs from a bare model: it refuses to fabricate under absence (planted-fabrication traps score 0 by design), states residual non-disclosure even after answering the rule ("capped at X" answers the cap, not the value), attaches counter-evidence to inferences, placeholder-locks every number in prose (the writing model never sees a digit), carries interval uncertainty on derivation chains, and holds the memo language contract across scripts. The bare model remains genuinely strong at Simplified-Chinese extraction; we say so.
 

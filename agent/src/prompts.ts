@@ -43,7 +43,7 @@ function asData(text: string): string {
 }
 
 /** Version stamp recorded in memo provenance. Bump on any wording change. */
-export const PROMPT_SET_VERSION = 'meridian-prompts-v0.3'
+export const PROMPT_SET_VERSION = 'meridian-prompts-v0.4'
 
 /**
  * The output language contract.
@@ -227,6 +227,9 @@ Hard requirements:
 - Keep the source's units exactly (万元 stays 万元; do not convert to 元 or 亿元). When a table
   declares its unit in a header line ("单位:人民币万元") and the rows carry bare figures, you may
   write that declared unit next to a figure quoted from that table — and no other unit.
+- PDF table flattening may weld a visual row's trailing figures to the start of the next text line.
+  Associate a bare-number line with the nearest preceding row identity and header column names before
+  concluding that a value is not disclosed; quote it verbatim and take its unit only from the header.
 - A unit is part of the figure, not part of the sentence: 元, 万元, 股, % stay in the source's own
   characters even when the sentence around them is English. Write "the claim amount is 1,234.56 元",
   not "1,234.56 yuan" and not "CNY 1,234.56" — a translated unit is a figure the filing does not
@@ -355,7 +358,12 @@ Rules:
   of them does, return no claim for that question — the memo will keep saying the figure is not yet
   determined, which is the truth and costs nothing.
 - Quotes are copied character-for-character from the sentences shown, and every number in a claim's
-  text must appear in that claim's own quote. Units stay in the source's characters.
+  text must appear in that claim's own quote.
+- A unit is part of the figure and stays in the source's own characters even when the surrounding
+  sentence is English. Write "1,234.56 元", not "1,234.56 yuan" or "CNY 1,234.56".
+- Identifiers are names, not prose: case numbers, document numbers and document titles must be quoted
+  as one whole identifier in the source's original character forms. Never transliterate or rewrite
+  them, because the rewritten identifier does not occur in the filing.
 - A ceiling is not the figure — unless the question itself asks for the ceiling/maximum. 「不超过X」
   answers "what is the maximum" and does not answer "what is the actual amount". If an actual value
   is requested and all you have is the bound, return nothing.
@@ -490,6 +498,11 @@ How to decide:
   your quotes are checked against the documents either way.
 - Every claim you return must carry "quotes" copied character-for-character, and every number in a
   claim's text must appear in that claim's own quotes.
+- A unit is part of the figure and stays in the source's own characters even when the surrounding
+  sentence is English. Write "1,234.56 元", not "1,234.56 yuan" or "CNY 1,234.56".
+- Identifiers are names, not prose: case numbers, document numbers and document titles must be quoted
+  as one whole identifier in the source's original character forms. Never transliterate or rewrite
+  them, because the rewritten identifier does not occur in the filing.
 ${LANGUAGE_CLAUSE[lang]}`,
     user: `${gaps
       .map(
