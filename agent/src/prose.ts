@@ -81,6 +81,7 @@ const STRINGS: Record<
     counterLead: string
     counterMissing: string
     sourceLead: string
+    nearestLead: string
   }
 > = {
   'zh-CN': {
@@ -91,6 +92,7 @@ const STRINGS: Record<
     counterLead: '反方证据显示',
     counterMissing: '未能找到反方证据',
     sourceLead: '原文',
+    nearestLead: '检索所及最接近的原文,供核对',
   },
   'zh-TW': {
     conclusion: '結論',
@@ -100,6 +102,7 @@ const STRINGS: Record<
     counterLead: '反方證據顯示',
     counterMissing: '未能找到反方證據',
     sourceLead: '原文',
+    nearestLead: '檢索所及最接近的原文,供核對',
   },
   en: {
     conclusion: 'Conclusion',
@@ -109,6 +112,7 @@ const STRINGS: Record<
     counterLead: 'against which the sources show',
     counterMissing: 'no counter-evidence could be found',
     sourceLead: 'Source',
+    nearestLead: "closest passage this run's retrieval reached, for the reader to check",
   },
 }
 
@@ -234,6 +238,8 @@ export interface ProseInput {
    * absence. Rendered inline, verbatim, right after the sentence it backs.
    */
   absenceSupport?: Map<string, string>
+  /** claimId → exclusion-exhibit evidence id, kept separate from absence support. */
+  exhibitSupport?: Map<string, string>
 }
 
 /** Output of {@link buildProse}. */
@@ -281,7 +287,10 @@ export async function buildProse(input: ProseInput, model?: ModelClient): Promis
         if (!claim) return []
         return claim.type === 'model_inference'
           ? [...claim.evidenceIds, ...claim.counterEvidence.evidenceIds]
-          : claim.evidenceIds
+          : [
+              ...claim.evidenceIds,
+              ...(claim.type === 'fact' && claim.exhibitEvidenceId ? [claim.exhibitEvidenceId] : []),
+            ]
       })
       .map((id) => evidenceById.get(id))
       .filter((item): item is EvidenceRef => Boolean(item))
@@ -458,12 +467,16 @@ function draftParagraphs(input: ProseInput, locker: Locker): ProseDraft[] {
             `${locker.lock(claim.text, claim.id, claim.id)}${supportFor(
               input.absenceSupport?.get(claim.id),
               input,
-            )}[${claim.id}]`,
+            )}${exhibitFor(input.exhibitSupport?.get(claim.id), input)}[${claim.id}]`,
         )
         .join(''),
       claimIds: owned.map((claim) => claim.id),
       questionId: question.id,
-      ...(owned.some((claim) => input.absenceSupport?.has(claim.id)) ? { locked: true } : {}),
+      ...(owned.some(
+        (claim) => input.absenceSupport?.has(claim.id) || input.exhibitSupport?.has(claim.id),
+      )
+        ? { locked: true }
+        : {}),
     })
   }
 
@@ -527,6 +540,16 @@ function supportFor(evidenceId: string | undefined, input: ProseInput): string {
   const strings = STRINGS[input.lang]
   const sigil = input.sigilByDocument?.get(evidence.documentId)
   return `(${strings.sourceLead}:「${evidence.quote}」${sigil ? `(${sigil})` : ''})`
+}
+
+/** Render the closest-passage exhibit in its own register. */
+function exhibitFor(evidenceId: string | undefined, input: ProseInput): string {
+  if (!evidenceId) return ''
+  const evidence = input.evidence.find((item) => item.id === evidenceId)
+  if (!evidence) return ''
+  const strings = STRINGS[input.lang]
+  const sigil = input.sigilByDocument?.get(evidence.documentId)
+  return `(${strings.nearestLead}:「${evidence.quote}」${sigil ? `(${sigil})` : ''})`
 }
 
 /** Anchors the model actually used, restricted to the ones it was given. */

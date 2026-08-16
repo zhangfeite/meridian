@@ -166,3 +166,26 @@ test('citations must resolve: dangling evidence and orphan sections are violatio
   assert.ok(codes.includes('dangling_evidence'))
   assert.ok(codes.includes('dangling_section_claim'))
 })
+
+test('an exhibit must resolve and only an unverifiable fact may carry it', () => {
+  const dangling = validateContract(
+    memoWith([
+      {
+        id: 'U-A',
+        type: 'fact',
+        text: '公告未披露相应信息,无法核实。',
+        questionId: 'Q1',
+        evidenceIds: [],
+        exhibitEvidenceId: 'E404',
+        numbers: [],
+        unverifiable: true,
+      },
+    ]),
+  )
+  assert.ok(dangling.some((violation) => violation.code === 'dangling_exhibit_evidence'))
+
+  const misplaced = validateContract(
+    memoWith([{ ...fact, exhibitEvidenceId: 'E1' }]),
+  )
+  assert.ok(misplaced.some((violation) => violation.code === 'exhibit_on_verifiable_claim'))
+})

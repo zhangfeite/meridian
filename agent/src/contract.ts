@@ -86,6 +86,12 @@ export interface ClaimBase {
 export interface FactClaim extends ClaimBase {
   type: 'fact'
   /**
+   * The closest compliant passage this run's deterministic retrieval reached
+   * before publishing an unverifiable statement. This is an exclusion exhibit,
+   * not evidence that the claimed absence is true.
+   */
+  exhibitEvidenceId?: string
+  /**
    * The no-answer discipline (PRD §4.1). `true` means the pipeline looked and
    * the sources do not disclose it. Such a claim is the ONLY claim allowed to
    * carry no evidence, and its text must say so plainly.
@@ -301,6 +307,10 @@ export interface AuditRecord {
      * claims about documents it cannot quote.
      */
     | 'gap_unevidenced'
+    /** The closest compliant passage was attached to an unverifiable claim. */
+    | 'gap_exhibit_attached'
+    /** Neither rejected located evidence nor a relevant passage was available. */
+    | 'gap_exhibit_none'
     /**
      * A gap sentence withdrawn before publication because the same sub-question
      * also carries a verified claim. An absence enumeration may only cover
@@ -483,6 +493,24 @@ export function validateContract(memo: Memo): ContractViolation[] {
           claimId: claim.id,
           code: 'dangling_evidence',
           message: `evidence '${evidenceId}' is not in the memo`,
+        })
+      }
+    }
+
+    const exhibitEvidenceId = 'exhibitEvidenceId' in claim ? claim.exhibitEvidenceId : undefined
+    if (exhibitEvidenceId !== undefined) {
+      if (!evidenceById.has(exhibitEvidenceId)) {
+        violations.push({
+          claimId: claim.id,
+          code: 'dangling_exhibit_evidence',
+          message: `exhibit evidence '${exhibitEvidenceId}' is not in the memo`,
+        })
+      }
+      if (claim.type !== 'fact' || claim.unverifiable !== true) {
+        violations.push({
+          claimId: claim.id,
+          code: 'exhibit_on_verifiable_claim',
+          message: 'exhibit evidence is only allowed on an unverifiable fact claim',
         })
       }
     }

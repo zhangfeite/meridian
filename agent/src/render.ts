@@ -41,6 +41,7 @@ interface Labels {
   scenario: string
   unverifiable: string
   source: string
+  nearest: string
   attribution: string
   confidence: string
   period: string
@@ -68,6 +69,7 @@ const LABELS: Record<MeridianLang, Labels> = {
     scenario: '情景',
     unverifiable: '无法核实',
     source: '出处原句',
+    nearest: '检索所及最接近的原文,供核对',
     attribution: '来源',
     confidence: '置信度',
     period: '期间',
@@ -93,6 +95,7 @@ const LABELS: Record<MeridianLang, Labels> = {
     scenario: '情景',
     unverifiable: '無法核實',
     source: '出處原句',
+    nearest: '檢索所及最接近的原文,供核對',
     attribution: '來源',
     confidence: '信心水準',
     period: '期間',
@@ -118,6 +121,7 @@ const LABELS: Record<MeridianLang, Labels> = {
     scenario: 'scenario',
     unverifiable: 'not verifiable',
     source: 'Evidence',
+    nearest: "closest passage this run's retrieval reached, for the reader to check",
     attribution: 'said by',
     confidence: 'confidence',
     period: 'period',
@@ -265,12 +269,16 @@ function renderClaim(
   }
 
   const citation = claim.evidenceIds.length > 0 ? ` ${labels.source}:${cite(claim.evidenceIds)}` : ''
+  const exhibit =
+    claim.type === 'fact' && claim.exhibitEvidenceId
+      ? ` ${labels.nearest}:${cite([claim.exhibitEvidenceId])}`
+      : ''
   const head = `- [${claim.id}] ${claim.text}`
 
   switch (claim.type) {
     case 'fact': {
       const tag = claim.unverifiable ? labels.unverifiable : labels.fact
-      return [`${head}【${tag}】${citation}`]
+      return [`${head}【${tag}】${citation}${exhibit}`]
     }
     case 'attributed_opinion':
       return [`${head}【${labels.opinion} · ${labels.attribution}:${claim.attribution}】${citation}`]

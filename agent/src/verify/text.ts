@@ -207,8 +207,50 @@ const GENERIC_UNITS = new Set([
 ])
 
 /** Question terms substantive enough to establish topical relevance. */
-function keyUnits(questionText: string): string[] {
+export function keyUnits(questionText: string): string[] {
   return [...semanticUnits(questionText)].filter((unit) => !GENERIC_UNITS.has(unit))
+}
+
+/**
+ * Find the closest on-topic passage reached by deterministic retrieval.
+ *
+ * Unlike {@link selectSupportingPassage}, this does not require absence
+ * language: it is an exhibit of what the run came closest to, not support for
+ * the proposition that an answer is absent.
+ *
+ * @param documents - retrieved documents.
+ * @param questionText - the sub-question that came up empty.
+ * @param accept - optional pre-ranking filter, used to exclude non-compliant quotes.
+ * @returns the closest passage, or `undefined` when no distinctive unit is shared.
+ */
+export function selectNearestPassage(
+  documents: { id: string; text: string }[],
+  questionText: string,
+  accept: (text: string) => boolean = () => true,
+): { documentId: string; text: string; shared: number } | undefined {
+  const wanted = keyUnits(questionText)
+  const candidates: { documentId: string; text: string; shared: number }[] = []
+  for (const document of documents) {
+    for (const passage of splitPassages(document.text)) {
+      for (const fragment of quotableFragments(passage.text)) {
+        const trimmed = fragment.trim()
+        if (trimmed.length < 10 || !accept(trimmed)) continue
+        const units = semanticUnits(trimmed)
+        const shared = wanted.filter((unit) => units.has(unit)).length
+        if (shared === 0) continue
+        candidates.push({ documentId: document.id, text: trimmed, shared })
+      }
+    }
+  }
+  if (candidates.length === 0) return undefined
+  candidates.sort(
+    (left, right) =>
+      right.shared - left.shared ||
+      left.text.length - right.text.length ||
+      left.documentId.localeCompare(right.documentId) ||
+      left.text.localeCompare(right.text),
+  )
+  return candidates[0]
 }
 
 /**

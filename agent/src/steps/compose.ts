@@ -36,13 +36,21 @@ import type { EvidencePool } from '../evidence-pool.ts'
 import { buildProse } from '../prose.ts'
 import { auditChecklist, AUDIT_VERSION } from './audit.ts'
 import type { SourceDocument } from '../source/types.ts'
-import type { Intent, RetrievalResult } from '../types.ts'
+import type { Intent, RejectedClaim, RetrievalResult } from '../types.ts'
 import { bindNumbers } from '../verify/bind.ts'
 import { scanCompliance } from '../verify/compliance.ts'
 import { locateQuote } from '../verify/evidence.ts'
 import { detectUnitHints, extractNumbers, verifyNumbers } from '../verify/numbers.ts'
 import { matchesScript } from '../verify/script.ts'
-import { coverage, maskNonContent, selectSupportingPassage, touchesTopic } from '../verify/text.ts'
+import {
+  coverage,
+  keyUnits,
+  maskNonContent,
+  selectNearestPassage,
+  selectSupportingPassage,
+  semanticUnits,
+  touchesTopic,
+} from '../verify/text.ts'
 import { renderMemoMarkdown } from '../render.ts'
 
 /** Inputs to composition. */
@@ -74,7 +82,7 @@ export interface ComposeInput {
    * silent about — it is one this run could not verify an answer for, and the
    * memo has to say the narrower of the two.
    */
-  rejected?: { questionId?: string }[]
+  rejected?: RejectedClaim[]
   /**
    * Sub-questions step 4d judged answered in their general form only: the rule,
    * range or procedure is disclosed and the specific figure is not.
@@ -223,6 +231,8 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
   )
   // claimId → evidence id of the passage that explains that claim's absence.
   const absenceSupport = new Map<string, string>()
+  // claimId → evidence id of the closest passage reached by this run.
+  const exhibitSupport = new Map<string, string>()
 
   for (const question of input.intent.subQuestions) {
     const owned = claims.filter((claim) => claim.questionId === question.id)
@@ -255,6 +265,7 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
         const support = selectSupportingPassage(input.documents, question.text)
         const evidence = support ? locateSupport(support, input.documents, input.pool) : undefined
         const residualId = nextGapClaimId()
+        const exhibit = evidence ? undefined : selectExhibit(question, input)
         claims.push({
           id: residualId,
           type: 'fact',
@@ -264,8 +275,20 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
           numbers: [],
           unverifiable: true,
           residual: true,
+          ...(exhibit ? { exhibitEvidenceId: exhibit.evidence.id } : {}),
         })
         if (evidence) absenceSupport.set(residualId, evidence.id)
+        if (exhibit) exhibitSupport.set(residualId, exhibit.evidence.id)
+        if (!evidence) {
+          audit.push({
+            step: 'compose',
+            action: exhibit ? 'gap_exhibit_attached' : 'gap_exhibit_none',
+            claimId: residualId,
+            detail: exhibit
+              ? `${question.id}: ${exhibit.detail}`
+              : `${question.id}: neither rejected located evidence nor a passage sharing a key unit was available`,
+          })
+        }
         residualIds.push(residualId)
         openQuestions.push(safeHeading(question.text, input.lang))
         audit.push({
@@ -303,6 +326,7 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
     // answer, which is a different sentence. MB-005 en refused the claim amount
     // four times and then published the amount as undisclosed.
     const refused = (input.rejected ?? []).some((item) => item.questionId === question.id)
+    const exhibit = !supportEvidence || refused ? selectExhibit(question, input) : undefined
     const suffix = supportEvidence && !refused ? strings.unverifiableSuffix : strings.unlocatedSuffix
     const text = input.documents.length === 0
       ? `${strings.noSources}${suffix(quoted, reason)}`
@@ -316,8 +340,10 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
       evidenceIds: supportEvidence ? [supportEvidence.id] : [],
       numbers: [],
       unverifiable: true,
+      ...(exhibit ? { exhibitEvidenceId: exhibit.evidence.id } : {}),
     })
     if (supportEvidence) absenceSupport.set(gapClaimId, supportEvidence.id)
+    if (exhibit) exhibitSupport.set(gapClaimId, exhibit.evidence.id)
     if (!supportEvidence || refused) {
       audit.push({
         step: 'compose',
@@ -326,6 +352,14 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
         detail: refused
           ? `${question.id}: claims were proposed and refused by verification, so the memo reports that it could not verify an answer rather than asserting the filing is silent`
           : `${question.id}: no passage explains the absence, so the memo reports that it could not locate an answer rather than asserting the filing is silent`,
+      })
+      audit.push({
+        step: 'compose',
+        action: exhibit ? 'gap_exhibit_attached' : 'gap_exhibit_none',
+        claimId: gapClaimId,
+        detail: exhibit
+          ? `${question.id}: ${exhibit.detail}`
+          : `${question.id}: neither rejected located evidence nor a passage sharing a key unit was available`,
       })
     }
     audit.push({
@@ -378,6 +412,7 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
       section.claimIds = section.claimIds.filter((id) => id !== gap.id)
     }
     absenceSupport.delete(gap.id)
+    exhibitSupport.delete(gap.id)
   }
   if (contradictoryGaps.length > 0) {
     const withdrawnQuestions = new Set(contradictoryGaps.map((gap) => gap.questionId))
@@ -393,10 +428,14 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
   const usedEvidenceIds = new Set(
     claims.flatMap((claim) => [
       ...claim.evidenceIds,
+      ...(claim.type === 'fact' && claim.exhibitEvidenceId ? [claim.exhibitEvidenceId] : []),
       ...(claim.type === 'model_inference' ? claim.counterEvidence.evidenceIds : []),
     ]),
   )
-  const evidence = input.evidence.filter((item) => usedEvidenceIds.has(item.id))
+  const availableEvidence = new Map(
+    [...input.evidence, ...input.pool.items].map((item) => [item.id, item]),
+  )
+  const evidence = [...availableEvidence.values()].filter((item) => usedEvidenceIds.has(item.id))
   const usedDocumentIds = new Set(evidence.map((item) => item.documentId))
   // A published figure drags its whole chain into the memo: the reader checking
   // 1.99× must be able to see the 1.82 元/股 it divides by, and the two quoted
@@ -443,6 +482,7 @@ export async function compose(input: ComposeInput): Promise<ComposeResult> {
       entityName: input.intent.entity.name,
       sigilByDocument: new Map(sources.map((source) => [source.documentId, source.sigil])),
       absenceSupport,
+      exhibitSupport,
     },
     input.model,
   )
@@ -573,6 +613,7 @@ function runGate(
   const numberViolations: { display: string; reason: string }[] = []
   for (const claim of memo.claims) {
     const claimEvidence = claim.evidenceIds
+      .concat(claim.type === 'fact' && claim.exhibitEvidenceId ? [claim.exhibitEvidenceId] : [])
       .map((id) => evidenceById.get(id))
       .filter((item): item is EvidenceRef => Boolean(item))
     const claimDerived = claim.numbers
@@ -610,6 +651,71 @@ function runGate(
     contractViolations,
     complianceHits: compliance.hits.map((hit) => ({ rule: hit.rule, match: hit.match })),
     numberViolations,
+  }
+}
+
+interface ExhibitSelection {
+  evidence: EvidenceRef
+  detail: string
+}
+
+/** Select R1 rejected evidence before falling back to the nearest source passage. */
+function selectExhibit(
+  question: { id: string; text: string },
+  input: ComposeInput,
+): ExhibitSelection | undefined {
+  const forbidden = input.skill?.forbidden_reinforce ?? []
+  const evidenceById = new Map(
+    [...input.evidence, ...input.pool.items].map((item) => [item.id, item]),
+  )
+  const wanted = keyUnits(question.text)
+  const r1: {
+    evidence: EvidenceRef
+    round: RejectedClaim['round']
+    claimCoverage: number
+    shared: number
+  }[] = []
+
+  for (const rejected of input.rejected ?? []) {
+    if (rejected.questionId !== question.id) continue
+    const claimCoverage = coverage(question.text, rejected.text)
+    for (const evidenceId of rejected.evidenceIds ?? []) {
+      const evidence = evidenceById.get(evidenceId)
+      if (!evidence || !scanCompliance(evidence.quote, input.lang, forbidden).passed) continue
+      const units = semanticUnits(evidence.quote)
+      const shared = wanted.filter((unit) => units.has(unit)).length
+      r1.push({ evidence, round: rejected.round, claimCoverage, shared })
+    }
+  }
+
+  const roundRank = (round: RejectedClaim['round']): number =>
+    round === 'repair' ? 0 : round === 'initial' ? 1 : 2
+  r1.sort(
+    (left, right) =>
+      roundRank(left.round) - roundRank(right.round) ||
+      right.claimCoverage - left.claimCoverage ||
+      right.shared - left.shared ||
+      left.evidence.id.localeCompare(right.evidence.id),
+  )
+  const rejectedEvidence = r1[0]
+  if (rejectedEvidence) {
+    return {
+      evidence: rejectedEvidence.evidence,
+      detail: `R1 round=${rejectedEvidence.round ?? 'unspecified'}, claimCoverage=${rejectedEvidence.claimCoverage.toFixed(4)}, sharedKeyUnits=${rejectedEvidence.shared}, evidenceId=${rejectedEvidence.evidence.id}`,
+    }
+  }
+
+  const nearest = selectNearestPassage(
+    input.documents,
+    question.text,
+    (quote) => scanCompliance(quote, input.lang, forbidden).passed,
+  )
+  if (!nearest) return undefined
+  const evidence = locateSupport(nearest, input.documents, input.pool)
+  if (!evidence) return undefined
+  return {
+    evidence,
+    detail: `R2 sharedKeyUnits=${nearest.shared}, length=${nearest.text.length}, documentId=${nearest.documentId}, evidenceId=${evidence.id}`,
   }
 }
 

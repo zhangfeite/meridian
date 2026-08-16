@@ -64,6 +64,11 @@ export interface RejectedClaim {
   reason: string
   questionId?: string
   /**
+   * Quotes that located successfully before a later verifier rejected the
+   * claim. Quote-not-located rejections deliberately omit this field.
+   */
+  evidenceIds?: string[]
+  /**
    * Which extraction round rejected it. `initial` rejections were sent back for
    * one repair attempt; they stay in the record either way, because "the model
    * proposed this and the verifier stopped it" is the audit trail, not noise.

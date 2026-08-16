@@ -9,7 +9,7 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { maskNonContent, selectSupportingPassage } from '../src/verify/text.ts'
+import { maskNonContent, selectNearestPassage, selectSupportingPassage } from '../src/verify/text.ts'
 
 const filing = [
   '一、公司被债权人申请重整的情况概述',
@@ -51,6 +51,33 @@ test('ranking is markers, then topical overlap, then shortest', () => {
   // With markers equal, the shorter sentence wins.
   const tie = selectSupportingPassage([{ id: 'D1', text: [oneLong, oneShort].join('\n') }], '重整管理人是谁?')
   assert.equal(tie?.text, oneShort)
+})
+
+test('nearest passage ranks shared key units, then shortest, and requires overlap', () => {
+  const oneLong = '第 20 号文件的施行机制已在本段作出完整说明。'
+  const oneShort = '第 20 号文件自发布时施行。'
+  const two = '第 20 号文件的施行机制和调整程序均自发布时生效。'
+  const chosen = selectNearestPassage(
+    [{ id: 'D1', text: [oneLong, oneShort, two].join('\n') }],
+    '第 20 号文件的施行机制和调整程序是什么?',
+  )
+  assert.equal(chosen?.text, two, 'more shared key units lead')
+
+  const tie = selectNearestPassage(
+    [{ id: 'D1', text: [oneLong, oneShort].join('\n') }],
+    '第 20 号文件如何施行?',
+  )
+  assert.equal(tie?.text, oneShort, 'the shortest equally relevant passage wins')
+  assert.equal(selectNearestPassage([{ id: 'D1', text: oneShort }], '主营业务毛利率?'), undefined)
+})
+
+test('nearest passage treats numbers as exact semantic tokens', () => {
+  const falseMatches = '文件编号为 2026-041。\n证券代码为 002920。'
+  assert.equal(selectNearestPassage([{ id: 'D1', text: falseMatches }], 'No. 20'), undefined)
+  assert.match(
+    selectNearestPassage([{ id: 'D1', text: `${falseMatches}\n第 20 号文件已发布。` }], 'No. 20')?.text ?? '',
+    /第 20 号/,
+  )
 })
 
 test('file paths with Chinese components are masked whole', () => {

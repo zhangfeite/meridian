@@ -654,6 +654,8 @@ function verifyBatch(
       continue
     }
 
+    const evidenceIds = evidence.map((entry) => entry.id)
+
     const bound = bindNumbers(text, evidence)
     if (bound.unbound.length > 0) {
       rejected.push({
@@ -666,6 +668,7 @@ function verifyBatch(
           .map((token) => token.raw)
           .join(', ')}${transliteratedIdentifier(text) ? IDENTIFIER_HINT : ''}`,
         questionId,
+        evidenceIds,
         unboundNumbers: bound.unbound.map((token) => token.raw),
       })
       continue
@@ -681,6 +684,7 @@ function verifyBatch(
         text,
         reason: `unit was translated: the filing prints 「${translated.printed}」 and this claim writes 「${translated.written}」. Keep the source's unit characters, whatever language the sentence is in.`,
         questionId,
+        evidenceIds,
       })
       continue
     }
@@ -691,18 +695,18 @@ function verifyBatch(
         text,
         reason: `compliance rule '${compliance.hits[0]?.rule}' fired on 「${compliance.hits[0]?.match}」`,
         questionId,
+        evidenceIds,
       })
       continue
     }
 
-    const evidenceIds = evidence.map((entry) => entry.id)
     const base = { id: nextClaimId(), text, questionId, evidenceIds, numbers: bound.numbers }
 
     switch (item.type) {
       case 'attributed_opinion': {
         const attribution = (item.attribution ?? '').trim()
         if (!attribution) {
-          rejected.push({ text, reason: 'attributed_opinion has no named speaker', questionId })
+          rejected.push({ text, reason: 'attributed_opinion has no named speaker', questionId, evidenceIds })
           continue
         }
         accepted.push({ ...base, type: 'attributed_opinion', attribution })
@@ -719,6 +723,7 @@ function verifyBatch(
             text,
             reason: 'model_inference needs a time range, at least one assumption, and a confidence level',
             questionId,
+            evidenceIds,
           })
           continue
         }
@@ -736,7 +741,7 @@ function verifyBatch(
       case 'scenario': {
         const triggers = (item.triggers ?? []).map((entry) => entry.trim()).filter(Boolean)
         if (triggers.length === 0) {
-          rejected.push({ text, reason: 'scenario has no observable trigger', questionId })
+          rejected.push({ text, reason: 'scenario has no observable trigger', questionId, evidenceIds })
           continue
         }
         accepted.push({ ...base, type: 'scenario', triggers })

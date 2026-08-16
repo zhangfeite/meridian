@@ -186,4 +186,5 @@ test('a claim that translates the filing`s unit is refused, with the fix named',
   assert.ok(rejection)
   assert.match(rejection.reason, /unit was translated/)
   assert.match(rejection.reason, /元/, 'the rejection names the characters to use')
+  assert.deepEqual(rejection.evidenceIds, ['E1'], 'located quotes survive a downstream rejection')
 })

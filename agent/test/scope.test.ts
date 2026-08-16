@@ -22,7 +22,7 @@ import { compose } from '../src/steps/compose.ts'
 import { EvidencePool } from '../src/evidence-pool.ts'
 import type { Claim, EvidenceRef, FactClaim, MeridianLang } from '../src/contract.ts'
 import type { SourceDocument } from '../src/source/types.ts'
-import type { Intent } from '../src/types.ts'
+import type { Intent, RejectedClaim } from '../src/types.ts'
 
 const FILING = [
   '公司于 2026 年 8 月 13 日收到浙江省宁波市中级人民法院送达的《通知书》。',
@@ -49,7 +49,7 @@ async function composeMemo(
   claims: Claim[],
   evidence: EvidenceRef[],
   lang: MeridianLang = 'zh-CN',
-  rejected: { questionId?: string }[] = [],
+  rejected: RejectedClaim[] = [],
   residuals: { questionId: string; missing: string }[] = [],
 ) {
   return compose({
@@ -227,7 +227,7 @@ test('a question whose claims were refused is not reported as a silent filing', 
     [],
     [],
     'zh-CN',
-    [{ questionId: 'Q1' }],
+    [{ questionId: 'Q1', text: '法院已裁定受理重整申请。', reason: '验证失败' }],
   )
 
   const gap = memo.claims.find((claim) => claim.type === 'fact' && claim.unverifiable)
