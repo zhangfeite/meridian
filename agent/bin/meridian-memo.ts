@@ -56,6 +56,43 @@ interface Args {
   limit?: number
 }
 
+/**
+ * The bench-only diagnostic sidecar.  It deliberately contains only pipeline
+ * inspection data: the subprocess protocol on stdout remains the answer.
+ */
+export interface BenchDiagnostic {
+  task_id: string
+  lang: MeridianLang
+  rejected: PipelineResult['trace']['extraction']['rejected']
+  notes: string[]
+  spans: NonNullable<PipelineResult['trace']['extraction']['spans']>
+  audit: PipelineResult['memo']['audit']
+}
+
+/** Build the stable, score-independent payload written for one bench instance. */
+export function benchDiagnostic(taskId: string, lang: MeridianLang, result: PipelineResult): BenchDiagnostic {
+  return {
+    task_id: taskId,
+    lang,
+    rejected: result.trace.extraction.rejected,
+    notes: result.trace.extraction.notes ?? [],
+    spans: result.trace.extraction.spans ?? [],
+    audit: result.memo.audit,
+  }
+}
+
+/** Write a bench diagnostic sidecar without touching the stdout protocol. */
+export function writeBenchDiagnostic(directory: string, taskId: string, lang: MeridianLang, result: PipelineResult): void {
+  mkdirSync(directory, { recursive: true })
+  const path = join(directory, `${taskId}.${lang}.diag.json`)
+  writeFileSync(path, `${JSON.stringify(benchDiagnostic(taskId, lang, result), null, 2)}\n`, 'utf8')
+}
+
+/** The entire bench stdout protocol, intentionally independent of diagnostics. */
+export function benchResponse(markdown: string): string {
+  return `${JSON.stringify({ output: markdown })}\n`
+}
+
 function parseArgs(argv: string[]): Args {
   const args: Args = { bench: false, audit: auditEnabled(process.env), tasksDir: process.env.MERIDIAN_BENCH_TASKS ?? DEFAULT_TASKS_DIR }
   for (let index = 0; index < argv.length; index += 1) {
@@ -153,7 +190,7 @@ async function emit(text: string): Promise<void> {
   await new Promise<void>((resolve) => process.stdout.once('drain', () => resolve()))
 }
 
-async function main(): Promise<number> {
+export async function main(): Promise<number> {
   const args = parseArgs(process.argv.slice(2))
   const model = OpenAICompatibleModel.fromEnv()
   if (!model) {
@@ -171,11 +208,12 @@ async function main(): Promise<number> {
     const task = readTask(args.tasksDir, taskId)
     const source = FixtureSource.fromBenchTasks(args.tasksDir, [taskId])
     const documentIds = task.contextFiles.map((relative) => `${taskId}/${relative}`)
+    const lang = request.lang ?? task.lang
     const result = await runPipeline({
       question: task.prompt,
       source,
       model,
-      lang: request.lang ?? task.lang,
+      lang,
       documentIds,
       taskId,
       ...(args.skill === undefined ? {} : { skillId: args.skill }),
@@ -183,7 +221,19 @@ async function main(): Promise<number> {
     })
     const outRoot = process.env.MERIDIAN_MEMO_OUT
     if (outRoot) writeArtifacts(join(resolve(outRoot), taskId), result)
-    await emit(`${JSON.stringify({ output: result.markdown })}\n`)
+    const diagnosticDir = process.env.MERIDIAN_DIAG_DIR
+    if (diagnosticDir) {
+      try {
+        writeBenchDiagnostic(resolve(diagnosticDir), taskId, lang, result)
+      } catch (error) {
+        // Diagnostics are intentionally unable to affect the benchmark answer,
+        // exit status, or score.  A broken optional sidecar is stderr-only.
+        process.stderr.write(
+          `meridian-memo: could not write diagnostic sidecar: ${error instanceof Error ? error.message : String(error)}\n`,
+        )
+      }
+    }
+    await emit(benchResponse(result.markdown))
     return 0
   }
 
@@ -262,12 +312,14 @@ async function main(): Promise<number> {
 // whatever stdout still has queued, and for a pipe that is everything past the
 // 64KB buffer. Setting the code lets Node leave once the write has actually
 // gone out — the difference between a memo and a memo cut off mid-character.
-main().then(
-  (code) => {
-    process.exitCode = code
-  },
-  (error: unknown) => {
-    process.stderr.write(`meridian-memo: ${error instanceof Error ? error.stack ?? error.message : String(error)}\n`)
-    process.exitCode = 2
-  },
-)
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().then(
+    (code) => {
+      process.exitCode = code
+    },
+    (error: unknown) => {
+      process.stderr.write(`meridian-memo: ${error instanceof Error ? error.stack ?? error.message : String(error)}\n`)
+      process.exitCode = 2
+    },
+  )
+}

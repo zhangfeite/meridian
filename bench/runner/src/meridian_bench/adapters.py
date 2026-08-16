@@ -1,6 +1,7 @@
 """HTTP and local-subprocess protocols for agents under test."""
 
 import json
+import os
 import shlex
 import shutil
 import subprocess
@@ -40,7 +41,7 @@ def _extract_text(payload: Any) -> str:
 
 
 class AgentAdapter:
-    def run(self, request_payload: Dict[str, Any]) -> AdapterResult:
+    def run(self, request_payload: Dict[str, Any], env: Optional[Dict[str, str]] = None) -> AdapterResult:
         raise NotImplementedError
 
 
@@ -50,7 +51,10 @@ class HttpAdapter(AgentAdapter):
         self.timeout = timeout
         self.retries = retries
 
-    def run(self, request_payload: Dict[str, Any]) -> AdapterResult:
+    def run(self, request_payload: Dict[str, Any], env: Optional[Dict[str, str]] = None) -> AdapterResult:
+        # An HTTP endpoint has no process environment to set.  The runner
+        # rejects --diag for this protocol before reaching here.
+        del env
         body = json.dumps(request_payload, ensure_ascii=False).encode("utf-8")
         last_error: Optional[BaseException] = None
         for attempt in range(1, self.retries + 2):
@@ -110,7 +114,7 @@ class SubprocessAdapter(AgentAdapter):
             details += ", resolved_paths=[%s]" % ", ".join(relative_paths)
         return details
 
-    def run(self, request_payload: Dict[str, Any]) -> AdapterResult:
+    def run(self, request_payload: Dict[str, Any], env: Optional[Dict[str, str]] = None) -> AdapterResult:
         stdin = json.dumps(request_payload, ensure_ascii=False)
         last_error: Optional[BaseException] = None
         for attempt in range(1, self.retries + 2):
@@ -123,6 +127,7 @@ class SubprocessAdapter(AgentAdapter):
                     timeout=self.timeout,
                     check=False,
                     cwd=self.cwd,
+                    env=None if env is None else {**os.environ, **env},
                 )
                 if completed.returncode != 0:
                     raise AdapterError(

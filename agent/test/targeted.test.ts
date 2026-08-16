@@ -160,7 +160,7 @@ test('the targeted prompt permits a ceiling only when the question asks for it',
     [{ questionId: 'Q1', question: 'What is the upper limit?', candidates: [{ documentId: 'D1', text: FILING }] }],
     'en',
   )
-  assert.equal(PROMPT_SET_VERSION, 'meridian-prompts-v0.4')
+  assert.equal(PROMPT_SET_VERSION, 'meridian-prompts-v0.5')
   assert.match(prompt.system, /unless the question itself asks for the ceiling\/maximum/)
   assert.match(prompt.system, /does not answer "what is the actual amount"/)
   assert.match(prompt.system, /Write "1,234\.56 元", not "1,234\.56 yuan" or "CNY 1,234\.56"/)
@@ -170,7 +170,7 @@ test('the targeted prompt permits a ceiling only when the question asks for it',
 test('the extraction prompt explains how to read flattened bare-number rows', () => {
   const prompt = extractionPrompt(intent([{ id: 'Q1', text: 'What value is shown?' }], 'en'), documents, 'en')
 
-  assert.equal(PROMPT_SET_VERSION, 'meridian-prompts-v0.4')
+  assert.equal(PROMPT_SET_VERSION, 'meridian-prompts-v0.5')
   assert.match(prompt.system, /visual row's trailing figures to the start of the next text line/)
   assert.match(prompt.system, /nearest preceding row identity and header column names/)
   assert.match(prompt.system, /quote it verbatim and take its unit only from the header/)

@@ -57,9 +57,13 @@ def execute_run(
     protocol: str,
     output_dir: Path,
     tasks_dir: Path,
+    diag: bool = False,
 ) -> Dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     response_dir = output_dir / "responses"
+    diag_dir = output_dir / "diag" if diag else None
+    if diag_dir is not None:
+        diag_dir.mkdir(parents=True, exist_ok=True)
     records: List[Dict[str, Any]] = []
     for loaded in tasks:
         request_payload = {
@@ -69,7 +73,10 @@ def execute_run(
             "type": loaded.task["type"],
         }
         try:
-            result = adapter.run(request_payload)
+            result = adapter.run(
+                request_payload,
+                env=None if diag_dir is None else {"MERIDIAN_DIAG_DIR": str(diag_dir.resolve())},
+            )
             response_error = None if result.output.strip() else "agent returned empty output"
             record = {
                 "task_id": loaded.task["id"],

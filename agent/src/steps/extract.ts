@@ -38,6 +38,7 @@ import { EvidencePool } from '../evidence-pool.ts'
 import { idAllocator } from '../ids.ts'
 import { readJsonReply, type ModelClient } from '../model.ts'
 import {
+  adversativeSweepPrompt,
   extractionPrompt,
   gapChallengePrompt,
   repairPrompt,
@@ -53,6 +54,7 @@ import type { Skill } from '../skills/types.ts'
 import { detectUnitHints, extractNumbers } from '../verify/numbers.ts'
 import { foldScript } from '../verify/script.ts'
 import { askedKinds, asksRemaining, figureCandidates, statesKind, type AskedKind } from '../verify/asked.ts'
+import { adversativeSweepTargets } from '../verify/adversative.ts'
 import { chooseQuoteSpan } from '../verify/span.ts'
 import { candidatePassages, splitPassages } from '../verify/text.ts'
 import { asWindowView, boundDocuments, selectWindows, windowDocument } from '../verify/window.ts'
@@ -245,6 +247,41 @@ export async function extractAndVerify(
     }
     if (passes.length === 1) collectGaps(repaired.gaps, gaps)
     rejected.push(...second.rejected.map((item) => ({ ...item, round: 'repair' as const })))
+  }
+
+  // Step 4a adversative sweep. A lost-in-the-middle sentence gets one more
+  // chance only when it is an uncited sibling of evidence this same question
+  // already owns. Candidate selection is deterministic, vocabulary-bounded and
+  // capped at four sentences per question; the three-question run cap is
+  // applied before any model call. Each target is called exactly once and every
+  // proposed claim still passes the ordinary verifier.
+  const adversativeTargets = adversativeSweepTargets(intent.subQuestions, claims, pool.items, documents)
+  for (const target of adversativeTargets) {
+    notes.push(`adversative_sweep_attempted: ${target.questionId}`)
+    const attempted = await askForJson<ExtractionReply>(
+      model,
+      adversativeSweepPrompt(target, lang),
+      `异议句补抽 ${target.questionId}`,
+      notes,
+    )
+    const round = verifyBatch(
+      (attempted?.claims ?? []).filter((claim) => (claim.question_id ?? '').trim() === target.questionId),
+      documents,
+      pool,
+      retrievedAt,
+      lang,
+      nextClaimId,
+      forbidden,
+      spans,
+    )
+    let adopted = 0
+    for (const claim of round.accepted) {
+      if (claims.some((existing) => existing.text.trim() === claim.text.trim())) continue
+      claims.push(claim)
+      adopted += 1
+    }
+    rejected.push(...round.rejected.map((item) => ({ ...item, round: 'repair' as const })))
+    notes.push(`adversative_sweep_adopted: ${target.questionId} claims=${adopted}`)
   }
 
   // Every claim has been verified against the sources; no gap has. That

@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional, Sequence
 
-from .adapters import AdapterError, create_adapter
+from .adapters import AdapterError, SubprocessAdapter, create_adapter
 from .reporting import write_report
 from .run import execute_run, score_run
 from .sensitivity import SensitivityError, check_traps
@@ -51,6 +51,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--output", type=Path, default=None)
     run.add_argument("--timeout", type=float, default=60.0)
     run.add_argument("--retries", type=int, default=2)
+    run.add_argument("--diag", action="store_true", help="write optional agent diagnostic sidecars to <output>/diag")
 
     score = subparsers.add_parser("score", help="offline rescore an existing run directory")
     score.add_argument("run_dir", type=Path)
@@ -88,8 +89,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 raise SchemaValidationError("selection contains no agent benchmark tasks")
             invocation_cwd = Path.cwd().resolve()
             adapter = create_adapter(args.agent, args.protocol, args.timeout, args.retries, cwd=invocation_cwd)
+            if args.diag and not isinstance(adapter, SubprocessAdapter):
+                raise AdapterError("--diag requires a local subprocess agent")
             output = args.output or _default_output()
-            manifest = execute_run(tasks, adapter, args.agent, args.protocol, output, args.tasks_dir)
+            manifest = execute_run(tasks, adapter, args.agent, args.protocol, output, args.tasks_dir, diag=args.diag)
             scores = score_run(output, tasks_dir=args.tasks_dir)
             report = write_report(output)
             _print_json(

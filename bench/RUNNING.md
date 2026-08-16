@@ -29,6 +29,9 @@ uv --directory bench/runner run bench run \
 
 `bench score ./my-run` re-scores stored responses offline (idempotent); `bench report ./my-run` writes `report.json` / `report.md`.
 
+For a local subprocess agent that supports it, add `--diag` to set `MERIDIAN_DIAG_DIR=<output>/diag` for each task and collect diagnostic sidecars there.
+Diagnostics are optional and are never read by scoring or reporting.
+
 ## 2. What the scorer rewards — the whole contract in six rules
 
 1. **Numbers verbatim.** Keep the filing's precision and units (`8,815.45 万元`, not `88 million`). A table printed under `单位：万元` licenses bare figures at that scale; a stated `单位:千元` table means thousands — misreading it is off by orders of magnitude. English currency forms (`CNY 1,500,000`, `1,500 yuan`) parse fine. Derived figures declared in gold carry a 0.5% relative tolerance.

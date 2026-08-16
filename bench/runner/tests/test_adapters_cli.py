@@ -132,6 +132,43 @@ class AdapterAndCliTests(unittest.TestCase):
             self.assertEqual(len({item["response_file"] for item in manifest["tasks"]}), 2)
             self.assertIn("MB-001 (en)", (run_dir / "report.md").read_text(encoding="utf-8"))
 
+    def test_cli_diag_is_a_score_and_report_independent_sidecar(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            plain_dir = root / "plain"
+            diag_dir = root / "diag"
+            common = [
+                "run",
+                "--agent",
+                "%s %s" % (sys.executable, FAKE_AGENT),
+                "--protocol",
+                "subprocess",
+                "--tasks",
+                "MB-001",
+                "--lang",
+                "zh-CN,en",
+                "--tasks-dir",
+                str(TASKS_DIR),
+                "--retries",
+                "0",
+            ]
+            self.assertEqual(main([*common, "--output", str(plain_dir)]), 0)
+            self.assertEqual(main([*common, "--output", str(diag_dir), "--diag"]), 0)
+
+            # This is the scoring invariant: diagnostics may exist on disk, but
+            # score and both report formats must be byte-for-byte unchanged.
+            for name in ("scores.json", "report.json", "report.md"):
+                self.assertEqual((plain_dir / name).read_bytes(), (diag_dir / name).read_bytes(), name)
+            self.assertFalse((plain_dir / "diag").exists())
+
+            sidecars = sorted((diag_dir / "diag").glob("*.diag.json"))
+            self.assertEqual([path.name for path in sidecars], ["MB-001.en.diag.json", "MB-001.zh-CN.diag.json"])
+            for sidecar in sidecars:
+                payload = json.loads(sidecar.read_text(encoding="utf-8"))
+                self.assertEqual(set(payload), {"task_id", "lang", "rejected", "notes", "spans", "audit"})
+                self.assertEqual(payload["task_id"], "MB-001")
+                self.assertIn(payload["lang"], {"zh-CN", "en"})
+
     def test_cli_zh_tw_selection_runs_only_zh_tw_instance(self):
         with tempfile.TemporaryDirectory() as temporary:
             run_dir = Path(temporary) / "run"

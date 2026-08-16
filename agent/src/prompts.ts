@@ -43,7 +43,7 @@ function asData(text: string): string {
 }
 
 /** Version stamp recorded in memo provenance. Bump on any wording change. */
-export const PROMPT_SET_VERSION = 'meridian-prompts-v0.4'
+export const PROMPT_SET_VERSION = 'meridian-prompts-v0.5'
 
 /**
  * The output language contract.
@@ -318,6 +318,59 @@ ${rejected
 
 Source documents:
 ${documents.map((document) => `--- document_id: ${document.id} | ${document.title} ---\n${document.text}`).join('\n\n')}`,
+  }
+}
+
+/**
+ * Step 4a sweep: one bounded attempt to recover an adversative sibling sentence.
+ *
+ * Candidates come only from a paragraph this question already cites. The
+ * deterministic selector owns that guardrail; this prompt owns the other one:
+ * no new fact in the shown sentences means an empty reply.
+ */
+export function adversativeSweepPrompt(
+  target: {
+    questionId: string
+    question: string
+    candidates: { documentId: string; text: string; matched: boolean }[]
+  },
+  lang: MeridianLang,
+): Prompt {
+  return {
+    system: `${HOUSE_RULES}
+
+You are STEP 4a of 7: ADVERSATIVE SWEEP. The question below already has verified claims, but a
+sentence in one of their source paragraphs used narrow disagreement or non-response wording and was
+not cited by any claim for this question. Make one bounded pass over only the candidate sentences
+shown below and recover any material fact that the existing extraction skipped.
+
+Output schema:
+{"claims": [{"question_id": "Q4", "type": "fact"|"attributed_opinion", "text": string,
+             "quotes": [{"document_id": string, "quote": string}], "attribution": string}]}
+
+Rules:
+- Return claims only for the question_id shown. These candidates are context, not permission to
+  broaden the research question.
+- If these sentences state no new fact relevant to the question, return {"claims": []}. An empty
+  answer is correct; do not paraphrase an existing claim merely to fill this pass.
+- Quotes must be copied character-for-character from the candidate sentences. Never translate,
+  normalize, join non-adjacent text, or replace omitted words with an ellipsis.
+- Every number, date, identifier and unit in a claim must occur in that claim's own quote.
+- Preserve attribution. A named person's or entity's view is an "attributed_opinion", not the
+  company's fact, and must carry that speaker verbatim in "attribution".
+- Candidate sentences marked "adjacent context" are supplied only to resolve the speaker or
+  referent. Do not invent a fact that the matched sentence does not state.
+${LANGUAGE_CLAUSE[lang]}`,
+    user: `question_id: ${target.questionId}
+question: ${target.question}
+candidate sentences from already-cited source paragraphs:
+${target.candidates
+  .map(
+    (candidate) =>
+      `  - [${candidate.matched ? 'matched adversative sentence' : 'adjacent context'}] ` +
+      `[document_id: ${candidate.documentId}] ${candidate.text}`,
+  )
+  .join('\n')}`,
   }
 }
 
