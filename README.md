@@ -29,7 +29,7 @@ uv --directory bench/runner run bench run \
 
 29 hand-authored tasks from real Chinese filings × 3 languages (zh-CN / zh-TW / en) = 87 scored instances, plus scorer-validation traps. Task format and scoring contract: [`bench/tasks/SCHEMA.md`](bench/tasks/SCHEMA.md).
 
-## Honest numbers (2026-08, deepseek-chat, temperature 0, full 25-task set, same scorer version)
+## Honest numbers (2026-08, deepseek-chat, temperature 0, full 29-task set, same scorer version)
 
 | language | bare DeepSeek | Meridian pipeline | Δ |
 |---|---|---|---|
